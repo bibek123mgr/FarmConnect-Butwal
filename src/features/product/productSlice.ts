@@ -1,0 +1,94 @@
+import { createSlice } from "@reduxjs/toolkit";
+import { fetchProducts } from "./productApi";
+
+
+export interface IProduct {
+  id: number;
+  name: string;
+  description: string;
+  unit: string;
+  rate: string;
+  farmId: number;
+  categoryId: number;
+  farmName: string;
+  categoryName: string;
+  quantity: string;
+}
+
+const initialValues={
+    products: [] as IProduct[],
+    loading: false,
+    success: false,
+    error: false,
+    message: "",
+    product: {} as IProduct,
+    pagination:{
+        page: 1,
+        limit: 10,
+        total: 0
+    },
+    searchFilters:{
+        title: "",
+        category: "",
+        minPrice: 0,
+        maxPrice: 0
+    }
+}
+
+const productSlice = createSlice({
+    name: "product",
+    initialState: initialValues,
+    reducers: {
+        setSearchFilters: (state, action) => {
+            state.searchFilters = {
+                ...state.searchFilters,
+                [action.payload.key]: action.payload.value
+            }
+        },
+        setPagination: (state, action) => {
+            state.pagination = {
+                ...state.pagination,
+                [action.payload.key]: action.payload.value
+            }
+        },
+        setSuccessMessage: (state, action) => {
+            state.message = action.payload;
+            state.error = false;
+        },
+        setError: (state, action) => {
+            state.message = action.payload;
+            state.error = true;
+        },
+        clearMessage: (state) => {
+            state.message = "";
+            state.error = false;
+            state.success = false;
+        }
+    },
+    extraReducers:(builder)=>{
+        builder
+            .addCase(fetchProducts.pending, (state) => {
+                state.loading = true;
+                state.error = false;
+                state.success = false;
+                state.message = "";
+            })
+            .addCase(fetchProducts.fulfilled, (state, action) => {
+                state.loading = false;
+                state.success = true;
+                state.products = action.payload.data;
+                state.pagination = action.payload.pagination;
+            })
+            .addCase(fetchProducts.rejected, (state, action) => {
+                state.loading = false;
+                state.error = true;
+                state.success = false;
+                state.message = action.error.message || "Something went wrong";
+            })
+    }
+    
+   
+});
+
+export const { setSearchFilters, setPagination, setSuccessMessage, setError, clearMessage } = productSlice.actions;
+export default productSlice.reducer;
