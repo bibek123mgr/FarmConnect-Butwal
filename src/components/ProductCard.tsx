@@ -1,55 +1,94 @@
+import { Star, ShoppingCart, Share2, Eye, Heart } from "lucide-react";
+import type { IProduct } from "../features/product/productSlice";
 
 interface IProductProps {
-    product: IProduct
+    product: IProduct;
 }
-import { 
-  Leaf,
-  Heart
-} from 'lucide-react';
-import type { IProduct } from '../features/product/productSlice';
 
 const ProductCard = ({ product }: IProductProps) => {
+    const rating = 4.5;
+    const reviewCount = 128;
+
     return (
-        <div key={product.id} className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow border border-gray-100 flex flex-col">
-            {/* Product Image Placeholder */}
-            <div className="relative h-48 bg-green-100 flex items-center justify-center">
-                <Leaf className="w-16 h-16 text-green-300" />
-                
-                <span className={`absolute top-2 left-2 px-2 py-1 rounded-full text-xs font-medium `}>
-                </span>
+        <div className="group bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-300">
+
+            <div className="relative aspect-square bg-gray-50 p-4 overflow-hidden">
+
+                <img
+                    src="https://www.freepnglogos.com/uploads/vegetables-png/vegetables-download-vegetable-photos-png-image-pngimg-3.png"
+                    alt={product.name}
+                    className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110"
+                />
+
+                <div className="absolute top-3 right-3">
+                    <span className="bg-red-500 text-white text-xs font-semibold px-2.5 py-1 rounded">
+                        Sale
+                    </span>
+                </div>
+
+                <div className="absolute bottom-0 left-0 right-0 flex justify-center">
+                    <div className="w-[70%] flex justify-center items-center gap-3 bg-white/80 backdrop-blur-md py-2 opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
+
+                        <button className="p-2 rounded-full hover:bg-green-100 transition">
+                            <ShoppingCart className="w-4 h-4 text-gray-700 hover:text-green-600" />
+                        </button>
+
+                        <button className="p-2 rounded-full hover:bg-blue-100 transition">
+                            <Share2 className="w-4 h-4 text-gray-700 hover:text-blue-600" />
+                        </button>
+
+                        <button className="p-2 rounded-full hover:bg-gray-200 transition">
+                            <Eye className="w-4 h-4 text-gray-700" />
+                        </button>
+
+                        <button className="p-2 rounded-full hover:bg-red-100 transition">
+                            <Heart className="w-4 h-4 text-gray-700 hover:text-red-500" />
+                        </button>
+                    </div>
+                </div>
             </div>
 
-            {/* Product Info */}
-            <div className="p-4 flex-1">
-                <div className="flex justify-between items-start mb-1">
-                    <h3 className="font-semibold text-gray-800 text-lg leading-tight">{product.name}</h3>
-                </div>
-                <p className="text-xs text-green-600 mb-1">{product.farmName}</p>
-                <p className="text-sm text-gray-500 mb-3 line-clamp-2">{product.description}</p>
+            <div className="p-4">
+                <h3 className="text-sm font-medium text-gray-800 mb-1 line-clamp-2 min-h-[2.5rem]">
+                    {product.name}
+                </h3>
 
-                <div className="flex items-center gap-2 mb-2">
-                    <span className="text-xs bg-gray-100 px-2 py-0.5 rounded-full text-gray-600">
-                        {product.categoryName}
-                    </span>
-                    <span className="text-xs text-gray-400">•</span>
-                    <span className="text-xs text-gray-500">Left: {product.quantity} {product.unit}s</span>
-                </div>
+                <p className="text-xs text-green-600 font-medium mb-2">
+                    Available Qty: {product.quantity}
+                </p>
 
-                <div className="flex items-center justify-between mt-2">
-                    <div>
-                        <span className="text-2xl font-bold text-green-700">Rs.{parseFloat(product.rate).toFixed(2)}</span>
-                        <span className="text-sm text-gray-500"> / {product.unit}</span>
+                <div className="flex items-center gap-1 mb-3">
+                    <div className="flex items-center">
+                        {[...Array(5)].map((_, index) => (
+                            <Star
+                                key={index}
+                                className={`w-3.5 h-3.5 ${index < Math.floor(rating)
+                                        ? "fill-yellow-400 text-yellow-400"
+                                        : "fill-gray-200 text-gray-200"
+                                    }`}
+                            />
+                        ))}
                     </div>
-                    <button
-                        className={`px-4 py-2 rounded-lg font-medium transition text-sm bg-green-600 text-white hover:bg-green-700
-                                `}
-                    >
-                        Add to Cart
-                    </button>
+                    <span className="text-xs text-gray-500">({reviewCount})</span>
+                </div>
+
+                <div className="flex items-center justify-between">
+                    <div className="flex flex-col">
+                        <div className="flex items-center gap-2">
+                            <span className="text-lg font-bold text-gray-900">
+                                Rs.{parseFloat(product.rate).toFixed(2)}
+                            </span>
+                            <span className="text-sm text-gray-400 line-through">
+                                Rs.{(parseFloat(product.rate) * 1.1).toFixed(2)}
+                            </span>
+                            <span className="text-xs text-gray-500">{product.unit}</span>
+
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     );
-}
+};
 
 export default ProductCard;

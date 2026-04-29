@@ -1,3 +1,4 @@
+import CategorySection from '../components/CategorySection';
 import ProductSection from '../components/ProductSection';
 
 const Home = () => {
@@ -5,6 +6,7 @@ const Home = () => {
         <div >
             <div className="container mx-auto px-5">
                 <h1>Home</h1>
+                <CategorySection />
                 <ProductSection />
             </div>
 
