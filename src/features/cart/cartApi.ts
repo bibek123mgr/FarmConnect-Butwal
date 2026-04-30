@@ -1,10 +1,15 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { axiosInstance } from "../../lib/axiosInstance";
 
+export interface IAddToCart {
+    productId: number;
+    quantity: number;
+    price: number;
+}
 
 export const createCart = createAsyncThunk(
     "cart/createCart",
-    async (payload, { rejectWithValue }) => {
+    async (payload : IAddToCart, { rejectWithValue }) => {
         try {
             const { data } = await axiosInstance.
                 post(`carts`, payload);

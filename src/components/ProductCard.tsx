@@ -1,6 +1,7 @@
 import { Star, ShoppingCart, Share2, Eye, Heart } from "lucide-react";
 import type { IProduct } from "../features/product/productSlice";
-
+import { useAppDispatch } from "../hooks/hooks";
+import { createCart, type IAddToCart } from "../features/cart/cartApi";
 interface IProductProps {
     product: IProduct;
 }
@@ -8,6 +9,19 @@ interface IProductProps {
 const ProductCard = ({ product }: IProductProps) => {
     const rating = 4.5;
     const reviewCount = 128;
+    const dispatch = useAppDispatch();
+
+    const handleAddToCart = (product: IProduct) => {
+        const { id, rate } = product;
+        const payload: IAddToCart = {
+            productId: id,
+            quantity: 1,
+            price: Number(rate)
+        }
+        dispatch(createCart(payload));
+    };
+
+
 
     return (
         <div className="group bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-300">
@@ -39,7 +53,8 @@ const ProductCard = ({ product }: IProductProps) => {
                             <Heart className="w-4 h-4 text-gray-700 hover:text-red-500" />
                         </button>
 
-                        <button className="p-2 rounded-full hover:bg-green-100 transition">
+                        <button className="p-2 rounded-full hover:bg-green-100 transition"
+                            onClick={() => handleAddToCart(product)}>
                             <ShoppingCart className="w-4 h-4 text-gray-700 hover:text-green-600" />
                         </button>
 
