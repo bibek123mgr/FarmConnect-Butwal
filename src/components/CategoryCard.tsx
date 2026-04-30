@@ -5,37 +5,38 @@ interface ICategoryProps {
 }
 
 const colors = [
-  "from-green-100 to-green-200",
-  "from-orange-100 to-orange-200",
-  "from-pink-100 to-pink-200",
-  "from-yellow-100 to-yellow-200",
-  "from-blue-100 to-blue-200",
-  "from-purple-100 to-purple-200",
+  "bg-orange-50",
+  "bg-green-50", 
+  "bg-orange-100",
+  "bg-pink-50",
+  "bg-yellow-50",
+  "bg-blue-50",
+  "bg-emerald-50",
+  "bg-purple-50",
+  "bg-red-50",
+  "bg-amber-50",
 ];
 
 const CategoryCard = ({ category }: ICategoryProps) => {
-  const randomColor =
-    colors[category.id % colors.length];
+  const randomColor = colors[category.id % colors.length];
 
   return (
-    <div className="flex flex-col items-center cursor-pointer group min-w-[100px]">
+    <div className="flex flex-col items-center gap-2 cursor-pointer group">
       <div
-        className={`w-20 h-20 md:w-24 md:h-24 rounded-full bg-gradient-to-br ${randomColor}
-        p-1 shadow-md group-hover:scale-105 transition-transform duration-300`}
+        className={`${randomColor} rounded-2xl px-4 py-5 md:px-6 md:py-6 
+        flex flex-col items-center justify-center min-w-[120px] md:min-w-[140px]
+        group-hover:shadow-md transition-all duration-300`}
       >
-        <div className="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden border-2 border-white">
-          <img
-            src={category.image}
-            alt={category.name}
-            className="w-full h-full object-cover rounded-full"
-          />
-        </div>
+        <img
+          src={category.image}
+          alt={category.name}
+          className="w-14 h-14 md:w-18 md:h-18 object-contain"
+        />
+        
+        <p className="mt-2 text-xs md:text-sm font-medium text-gray-700 text-center">
+          {category.name}
+        </p>
       </div>
-
-      {/* Category Name */}
-      <p className="mt-3 text-sm font-medium text-gray-700 text-center group-hover:text-green-600 transition">
-        {category.name}
-      </p>
     </div>
   );
 };

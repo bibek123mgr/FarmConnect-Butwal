@@ -1,12 +1,66 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Eye, EyeOff, User, Lock, Leaf, Home } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAppDispatch, useAppSelector } from "../hooks/hooks";
+import { getUserProfile, LoginUser } from "../features/auth/AuthApi";
+import { clearMessage } from "../features/auth/AuthSlice";
+import toast from "react-hot-toast";
+
+export interface LoginPayload {
+    email: string;
+    password: string;
+}
+
 
 const Login = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [remember, setRemember] = useState(false);
+    const dispatch = useAppDispatch();
+    const navigate = useNavigate();
+
+    const [formData, setFormData] = useState<LoginPayload>({
+        email: "",
+        password: ""
+    });
+
+    const { message, success, error } = useAppSelector((state: any) => state.auth);
+
+    useEffect(() => {
+        if (!message) return;
+
+        if (success) {
+            toast.success(message);
+
+            dispatch(getUserProfile());
+
+            setTimeout(() => {
+                navigate("/");
+            }, 500);
+        }
+
+        if (error) {
+            toast.error(message);
+        }
+
+        const timer = setTimeout(() => {
+            dispatch(clearMessage());
+        }, 2000);
+
+        return () => clearTimeout(timer);
+    }, [message, success, error, dispatch, navigate]);
+
+    const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
+        e.preventDefault();
+        if (!formData.email || !formData.password) return
+        dispatch(
+            LoginUser(formData)
+        );
+    };
+
+
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+        <div className="my-12 flex items-center justify-center bg-gray-50 p-4">
 
             <div className="w-full max-w-md bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden group">
 
@@ -46,9 +100,13 @@ const Login = () => {
                         <div className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-2 focus-within:border-green-500 transition">
                             <User className="w-4 h-4 text-gray-400" />
                             <input
-                                type="text"
+                                type="email"
                                 placeholder="Enter username or email"
                                 className="w-full outline-none text-sm h-9"
+                                onChange={(e) => setFormData({
+                                    ...formData,
+                                    email: e.target.value
+                                })}
                             />
                         </div>
                     </div>
@@ -66,6 +124,10 @@ const Login = () => {
                                     type={showPassword ? "text" : "password"}
                                     placeholder="Enter password"
                                     className="w-full outline-none text-sm h-9"
+                                    onChange={(e) => setFormData({
+                                        ...formData,
+                                        password: e.target.value
+                                    })}
                                 />
                             </div>
 
@@ -90,6 +152,8 @@ const Login = () => {
                                 type="checkbox"
                                 checked={remember}
                                 onChange={() => setRemember(!remember)}
+
+
                                 className="accent-green-600"
                             />
                             Remember me
@@ -100,14 +164,16 @@ const Login = () => {
                         </span>
                     </div>
 
-                    <button className="w-full bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-2.5 rounded-lg transition-all duration-200">
+                    <button className="w-full bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-2.5 rounded-lg transition-all duration-200"
+                        onClick={(e) => handleSubmit(e)}
+                    >
                         Login
                     </button>
 
-                    <div className="flex items-center justify-center gap-2 mt-4 text-sm text-gray-500 hover:text-green-600 cursor-pointer transition">
+                    <Link to="/" className="flex items-center justify-center gap-2 mt-4 text-sm text-gray-500 hover:text-green-600 cursor-pointer transition">
                         <Home className="w-3.5 h-3.5" />
                         Back to Home
-                    </div>
+                    </Link>
 
                     <div className="text-center mt-4">
                         <p className="text-sm text-gray-500">

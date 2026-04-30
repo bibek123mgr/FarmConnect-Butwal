@@ -1,12 +1,11 @@
-import axios from "axios";
-import { baseUrl } from "../../config/config";
 import { createAsyncThunk } from "@reduxjs/toolkit";
+import { axiosInstance } from "../../lib/axiosInstance";
 
 export const fetchProducts = createAsyncThunk(
     "products/getProductsList",
     async (_, { rejectWithValue }) => {
         try {
-            const { data } = await axios.get(`${baseUrl}products`);
+            const { data } = await axiosInstance.get(`products`);
             return data;
         } catch (error: any) {
             return rejectWithValue(

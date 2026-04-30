@@ -29,20 +29,23 @@ const ProductCard = ({ product }: IProductProps) => {
                 <div className="absolute bottom-0 left-0 right-0 flex justify-center">
                     <div className="w-[70%] flex justify-center items-center gap-3 bg-white/80 backdrop-blur-md py-2 opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
 
-                        <button className="p-2 rounded-full hover:bg-green-100 transition">
-                            <ShoppingCart className="w-4 h-4 text-gray-700 hover:text-green-600" />
-                        </button>
-
-                        <button className="p-2 rounded-full hover:bg-blue-100 transition">
-                            <Share2 className="w-4 h-4 text-gray-700 hover:text-blue-600" />
-                        </button>
-
                         <button className="p-2 rounded-full hover:bg-gray-200 transition">
                             <Eye className="w-4 h-4 text-gray-700" />
                         </button>
 
+
+
                         <button className="p-2 rounded-full hover:bg-red-100 transition">
                             <Heart className="w-4 h-4 text-gray-700 hover:text-red-500" />
+                        </button>
+
+                        <button className="p-2 rounded-full hover:bg-green-100 transition">
+                            <ShoppingCart className="w-4 h-4 text-gray-700 hover:text-green-600" />
+                        </button>
+
+
+                        <button className="p-2 rounded-full hover:bg-blue-100 transition">
+                            <Share2 className="w-4 h-4 text-gray-700 hover:text-blue-600" />
                         </button>
                     </div>
                 </div>
@@ -63,8 +66,8 @@ const ProductCard = ({ product }: IProductProps) => {
                             <Star
                                 key={index}
                                 className={`w-3.5 h-3.5 ${index < Math.floor(rating)
-                                        ? "fill-yellow-400 text-yellow-400"
-                                        : "fill-gray-200 text-gray-200"
+                                    ? "fill-yellow-400 text-yellow-400"
+                                    : "fill-gray-200 text-gray-200"
                                     }`}
                             />
                         ))}

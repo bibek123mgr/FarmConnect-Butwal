@@ -13,20 +13,15 @@ const CategorySection = () => {
     dispatch(fetchCategories());
   }, [dispatch]);
 
-  const duplicatedCategories = [
-    ...(categoryList || []),
-    ...(categoryList || []),
-  ];
 
   return (
     <div className="w-full overflow-hidden py-4">
       <h1 className="text-2xl font-bold mb-4 text-gray-800">
         Shop by Category
       </h1>
-
       <div className="marquee-container">
         <div className="marquee-track">
-          {duplicatedCategories.map((category, index) => (
+          {categoryList?.slice(0, 10).map((category, index) => (
             <div key={`${category.id}-${index}`} className="flex-shrink-0">
               <CategoryCard category={category} />
             </div>

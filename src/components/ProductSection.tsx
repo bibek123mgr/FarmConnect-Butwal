@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import { fetchProducts } from "../features/product/productApi";
 import ProductCard from "./ProductCard";
 import { useAppDispatch, useAppSelector } from "../hooks/hooks";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const ProductSection = () => {
   const dispatch = useAppDispatch();
@@ -11,7 +10,7 @@ const ProductSection = () => {
     dispatch(fetchProducts());
   }, [dispatch])
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto py-8">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-gray-900">Popular Products</h2>
          <div className="hidden md:flex items-center gap-6">

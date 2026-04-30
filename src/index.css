@@ -7,27 +7,18 @@
 
 .marquee-container {
     width: 100%;
-    overflow: hidden;
-    position: relative;
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+    scrollbar-width: none; /* Firefox */
+}
+
+.marquee-container::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
 }
 
 .marquee-track {
     display: flex;
-    gap: 24px;
+    gap: 17px;
     width: max-content;
-    animation: marqueeScroll 100s linear infinite;
-}
-
-.marquee-track:hover {
-    animation-play-state: paused;
-}
-
-@keyframes marqueeScroll {
-    0% {
-        transform: translateX(0);
-    }
-
-    100% {
-        transform: translateX(-50%);
-    }
 }

@@ -1,23 +1,7 @@
 import axios from "axios";
+import { baseUrl } from "../config/config";
 
-axios.interceptors.request.use(
-    async (config) => {
-        return config;
-    },
-    (error) => Promise.reject(error)
-);
-
-axios.interceptors.response.use(
-    (response) => response,
-    (error) => {
-        const { response } = error;
-
-        if (response && response.status === 401) {
-            localStorage.clear();
-            window.location.href = "/login";
-        }
-        return Promise.reject(error);
-    }
-);
-
-export default axios;
+export const axiosInstance = axios.create({
+    baseURL: baseUrl,
+    withCredentials: true
+});
