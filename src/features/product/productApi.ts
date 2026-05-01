@@ -1,11 +1,11 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { axiosInstance } from "../../lib/axiosInstance";
+import { axiosInstanceNoCredentials } from "../../lib/axiosInstance";
 
 export const fetchProducts = createAsyncThunk(
     "products/getProductsList",
     async (_, { rejectWithValue }) => {
         try {
-            const { data } = await axiosInstance.get(`products`);
+            const { data } = await axiosInstanceNoCredentials.get(`products`);
             return data;
         } catch (error: any) {
             return rejectWithValue(

@@ -10,15 +10,95 @@
     overflow-x: auto;
     overflow-y: hidden;
     white-space: nowrap;
-    scrollbar-width: none; /* Firefox */
+    scrollbar-width: none;
+    /* Firefox */
 }
 
 .marquee-container::-webkit-scrollbar {
-    display: none; /* Chrome/Safari */
+    display: none;
+    /* Chrome/Safari */
 }
 
 .marquee-track {
     display: flex;
     gap: 17px;
     width: max-content;
+}
+
+@keyframes slide-down {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slide-right {
+    from {
+        opacity: 0;
+        transform: translateX(-50px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes scroll {
+    0% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+}
+
+.animate-slide-down {
+    animation: slide-down 0.6s ease-out forwards;
+}
+
+.animate-slide-right {
+    animation: slide-right 0.6s ease-out forwards;
+    opacity: 0;
+}
+
+.animate-fade-in {
+    animation: fade-in 0.6s ease-out forwards;
+    opacity: 0;
+}
+
+.animate-scroll {
+    animation: scroll 1.5s ease-in-out infinite;
+}
+
+.animation-delay-100 {
+    animation-delay: 0.1s;
+}
+
+.animation-delay-200 {
+    animation-delay: 0.2s;
+}
+
+.animation-delay-300 {
+    animation-delay: 0.3s;
 }

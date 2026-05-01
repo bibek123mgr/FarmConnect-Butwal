@@ -8,7 +8,10 @@ import ProtectedRoute from "./ProtectedRoute"
 import { getUserProfile } from "./features/auth/AuthApi"
 import { useEffect } from "react"
 import { useAppDispatch } from "./hooks/hooks"
-
+import SingleProduct from "./pages/SingleProduct"
+import BackToTop from "./components/includes/BackToTop"
+import Checkout from "./pages/Checkout"
+import Orders from "./pages/Orders"
 function App() {
 
   const dispatch = useAppDispatch();
@@ -22,11 +25,15 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/products/:id" element={<SingleProduct />} />
         <Route element={<ProtectedRoute />}>
           <Route path="/cart" element={<Cart />} />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/orders" element={<Orders />} />
         </Route>
       </Routes>
       <Footer />
+      <BackToTop />
     </BrowserRouter>
   )
 }

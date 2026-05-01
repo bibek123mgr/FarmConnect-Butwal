@@ -23,31 +23,17 @@ const Login = () => {
         password: ""
     });
 
-    const { message, success, error } = useAppSelector((state: any) => state.auth);
+    const {  success, error } = useAppSelector((state: any) => state.auth);
 
     useEffect(() => {
-        if (!message) return;
-
         if (success) {
-            toast.success(message);
-
             dispatch(getUserProfile());
 
             setTimeout(() => {
                 navigate("/");
             }, 500);
         }
-
-        if (error) {
-            toast.error(message);
-        }
-
-        const timer = setTimeout(() => {
-            dispatch(clearMessage());
-        }, 2000);
-
-        return () => clearTimeout(timer);
-    }, [message, success, error, dispatch, navigate]);
+    }, [success, error, dispatch, navigate]);
 
     const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
         e.preventDefault();

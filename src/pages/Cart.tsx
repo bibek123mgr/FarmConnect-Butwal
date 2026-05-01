@@ -5,14 +5,13 @@ import {
   Trash2,
   Plus,
   Minus,
-  ArrowRight,
   CreditCard,
   Truck,
   Shield,
   Tag,
 
 } from "lucide-react";
-import { decrementCart, deleteCart, getMyCart, increnmentCart, removeAllCart } from "../features/cart/cartApi";
+import { decrementCart, deleteCart, getMyCart, increnmentCart } from "../features/cart/cartApi";
 import { useAppDispatch, useAppSelector } from "../hooks/hooks";
 import { DecreaseQuantity, IncreaseQuantity, removeFromCart } from "../features/cart/cartSlice";
 import { useEffect } from "react";
@@ -90,7 +89,7 @@ const Cart = () => {
                         />
                         <div className="flex-1">
                           <Link
-                            to={`/product/${item.id}`}
+                            to={`/products/${item.id}`}
                             className="font-medium text-gray-800 hover:text-green-600 transition"
                           >
                             {item.productName}
@@ -253,10 +252,10 @@ const Cart = () => {
                 </p>
               </div>
 
-              <button className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 rounded-lg transition mt-4 flex items-center justify-center gap-2">
+              <Link to="/checkout" className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 rounded-lg transition mt-4 flex items-center justify-center gap-2">
                 <CreditCard className="w-4 h-4" />
                 Proceed to Checkout
-              </button>
+              </Link>
 
               <div className="flex items-center justify-center gap-2 mt-4 text-xs text-gray-400">
                 <Shield className="w-3.5 h-3.5" />

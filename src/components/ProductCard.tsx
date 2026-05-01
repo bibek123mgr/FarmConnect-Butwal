@@ -2,6 +2,7 @@ import { Star, ShoppingCart, Share2, Eye, Heart } from "lucide-react";
 import type { IProduct } from "../features/product/productSlice";
 import { useAppDispatch } from "../hooks/hooks";
 import { createCart, type IAddToCart } from "../features/cart/cartApi";
+import { useNavigate } from "react-router-dom";
 interface IProductProps {
     product: IProduct;
 }
@@ -10,6 +11,7 @@ const ProductCard = ({ product }: IProductProps) => {
     const rating = 4.5;
     const reviewCount = 128;
     const dispatch = useAppDispatch();
+    const nagivate = useNavigate();
 
     const handleAddToCart = (product: IProduct) => {
         const { id, rate } = product;
@@ -21,7 +23,9 @@ const ProductCard = ({ product }: IProductProps) => {
         dispatch(createCart(payload));
     };
 
-
+    const handleNeviateToProductdetails = (productId: number) => {
+        nagivate(`/products/${productId}`);
+    }
 
     return (
         <div className="group bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-300">
@@ -43,7 +47,9 @@ const ProductCard = ({ product }: IProductProps) => {
                 <div className="absolute bottom-0 left-0 right-0 flex justify-center">
                     <div className="w-[70%] flex justify-center items-center gap-3 bg-white/80 backdrop-blur-md py-2 opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
 
-                        <button className="p-2 rounded-full hover:bg-gray-200 transition">
+                        <button className="p-2 rounded-full hover:bg-gray-200 transition" 
+                        onClick={()=>handleNeviateToProductdetails(product.id)}
+                        >
                             <Eye className="w-4 h-4 text-gray-700" />
                         </button>
 

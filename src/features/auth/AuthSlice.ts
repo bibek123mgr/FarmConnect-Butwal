@@ -1,7 +1,25 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { getUserProfile, LoginUser, LogoutUser } from "./AuthApi";
 
-const initialState = {
+interface IUser {
+    id: number;
+    name: string;
+    email: string;
+    role: string;
+    farmId: number;
+    farmName: string;
+}
+
+interface IAuthState {
+    user: IUser | null;
+    loading: boolean;
+    error: boolean;
+    message: string;
+    success: boolean;
+    isInitialized: boolean;
+}
+
+const initialState: IAuthState = {
     user: null,
     loading: false,
     error: false,
@@ -40,6 +58,7 @@ const authSlice = createSlice({
                 state.success = false;
                 state.message =
                     (action.payload as any)?.message ||
+                    (action.payload as any)?.errors?.[0]?.toString() ||
                     action.error.message ||
                     "Something went wrong";
             })
@@ -56,9 +75,11 @@ const authSlice = createSlice({
                 state.user = null;
                 state.isInitialized = true;
             })
-            .addCase(LogoutUser.fulfilled, (state) => {
+            .addCase(LogoutUser.fulfilled, (state, action) => {
                 state.user = null;
                 state.isInitialized = true;
+                state.success = true;
+                state.message = action.payload.message;
             });
     },
 });
