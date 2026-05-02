@@ -1,5 +1,4 @@
-// SingleProductPage.tsx
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
     Star,
@@ -16,17 +15,66 @@ import {
     MapPin,
     Award,
     Clock,
-    ThumbsUp,
     MessageCircle,
     Calendar,
+    Send,
+    Edit,
+    Trash,
 } from "lucide-react";
+import { useAppDispatch, useAppSelector } from "../hooks/hooks";
+import { getAllComments, createComment, deleteComment, updateComment } from "../features/comment/CommentApi";
+import { useParams } from "react-router-dom";
+import { clearMessage, deleteCommentFromState, updateCommentFromState, type IComment } from "../features/comment/CommentSlice";
+import toast from "react-hot-toast";
 
 const SingleProductPage = () => {
     const [activeTab, setActiveTab] = useState("description");
     const [selectedImage, setSelectedImage] = useState(0);
     const [quantity, setQuantity] = useState(1);
+    const [reviewRating, setReviewRating] = useState(5);
+    const [reviewComment, setReviewComment] = useState("");
+    const [hoveredRating, setHoveredRating] = useState(0);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Static product data
+    const dispatch = useAppDispatch();
+    const { id } = useParams();
+    const ProductId = Number(id);
+
+    const { comments, loading, error, success, message } = useAppSelector((state) => state.comment);
+
+    const { user } = useAppSelector((state) => state.auth);
+
+    useEffect(() => {
+        dispatch(getAllComments(ProductId));
+    }, []);
+
+    const handleDeleteReview = (commentId: number) => {
+        dispatch(deleteComment(commentId));
+        dispatch(deleteCommentFromState(commentId));
+    }
+
+    const handleEditReview = (review:IComment) => {
+        const { id, comment, rating } = review;
+        dispatch(updateComment({ id, comment, rating }));
+        dispatch(updateCommentFromState({ id, comment, rating }));
+    }
+
+    useEffect(() => {
+        if (loading) return;
+        if (success) {
+            message && toast.success(message);
+            dispatch(clearMessage());
+            setReviewComment("");
+            setReviewRating(5);
+            setIsSubmitting(false);
+        }
+        if (error) {
+            toast.error(message);
+            dispatch(clearMessage());
+            setIsSubmitting(false);
+        }
+    }, [success, dispatch, message, error, loading, ProductId]);
+
     const product = {
         id: 1,
         name: "Organic Fresh Apples - Himalayan Variety",
@@ -66,46 +114,6 @@ const SingleProductPage = () => {
         },
     };
 
-    // Reviews data
-    const reviewsList = [
-        {
-            id: 1,
-            user: "Ramesh Adhikari",
-            rating: 5,
-            date: "March 15, 2024",
-            comment: "Absolutely fresh and delicious apples! The taste is amazing and delivery was super fast. Will definitely order again.",
-            avatar: "https://randomuser.me/api/portraits/men/1.jpg",
-            helpful: 24,
-        },
-        {
-            id: 2,
-            user: "Sita Thapa",
-            rating: 4,
-            date: "March 10, 2024",
-            comment: "Good quality apples. Fresh and crispy. Slightly expensive but worth the quality.",
-            avatar: "https://randomuser.me/api/portraits/women/2.jpg",
-            helpful: 12,
-        },
-        {
-            id: 3,
-            user: "Bikash Sharma",
-            rating: 5,
-            date: "March 5, 2024",
-            comment: "Best organic apples I've ever had! The natural sweetness is just perfect. Highly recommend!",
-            avatar: "https://randomuser.me/api/portraits/men/3.jpg",
-            helpful: 18,
-        },
-        {
-            id: 4,
-            user: "Priya Gurung",
-            rating: 4,
-            date: "February 28, 2024",
-            comment: "Good product. Packaging was excellent and delivery on time.",
-            avatar: "https://randomuser.me/api/portraits/women/4.jpg",
-            helpful: 8,
-        },
-    ];
-
     const relatedProducts = [
         {
             id: 2,
@@ -141,12 +149,11 @@ const SingleProductPage = () => {
         },
     ];
 
-    // Helper function to render stars
-    const renderStars = (rating: number) => {
+    const renderStars = (rating: number, size: string = "w-4 h-4") => {
         return [...Array(5)].map((_, i) => (
             <Star
                 key={i}
-                className={`w-4 h-4 ${i < Math.floor(rating)
+                className={`${size} ${i < Math.floor(rating)
                     ? "text-yellow-400 fill-yellow-400"
                     : i < rating
                         ? "text-yellow-400 fill-yellow-400 opacity-50"
@@ -156,22 +163,36 @@ const SingleProductPage = () => {
         ));
     };
 
+    const handleSubmitReview = () => {
+        if (!user) {
+            toast.error("Please login to submit a review");
+            return;
+        }
+        if (!reviewComment.trim()) {
+            toast.error("Please write a review");
+            return;
+        }
+
+        setIsSubmitting(true);
+        const reviewData = {
+            productId: ProductId,
+            rating: reviewRating,
+            comment: reviewComment,
+        };
+
+        dispatch(createComment(reviewData));
+    };
+
     return (
         <div className="min-h-screen bg-gray-50 py-8">
             <div className="container mx-auto px-5">
                 {/* Breadcrumb */}
                 <div className="flex items-center gap-2 text-sm text-gray-500 mb-6">
-                    <Link to="/" className="hover:text-green-600 transition">
-                        Home
-                    </Link>
+                    <Link to="/" className="hover:text-green-600 transition">Home</Link>
                     <span>/</span>
-                    <Link to="/products" className="hover:text-green-600 transition">
-                        Products
-                    </Link>
+                    <Link to="/products" className="hover:text-green-600 transition">Products</Link>
                     <span>/</span>
-                    <Link to="/products/fruits" className="hover:text-green-600 transition">
-                        Fruits
-                    </Link>
+                    <Link to="/products/fruits" className="hover:text-green-600 transition">Fruits</Link>
                     <span>/</span>
                     <span className="text-gray-800 font-medium">{product.name}</span>
                 </div>
@@ -179,7 +200,6 @@ const SingleProductPage = () => {
                 <div className="flex flex-col lg:flex-row gap-8">
                     {/* Left Column - Product Images */}
                     <div className="lg:w-1/2">
-                        {/* Main Image */}
                         <div className="bg-white rounded-lg shadow-sm overflow-hidden mb-4">
                             <img
                                 src={product.images[selectedImage]}
@@ -187,8 +207,6 @@ const SingleProductPage = () => {
                                 className="w-full h-auto object-cover cursor-pointer"
                             />
                         </div>
-
-                        {/* Thumbnail Images */}
                         <div className="flex gap-3">
                             {product.images.map((img, index) => (
                                 <button
@@ -197,11 +215,7 @@ const SingleProductPage = () => {
                                     className={`w-20 h-20 rounded-lg border-2 ${selectedImage === index ? "border-green-600" : "border-gray-200"
                                         } overflow-hidden hover:border-green-600 transition`}
                                 >
-                                    <img
-                                        src={img}
-                                        alt={`Product view ${index + 1}`}
-                                        className="w-full h-full object-cover"
-                                    />
+                                    <img src={img} alt={`Product view ${index + 1}`} className="w-full h-full object-cover" />
                                 </button>
                             ))}
                         </div>
@@ -210,58 +224,35 @@ const SingleProductPage = () => {
                     {/* Right Column - Product Info */}
                     <div className="lg:w-1/2">
                         <div className="bg-white rounded-lg shadow-sm p-6">
-                            {/* Category Badge */}
                             <div className="mb-3">
                                 <span className="inline-block bg-green-100 text-green-700 text-xs font-medium px-2.5 py-1 rounded">
                                     {product.category}
                                 </span>
                             </div>
-
-                            {/* Title */}
-                            <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-3">
-                                {product.name}
-                            </h1>
-
-                            {/* Rating */}
+                            <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-3">{product.name}</h1>
                             <div className="flex items-center gap-3 mb-4">
                                 <div className="flex items-center gap-1">
                                     {renderStars(product.rating)}
-                                    <span className="text-sm font-medium text-gray-700 ml-1">
-                                        {product.rating}
-                                    </span>
+                                    <span className="text-sm font-medium text-gray-700 ml-1">{product.rating}</span>
                                 </div>
-                                <span className="text-sm text-gray-500">
-                                    ({product.reviews} reviews)
-                                </span>
+                                <span className="text-sm text-gray-500">({comments?.length || 0} reviews)</span>
                                 <div className="flex items-center gap-1 text-green-600">
                                     <Check className="w-4 h-4" />
                                     <span className="text-xs font-medium">In Stock</span>
                                 </div>
                             </div>
-
-                            {/* Price */}
                             <div className="mb-4">
                                 <div className="flex items-baseline gap-2">
-                                    <span className="text-3xl font-bold text-green-600">
-                                        ₹{product.price}
-                                    </span>
-                                    <span className="text-lg text-gray-400 line-through">
-                                        ₹{product.originalPrice}
-                                    </span>
+                                    <span className="text-3xl font-bold text-green-600">₹{product.price}</span>
+                                    <span className="text-lg text-gray-400 line-through">₹{product.originalPrice}</span>
                                     <span className="bg-red-100 text-red-600 text-sm font-semibold px-2 py-0.5 rounded">
                                         {product.discount}% OFF
                                     </span>
                                 </div>
-                                <p className="text-xs text-gray-500 mt-1">
-                                    Inclusive of all taxes • Free delivery on orders above ₹1000
-                                </p>
+                                <p className="text-xs text-gray-500 mt-1">Inclusive of all taxes • Free delivery on orders above ₹1000</p>
                             </div>
-
-                            {/* Quantity Selector */}
                             <div className="mb-4">
-                                <label className="text-sm text-gray-600 mb-2 block">
-                                    Quantity ({product.unit})
-                                </label>
+                                <label className="text-sm text-gray-600 mb-2 block">Quantity ({product.unit})</label>
                                 <div className="flex items-center gap-3">
                                     <div className="flex items-center border border-gray-200 rounded-lg">
                                         <button
@@ -270,9 +261,7 @@ const SingleProductPage = () => {
                                         >
                                             <Minus className="w-4 h-4" />
                                         </button>
-                                        <span className="w-12 text-center text-sm font-medium">
-                                            {quantity}
-                                        </span>
+                                        <span className="w-12 text-center text-sm font-medium">{quantity}</span>
                                         <button
                                             onClick={() => quantity < product.maxOrder && setQuantity(quantity + 1)}
                                             className="w-9 h-9 flex items-center justify-center border-l border-gray-200 hover:text-green-600 transition"
@@ -281,13 +270,10 @@ const SingleProductPage = () => {
                                         </button>
                                     </div>
                                     <p className="text-xs text-gray-500">
-                                        Min. order: {product.minOrder} {product.unit} | Max:{" "}
-                                        {product.maxOrder} {product.unit}
+                                        Min. order: {product.minOrder} {product.unit} | Max: {product.maxOrder} {product.unit}
                                     </p>
                                 </div>
                             </div>
-
-                            {/* Action Buttons */}
                             <div className="flex gap-3 mb-6">
                                 <button className="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-3 rounded-lg transition flex items-center justify-center gap-2">
                                     <ShoppingCart className="w-4 h-4" />
@@ -301,48 +287,36 @@ const SingleProductPage = () => {
                                     <Share2 className="w-4 h-4" />
                                 </button>
                             </div>
-
-                            {/* Delivery Info Cards */}
                             <div className="grid grid-cols-2 gap-3 mb-6">
                                 <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
                                     <Truck className="w-4 h-4 text-green-600" />
                                     <div>
-                                        <p className="text-xs font-medium text-gray-800">
-                                            Free Delivery
-                                        </p>
+                                        <p className="text-xs font-medium text-gray-800">Free Delivery</p>
                                         <p className="text-xs text-gray-500">On orders ₹1000+</p>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
                                     <Clock className="w-4 h-4 text-green-600" />
                                     <div>
-                                        <p className="text-xs font-medium text-gray-800">
-                                            Same Day Delivery
-                                        </p>
+                                        <p className="text-xs font-medium text-gray-800">Same Day Delivery</p>
                                         <p className="text-xs text-gray-500">Order before 2 PM</p>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
                                     <Shield className="w-4 h-4 text-green-600" />
                                     <div>
-                                        <p className="text-xs font-medium text-gray-800">
-                                            Fresh Guarantee
-                                        </p>
+                                        <p className="text-xs font-medium text-gray-800">Fresh Guarantee</p>
                                         <p className="text-xs text-gray-500">100% quality assured</p>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
                                     <RefreshCw className="w-4 h-4 text-green-600" />
                                     <div>
-                                        <p className="text-xs font-medium text-gray-800">
-                                            Easy Returns
-                                        </p>
+                                        <p className="text-xs font-medium text-gray-800">Easy Returns</p>
                                         <p className="text-xs text-gray-500">7 days return policy</p>
                                     </div>
                                 </div>
                             </div>
-
-                            {/* Seller Info */}
                             <div className="border-t pt-4">
                                 <div className="flex items-center justify-between mb-2">
                                     <div className="flex items-center gap-2">
@@ -350,24 +324,16 @@ const SingleProductPage = () => {
                                             <Leaf className="w-4 h-4 text-green-600" />
                                         </div>
                                         <div>
-                                            <p className="text-sm font-medium text-gray-800">
-                                                {product.seller.name}
-                                            </p>
+                                            <p className="text-sm font-medium text-gray-800">{product.seller.name}</p>
                                             <div className="flex items-center gap-1">
                                                 <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
                                                 <span className="text-xs text-gray-600">
-                                                    {product.seller.rating} · {product.seller.products}{" "}
-                                                    products
+                                                    {product.seller.rating} · {product.seller.products} products
                                                 </span>
                                             </div>
                                         </div>
                                     </div>
-                                    <Link
-                                        to="/seller/1"
-                                        className="text-xs text-green-600 hover:underline"
-                                    >
-                                        View Shop
-                                    </Link>
+                                    <Link to="/seller/1" className="text-xs text-green-600 hover:underline">View Shop</Link>
                                 </div>
                                 <div className="flex items-center gap-2 text-xs text-gray-500">
                                     <MapPin className="w-3 h-3" />
@@ -384,7 +350,6 @@ const SingleProductPage = () => {
                 {/* Product Details Tabs Section */}
                 <div className="mt-8">
                     <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-                        {/* Tab Headers */}
                         <div className="flex border-b border-gray-200">
                             <button
                                 onClick={() => setActiveTab("description")}
@@ -402,104 +367,158 @@ const SingleProductPage = () => {
                                     : "text-gray-500 hover:text-gray-700"
                                     }`}
                             >
-                                Reviews ({product.reviews})
+                                Reviews ({comments?.length || 0})
                             </button>
                         </div>
 
-                        {/* Tab Content - Description */}
                         {activeTab === "description" && (
                             <div className="p-6">
-                                <h3 className="text-lg font-semibold text-gray-800 mb-3">
-                                    Product Description
-                                </h3>
-                                <p className="text-gray-600 leading-relaxed">
-                                    {product.description}
-                                </p>
-                                <h3 className="text-lg font-semibold text-gray-800 mt-6 mb-3">
-                                    Product Features
-                                </h3>
+                                <h3 className="text-lg font-semibold text-gray-800 mb-3">Product Description</h3>
+                                <p className="text-gray-600 leading-relaxed">{product.description}</p>
+                                <h3 className="text-lg font-semibold text-gray-800 mt-6 mb-3">Product Features</h3>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
                                     {product.features.map((feature, idx) => (
-                                        <div
-                                            key={idx}
-                                            className="flex items-center gap-2 text-sm text-gray-600"
-                                        >
+                                        <div key={idx} className="flex items-center gap-2 text-sm text-gray-600">
                                             <Check className="w-4 h-4 text-green-600" />
                                             {feature}
                                         </div>
                                     ))}
                                 </div>
-
                             </div>
                         )}
 
-                        {/* Tab Content - Reviews */}
                         {activeTab === "reviews" && (
                             <div className="p-6">
                                 {/* Rating Summary */}
-                                <div className="flex items-center gap-8 mb-6 pb-6 border-b">
-                                    <div className="text-center">
-                                        <div className="text-4xl font-bold text-gray-800">
-                                            {product.rating}
+                                <div className="flex items-center justify-between flex-wrap gap-4 mb-6 pb-6 border-b">
+                                    <div className="flex items-center gap-8">
+                                        <div className="text-center">
+                                            <div className="text-4xl font-bold text-gray-800">{product.rating}</div>
+                                            <div className="flex items-center gap-1 mt-1">{renderStars(product.rating)}</div>
+                                            <div className="text-sm text-gray-500 mt-1">Based on {comments?.length || 0} reviews</div>
                                         </div>
-                                        <div className="flex items-center gap-1 mt-1">
-                                            {renderStars(product.rating)}
-                                        </div>
-                                        <div className="text-sm text-gray-500 mt-1">
-                                            Based on {product.reviews} reviews
-                                        </div>
-                                    </div>
-                                    <div className="flex-1">
-                                        <button className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2">
-                                            <MessageCircle className="w-4 h-4" />
-                                            Write a Review
-                                        </button>
                                     </div>
                                 </div>
 
-                                {/* Reviews List */}
-                                <div className="space-y-6">
-                                    {reviewsList.map((review) => (
-                                        <div key={review.id} className="pb-6 border-b last:border-b-0">
-                                            <div className="flex items-start gap-3">
-                                                <img
-                                                    src={review.avatar}
-                                                    alt={review.user}
-                                                    className="w-10 h-10 rounded-full object-cover"
-                                                />
-                                                <div className="flex-1">
-                                                    <div className="flex items-center justify-between mb-1">
-                                                        <div>
-                                                            <h4 className="font-medium text-gray-800">
-                                                                {review.user}
-                                                            </h4>
-                                                            <div className="flex items-center gap-1 mt-1">
-                                                                {renderStars(review.rating)}
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex items-center gap-1 text-xs text-gray-400">
-                                                            <Calendar className="w-3 h-3" />
-                                                            {review.date}
-                                                        </div>
-                                                    </div>
-                                                    <p className="text-gray-600 text-sm mt-2">
-                                                        {review.comment}
-                                                    </p>
-                                                    <button className="flex items-center gap-1 mt-3 text-xs text-gray-500 hover:text-green-600 transition">
-                                                        <ThumbsUp className="w-3.5 h-3.5" />
-                                                        Helpful ({review.helpful})
+                                {user ? (
+                                    <div className="mb-8 p-4 bg-gray-50 rounded-lg">
+                                        <h3 className="font-semibold text-gray-800 mb-3">Write a Review</h3>
+                                        <div className="mb-3">
+                                            <label className="block text-sm text-gray-600 mb-2">Your Rating</label>
+                                            <div className="flex items-center gap-1">
+                                                {[1, 2, 3, 4, 5].map((star) => (
+                                                    <button
+                                                        key={star}
+                                                        onClick={() => setReviewRating(star)}
+                                                        onMouseEnter={() => setHoveredRating(star)}
+                                                        onMouseLeave={() => setHoveredRating(0)}
+                                                        className="focus:outline-none"
+                                                    >
+                                                        <Star
+                                                            className={`w-6 h-6 transition ${(hoveredRating || reviewRating) >= star
+                                                                ? "text-yellow-400 fill-yellow-400"
+                                                                : "text-gray-300"
+                                                                }`}
+                                                        />
                                                     </button>
-                                                </div>
+                                                ))}
                                             </div>
                                         </div>
-                                    ))}
-                                </div>
+                                        <div className="mb-3">
+                                            <label className="block text-sm text-gray-600 mb-2">Your Review</label>
+                                            <textarea
+                                                value={reviewComment}
+                                                onChange={(e) => setReviewComment(e.target.value)}
+                                                rows={3}
+                                                placeholder="Share your experience with this product..."
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
+                                            />
+                                        </div>
+                                        <button
+                                            onClick={handleSubmitReview}
+                                            disabled={isSubmitting}
+                                            className="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 disabled:opacity-70"
+                                        >
+                                            {isSubmitting ? (
+                                                <>
+                                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                                    Submitting...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Send className="w-4 h-4" />
+                                                    Submit Review
+                                                </>
+                                            )}
+                                        </button>
+                                    </div>
+                                )
 
-                                {/* Load More Button */}
-                                <div className="text-center mt-6">
-                                    <button className="text-green-600 hover:text-green-700 text-sm font-medium">
-                                        Load More Reviews →
-                                    </button>
+                                    : (
+                                        <div className="mb-8 p-4 bg-gray-50 rounded-lg text-center">
+                                            <p className="text-gray-600">
+                                                Please <Link to="/login" className="text-green-600 hover:underline">login</Link> to write a review
+                                            </p>
+                                        </div>
+                                    )}
+
+
+                                <div className="space-y-6">
+                                    {loading ? (
+                                        <div className="text-center py-8">
+                                            <div className="inline-block w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full animate-spin"></div>
+                                            <p className="text-gray-500 mt-2">Loading reviews...</p>
+                                        </div>
+                                    ) : comments?.length === 0 ? (
+                                        <div className="text-center py-8">
+                                            <MessageCircle className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                                            <p className="text-gray-500">No reviews yet. Be the first to review this product!</p>
+                                        </div>
+                                    ) : (
+                                        comments?.map((review) => (
+                                            <div key={review.id} className="pb-6 border-b last:border-b-0">
+                                                <div className="flex items-start gap-3">
+                                                    <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                                                        <span className="text-green-600 font-semibold">
+                                                            {review.createdByName?.charAt(0).toUpperCase()}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <div className="flex items-center justify-between flex-wrap gap-2 mb-1">
+                                                            <div>
+                                                                <h4 className="font-medium text-gray-800">{review.createdByName}</h4>
+                                                                <div className="flex items-center gap-1 mt-1">
+                                                                    {renderStars(review.rating, "w-3.5 h-3.5")}
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="">
+                                                                <div className="flex items-center gap-2 mb-2">
+                                                                    <button
+                                                                        onClick={() => handleDeleteReview(review.id)}
+                                                                        className="text-xs text-red-600 hover:underline"
+                                                                    >
+                                                                        <Trash className="w-4 h-4" />
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => handleEditReview(review)}
+                                                                        className="text-xs text-green-600 hover:underline"
+                                                                    >
+                                                                        <Edit className="w-4 h-4" />
+                                                                    </button>
+                                                                </div>
+                                                                <div className="flex text-xs text-gray-400 gap-2">
+                                                                    <Calendar className="w-4 h-4" />
+                                                                    {new Date(review.createdAt).toLocaleDateString()}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <p className="text-gray-600 text-sm mt-2">{review.comment}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
                                 </div>
                             </div>
                         )}
@@ -509,30 +528,14 @@ const SingleProductPage = () => {
                 {/* Related Products Section */}
                 <div className="mt-8">
                     <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-xl font-semibold text-gray-800">
-                            You May Also Like
-                        </h3>
-                        <Link
-                            to="/products"
-                            className="text-sm text-green-600 hover:underline"
-                        >
-                            View All
-                        </Link>
+                        <h3 className="text-xl font-semibold text-gray-800">You May Also Like</h3>
+                        <Link to="/products" className="text-sm text-green-600 hover:underline">View All</Link>
                     </div>
-
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                         {relatedProducts.map((item) => (
-                            <Link
-                                key={item.id}
-                                to={`/product/${item.id}`}
-                                className="bg-white rounded-lg shadow-sm hover:shadow-md transition overflow-hidden group"
-                            >
+                            <Link key={item.id} to={`/product/${item.id}`} className="bg-white rounded-lg shadow-sm hover:shadow-md transition overflow-hidden group">
                                 <div className="relative">
-                                    <img
-                                        src={item.image}
-                                        alt={item.name}
-                                        className="w-full h-40 object-cover group-hover:scale-105 transition duration-300"
-                                    />
+                                    <img src={item.image} alt={item.name} className="w-full h-40 object-cover group-hover:scale-105 transition duration-300" />
                                     <button className="absolute top-2 right-2 bg-white rounded-full p-1.5 shadow-sm hover:bg-green-600 hover:text-white transition">
                                         <ShoppingCart className="w-3.5 h-3.5" />
                                     </button>
@@ -547,16 +550,10 @@ const SingleProductPage = () => {
                                         <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
                                         <span className="text-xs text-gray-600">{item.rating}</span>
                                     </div>
-                                    <h4 className="font-medium text-gray-800 text-sm truncate">
-                                        {item.name}
-                                    </h4>
+                                    <h4 className="font-medium text-gray-800 text-sm truncate">{item.name}</h4>
                                     <div className="flex items-center gap-2 mt-1">
-                                        <span className="font-semibold text-gray-800 text-sm">
-                                            ₹{item.price}
-                                        </span>
-                                        <span className="text-xs text-gray-400 line-through">
-                                            ₹{item.originalPrice}
-                                        </span>
+                                        <span className="font-semibold text-gray-800 text-sm">₹{item.price}</span>
+                                        <span className="text-xs text-gray-400 line-through">₹{item.originalPrice}</span>
                                     </div>
                                 </div>
                             </Link>
