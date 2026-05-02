@@ -493,7 +493,7 @@ const SingleProductPage = () => {
                                                             </div>
 
                                                             <div className="">
-                                                                <div className="flex items-center gap-2 mb-2">
+                                                                {user && user.id === review.createdBy && <div className="flex items-center gap-2 mb-2">
                                                                     <button
                                                                         onClick={() => handleDeleteReview(review.id)}
                                                                         className="text-xs text-red-600 hover:underline"
@@ -506,7 +506,8 @@ const SingleProductPage = () => {
                                                                     >
                                                                         <Edit className="w-4 h-4" />
                                                                     </button>
-                                                                </div>
+                                                                </div> }
+                                                                
                                                                 <div className="flex text-xs text-gray-400 gap-2">
                                                                     <Calendar className="w-4 h-4" />
                                                                     {new Date(review.createdAt).toLocaleDateString()}
