@@ -12,6 +12,7 @@ import SingleProduct from "./pages/SingleProduct"
 import BackToTop from "./components/includes/BackToTop"
 import Checkout from "./pages/Checkout"
 import Orders from "./pages/Orders"
+import ProductsPage from "./pages/ProductPage"
 function App() {
 
   const dispatch = useAppDispatch();
@@ -26,6 +27,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/products/:id" element={<SingleProduct />} />
+        <Route path="/products" element={<ProductsPage />} />
         <Route element={<ProtectedRoute />}>
           <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<Checkout />} />

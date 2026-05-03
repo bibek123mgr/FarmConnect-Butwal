@@ -22,9 +22,11 @@ const initialValues={
     error: false,
     message: "",
     product: {} as IProduct,
+    totalProducts: 0,
+    totalPages: 0,
     pagination:{
         page: 1,
-        limit: 10,
+        limit: 20,
         total: 0
     },
     searchFilters:{

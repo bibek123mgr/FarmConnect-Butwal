@@ -1,6 +1,5 @@
 import CategorySection from '../components/CategorySection';
 import HeroSection from '../components/HeroSection';
-import Newsletter from '../components/NewsLetter';
 import ProductSection from '../components/ProductSection';
 
 const Home = () => {
@@ -10,7 +9,7 @@ const Home = () => {
             <div className="container mx-auto px-5">
                 <CategorySection />
                 <ProductSection />
-w            </div>
+            </div>
 
         </div>
     );

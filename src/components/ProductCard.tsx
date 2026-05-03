@@ -28,7 +28,9 @@ const ProductCard = ({ product }: IProductProps) => {
     }
 
     return (
-        <div className="group bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-300">
+        <div className="group bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-300 cursor-pointer"
+         onClick={() => handleNeviateToProductdetails(product.id)}
+        >
 
             <div className="relative aspect-square bg-gray-50 p-4 overflow-hidden">
 
@@ -47,8 +49,8 @@ const ProductCard = ({ product }: IProductProps) => {
                 <div className="absolute bottom-0 left-0 right-0 flex justify-center">
                     <div className="w-[70%] flex justify-center items-center gap-3 bg-white/80 backdrop-blur-md py-2 opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
 
-                        <button className="p-2 rounded-full hover:bg-gray-200 transition" 
-                        onClick={()=>handleNeviateToProductdetails(product.id)}
+                        <button className="p-2 rounded-full hover:bg-gray-200 transition"
+                            onClick={() => handleNeviateToProductdetails(product.id)}
                         >
                             <Eye className="w-4 h-4 text-gray-700" />
                         </button>
@@ -60,7 +62,10 @@ const ProductCard = ({ product }: IProductProps) => {
                         </button>
 
                         <button className="p-2 rounded-full hover:bg-green-100 transition"
-                            onClick={() => handleAddToCart(product)}>
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleAddToCart(product)
+                            }}>
                             <ShoppingCart className="w-4 h-4 text-gray-700 hover:text-green-600" />
                         </button>
 

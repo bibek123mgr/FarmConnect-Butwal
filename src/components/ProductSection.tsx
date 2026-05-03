@@ -5,12 +5,21 @@ import { useAppDispatch, useAppSelector } from "../hooks/hooks";
 import toast from "react-hot-toast";
 import { clearMessage } from "../features/cart/cartSlice";
 import ProductCardSkeleton from "./ProductCardSkleton";
+import { Link } from "react-router-dom";
+import { ArrowBigRight, ArrowRight } from "lucide-react";
 
 const ProductSection = () => {
   const dispatch = useAppDispatch();
   const { products: ProductList, loading: productLoading } = useAppSelector((state) => state.product);
   useEffect(() => {
-    dispatch(fetchProducts());
+    dispatch(fetchProducts({
+      page: 1,
+      limit: 20,
+      productname: "all",
+      category: "all",
+      pricerangeFrom: 0,
+      pricerangeTo: "max"
+    }));
   }, [dispatch])
 
   const { loading, success, error, message } = useAppSelector(
@@ -68,6 +77,13 @@ const ProductSection = () => {
               <ProductCard key={product.id} product={product} />
             ))}
       </div>
+        <Link
+          to="/products?page=1&limit=20&productname=all&category=all&pricerangeFrom=0&pricerangeTo=max"
+          className="group relative overflow-hidden bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-8 py-3.5 rounded-md font-semibold transition-all duration-300 shadow-lg hover:shadow-2xl flex items-center gap-2 mt-4 max-w-fit mx-auto"
+        >
+          <span>See all products</span>
+         <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
+        </Link>
     </div>
   );
 }

@@ -493,7 +493,7 @@ const SingleProductPage = () => {
                                                             </div>
 
                                                             <div className="">
-                                                                {user && user.id === review.createdBy && <div className="flex items-center gap-2 mb-2">
+                                                                {user && Number(user.id) === Number(review.createdBy) && <div className="flex items-center gap-2 mb-2">
                                                                     <button
                                                                         onClick={() => handleDeleteReview(review.id)}
                                                                         className="text-xs text-red-600 hover:underline"
