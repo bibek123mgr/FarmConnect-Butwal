@@ -2,6 +2,12 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 import type { LoginPayload } from "../../pages/Login";
 import { axiosInstance } from "../../lib/axiosInstance";
 
+export interface IRegisterPayload {
+    name: string;
+    email: string;
+    password: string;
+}
+
 export const LoginUser = createAsyncThunk(
     "auth/login",
     async (payload: LoginPayload, { rejectWithValue }) => {
@@ -17,7 +23,7 @@ export const LoginUser = createAsyncThunk(
 
 export const RegisterUser = createAsyncThunk(
     "auth/register",
-    async (payload, { rejectWithValue }) => {
+    async (payload:IRegisterPayload, { rejectWithValue }) => {
         try {
             const { data } = await axiosInstance.post(`auth/register`, payload);
             return data;

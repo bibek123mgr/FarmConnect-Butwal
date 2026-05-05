@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { getUserProfile, LoginUser, LogoutUser } from "./AuthApi";
+import { getUserProfile, LoginUser, LogoutUser, RegisterUser } from "./AuthApi";
 
 interface IUser {
     id: number;
@@ -80,6 +80,27 @@ const authSlice = createSlice({
                 state.isInitialized = true;
                 state.success = true;
                 state.message = action.payload.message;
+            })
+            .addCase(RegisterUser.pending, (state) => {
+                state.loading = true;
+                state.error = false;
+                state.success = false;
+                state.message = "";
+            })
+            .addCase(RegisterUser.fulfilled, (state, action) => {
+                state.loading = false;
+                state.success = true;
+                state.message = action.payload.message;
+            })
+            .addCase(RegisterUser.rejected, (state, action) => {
+                state.loading = false;
+                state.error = true;
+                state.success = false;
+                state.message =
+                    (action.payload as any)?.message ||
+                    (action.payload as any)?.errors?.[0]?.toString() ||
+                    action.error.message ||
+                    "Something went wrong";
             });
     },
 });
