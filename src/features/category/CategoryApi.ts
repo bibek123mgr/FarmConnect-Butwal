@@ -46,7 +46,7 @@ export const updateCategory = createAsyncThunk(
 
 export const deleteCategory = createAsyncThunk(
     "categories/deleteCategory",
-    async (id, { rejectWithValue }) => {
+    async (id:number, { rejectWithValue }) => {
         try {
             const { data } = await axiosInstanceNoCredentials.delete(`categories/${id}`);
             return data;
