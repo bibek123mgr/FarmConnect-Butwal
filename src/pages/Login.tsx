@@ -23,15 +23,25 @@ const Login = () => {
         password: ""
     });
 
-    const {  success, error } = useAppSelector((state: any) => state.auth);
+    const { success, error } = useAppSelector((state: any) => state.auth);
 
     useEffect(() => {
         if (success) {
-            dispatch(getUserProfile());
+            dispatch(getUserProfile())
+                .unwrap()
+                .then((res) => {
+                    console.log(res.user.role);
+                    const user = res.user;
 
-            setTimeout(() => {
-                navigate("/");
-            }, 500);
+                    if (user.role === "superadmin") {
+                        navigate("/admin/dashboard");
+                        return;
+                    }
+                    navigate("/");
+                })
+                .catch((err) => {
+                    console.error(err);
+                });
         }
     }, [success, error, dispatch, navigate]);
 
