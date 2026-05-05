@@ -5,7 +5,8 @@ import { fetchCategories } from "./CategoryApi";
 export interface ICategory {
     id: number
     name: string,
-    image: string
+    image: string,
+    description: string
 }
 const initialState={
     categories: [] as ICategory[],
@@ -13,6 +14,12 @@ const initialState={
     success: false,
     error: false,
     message: "",
+    pagination:{
+        page: 1,
+        limit: 20,
+        total: 0,
+        totalPages: 0
+    }
 }
 
 const categorySlice = createSlice({

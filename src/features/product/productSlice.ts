@@ -12,7 +12,7 @@ export interface IProduct {
   categoryId: number;
   farmName: string;
   categoryName: string;
-  quantity: string;
+  quantity: number;
 }
 
 const initialValues={
