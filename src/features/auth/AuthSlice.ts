@@ -12,20 +12,34 @@ interface IUser {
 
 interface IAuthState {
     user: IUser | null;
+    users: any;
     loading: boolean;
     error: boolean;
     message: string;
     success: boolean;
     isInitialized: boolean;
+    pagination: {
+        page: number;
+        limit: number;
+        total: number;
+        totalPages: number;
+    }
 }
 
 const initialState: IAuthState = {
     user: null,
+    users: [] ,
     loading: false,
     error: false,
     message: "",
     success: false,
     isInitialized: false,
+    pagination: {
+        page: 1,
+        limit: 20,
+        total: 0,
+        totalPages: 0
+    }
 };
 
 const authSlice = createSlice({
