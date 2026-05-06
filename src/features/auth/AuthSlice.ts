@@ -1,13 +1,14 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { getUserProfile, LoginUser, LogoutUser, RegisterUser } from "./AuthApi";
 
-interface IUser {
+export interface IUser {
     id: number;
     name: string;
     email: string;
     role: string;
     farmId: number;
     farmName: string;
+    createdAt: string;
 }
 
 interface IAuthState {
