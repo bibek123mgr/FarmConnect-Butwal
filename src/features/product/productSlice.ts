@@ -13,6 +13,7 @@ export interface IProduct {
   farmName: string;
   categoryName: string;
   quantity: number;
+  image: string;
 }
 
 const initialValues={

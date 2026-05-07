@@ -1,5 +1,6 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { axiosInstanceNoCredentials } from "../../lib/axiosInstance";
+import { axiosInstance, axiosInstanceNoCredentials } from "../../lib/axiosInstance";
+import type { AnyActionArg } from "react";
 
 interface IProductFilter {
     productname: string;
@@ -8,6 +9,17 @@ interface IProductFilter {
     pricerangeTo: number | string;
     page: number;
     limit: number;
+}
+
+interface IProductCreate{
+    name: string;
+    description: string;
+    unit: string;
+    rate: number;
+    quantity: number;
+    categoryId: number;
+    image: string;
+    id?: number
 }
 
 export const fetchProducts = createAsyncThunk(
@@ -28,7 +40,7 @@ export const createProduct = createAsyncThunk(
     "products/createProduct",
     async (payload: any, { rejectWithValue }) => {
         try {
-            const { data } = await axiosInstanceNoCredentials.post(`products`, payload);
+            const { data } = await axiosInstance.post(`products`, payload);
             return data;
         } catch (error: any) {
             return rejectWithValue(

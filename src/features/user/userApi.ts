@@ -14,3 +14,17 @@ export const getAllUsers=createAsyncThunk(
         }
     }
 )
+
+export const getDashboardStatic=createAsyncThunk(
+    "user/getDashboardStatic",
+    async (_, { rejectWithValue }) => {
+        try {
+            const { data } = await axiosInstance.get(`get-dashboard-static`);
+            return data;
+        } catch (error: any) {
+            return rejectWithValue(
+                error.response?.data || "Something went wrong"
+            );
+        }
+    }
+)

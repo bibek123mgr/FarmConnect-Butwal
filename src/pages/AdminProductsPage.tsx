@@ -1,4 +1,3 @@
-// AdminProductsPage.tsx
 import { useEffect, useState, useRef } from "react";
 import { useAppDispatch, useAppSelector } from "../hooks/hooks";
 import {
@@ -16,8 +15,6 @@ import {
   TrendingDown,
   AlertTriangle,
   Upload,
-  Filter,
-  ChevronDown,
   RefreshCw,
 } from "lucide-react";
 import toast from "react-hot-toast";
@@ -33,7 +30,7 @@ interface ProductFormData {
   openingStock: number;
   unit: string;
   description: string;
-  images: string[];
+  image?: File | string;
 }
 
 const AdminProductsPage = () => {
@@ -41,7 +38,6 @@ const AdminProductsPage = () => {
   const { products, loading, pagination } = useAppSelector((state) => state.product);
   const { categories } = useAppSelector((state) => state.category);
   
-  // Filter states
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [limit, setLimit] = useState(10);
@@ -50,7 +46,6 @@ const AdminProductsPage = () => {
   const [sortBy, setSortBy] = useState<string>("name");
   const [sortOrder, setSortOrder] = useState<string>("asc");
   
-  // Local filter states (for form inputs before search)
   const [localSearchTerm, setLocalSearchTerm] = useState("");
   const [localSelectedCategory, setLocalSelectedCategory] = useState<string>("all");
   const [localStockStatus, setLocalStockStatus] = useState<string>("all");
@@ -65,9 +60,10 @@ const AdminProductsPage = () => {
     openingStock: 0,
     unit: "kg",
     description: "",
-    images: [],
+    image: undefined,
   });
-  const [previewImages, setPreviewImages] = useState<string[]>([]);
+  const [previewImage, setPreviewImage] = useState<string>("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -79,7 +75,6 @@ const AdminProductsPage = () => {
     activeProducts: 0,
   });
 
-  // Function to fetch products with current filters
   const fetchProductsWithFilters = () => {
     const filters: any = {
       page: currentPage,
@@ -102,7 +97,6 @@ const AdminProductsPage = () => {
     dispatch(fetchProducts(filters));
   };
 
-  // Handle search button click
   const handleSearch = () => {
     setSearchTerm(localSearchTerm);
     setSelectedCategory(localSelectedCategory);
@@ -112,7 +106,6 @@ const AdminProductsPage = () => {
     setCurrentPage(1);
   };
 
-  // Handle clear filters
   const clearFilters = () => {
     setLocalSearchTerm("");
     setLocalSelectedCategory("all");
@@ -128,17 +121,14 @@ const AdminProductsPage = () => {
     setCurrentPage(1);
   };
 
-  // Fetch products when search params, page, or limit changes
   useEffect(() => {
     fetchProductsWithFilters();
   }, [dispatch, currentPage, limit, searchTerm, selectedCategory, stockStatus, sortBy, sortOrder]);
 
-  // Fetch categories on mount
   useEffect(() => {
     dispatch(fetchCategories());
   }, [dispatch]);
 
-  // Update stats when products change
   useEffect(() => {
     if (products) {
       const totalProducts = products.length;
@@ -166,9 +156,10 @@ const AdminProductsPage = () => {
       openingStock: product.quantity || 0,
       unit: product.unit || "kg",
       description: product.description || "",
-      images: product.images || [],
+      image: product.image || "",
     });
-    setPreviewImages(product.images || []);
+    setPreviewImage(product.image || "");
+    setSelectedFile(null);
   };
 
   const handleCancelEdit = () => {
@@ -180,30 +171,48 @@ const AdminProductsPage = () => {
       openingStock: 0,
       unit: "kg",
       description: "",
-      images: [],
+      image: undefined,
     });
-    setPreviewImages([]);
+    setPreviewImage("");
+    setSelectedFile(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    const newImages = files.map((file) => URL.createObjectURL(file));
-    setPreviewImages([...previewImages, ...newImages]);
-    setFormData({
-      ...formData,
-      images: [...formData.images, ...newImages],
-    });
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        toast.error("Please upload an image file");
+        return;
+      }
+      
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("Image size should be less than 5MB");
+        return;
+      }
+      
+      setSelectedFile(file);
+      const imageUrl = URL.createObjectURL(file);
+      setPreviewImage(imageUrl);
+      setFormData({
+        ...formData,
+        image: file,
+      });
+    }
   };
 
-  const handleRemoveImage = (index: number) => {
-    setPreviewImages(previewImages.filter((_, i) => i !== index));
+  const handleRemoveImage = () => {
+    setPreviewImage("");
+    setSelectedFile(null);
     setFormData({
       ...formData,
-      images: formData.images.filter((_, i) => i !== index),
+      image: undefined,
     });
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -230,40 +239,51 @@ const AdminProductsPage = () => {
 
     setIsSubmitting(true);
 
-    const productData = {
-      name: formData.name,
-      price: formData.price,
-      categoryId: parseInt(formData.categoryId as string),
-      stock: formData.openingStock,
-      unit: formData.unit,
-      description: formData.description,
-      images: previewImages.length > 0 ? previewImages : ["https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=500"],
-    };
-
-    if (editingProduct) {
-      await dispatch(updateProduct({ id: editingProduct.id, ...productData }));
-      toast.success("Product updated successfully");
-      handleCancelEdit();
-    } else {
-      await dispatch(createProduct(productData));
-      toast.success("Product created successfully");
-      setFormData({
-        name: "",
-        price: 0,
-        categoryId: "",
-        openingStock: 0,
-        unit: "kg",
-        description: "",
-        images: [],
-      });
-      setPreviewImages([]);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
+    const formDataToSend = new FormData();
+    
+    formDataToSend.append("name", formData.name);
+    formDataToSend.append("rate", formData.price.toString());
+    formDataToSend.append("categoryId", formData.categoryId.toString());
+    formDataToSend.append("quantity", formData.openingStock.toString());
+    formDataToSend.append("unit", formData.unit);
+    formDataToSend.append("description", formData.description || "");
+    
+    if (selectedFile) {
+      formDataToSend.append("image", selectedFile);
     }
 
-    setIsSubmitting(false);
-    fetchProductsWithFilters();
+    try {
+      if (editingProduct && editingProduct.id) {
+        formDataToSend.append("id", editingProduct.id.toString());
+        await dispatch(updateProduct(formDataToSend));
+        toast.success("Product updated successfully");
+        handleCancelEdit();
+      } else {
+        await dispatch(createProduct(formDataToSend));
+        toast.success("Product created successfully");
+        setFormData({
+          name: "",
+          price: 0,
+          categoryId: "",
+          openingStock: 0,
+          unit: "kg",
+          description: "",
+          image: undefined,
+        });
+        setPreviewImage("");
+        setSelectedFile(null);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+      }
+      
+      fetchProductsWithFilters();
+    } catch (error) {
+      toast.error("Something went wrong. Please try again.");
+      console.error("Error submitting product:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleDelete = async (productId: number) => {
@@ -274,7 +294,7 @@ const AdminProductsPage = () => {
     }
   };
 
-  const totalPages = pagination?.total || pagination?.total || 1;
+  const totalPages = pagination?.total || 1;
   const totalProducts = pagination?.total || 0;
 
   const goToPage = (page: number) => {
@@ -324,7 +344,6 @@ const AdminProductsPage = () => {
           <p className="text-gray-500 mt-1">Manage your store products inventory</p>
         </div>
 
-        {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
           <div className="bg-white rounded-2xl p-4 shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100">
             <div className="flex items-center justify-between">
@@ -388,7 +407,6 @@ const AdminProductsPage = () => {
         </div>
 
         <div className="flex flex-col lg:flex-row gap-6">
-          {/* Product Form Sidebar */}
           <div className="lg:w-[450px] flex-shrink-0">
             <div className="bg-white rounded-2xl shadow-lg sticky top-24 overflow-hidden border border-gray-100">
               <form onSubmit={handleSubmit} className="p-5 space-y-4">
@@ -492,7 +510,7 @@ const AdminProductsPage = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Product Images</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Product Image</label>
                   <div
                     onClick={() => fileInputRef.current?.click()}
                     className="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center cursor-pointer hover:border-green-500 transition-all duration-300 bg-gray-50 hover:bg-green-50"
@@ -500,34 +518,29 @@ const AdminProductsPage = () => {
                     <input
                       ref={fileInputRef}
                       type="file"
-                      multiple
                       accept="image/*"
                       onChange={handleImageUpload}
                       className="hidden"
                     />
                     <Upload className="w-8 h-8 text-gray-400 mx-auto mb-1" />
-                    <p className="text-xs text-gray-500">Click to upload images</p>
+                    <p className="text-xs text-gray-500">Click to upload image</p>
                     <p className="text-xs text-gray-400 mt-1">PNG, JPG up to 5MB</p>
                   </div>
 
-                  {previewImages.length > 0 && (
-                    <div className="grid grid-cols-4 gap-2 mt-3">
-                      {previewImages.map((img, idx) => (
-                        <div key={idx} className="relative group">
-                          <img
-                            src={img}
-                            alt={`Preview ${idx + 1}`}
-                            className="w-full h-16 object-cover rounded-lg border border-gray-200"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveImage(idx)}
-                            className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </div>
-                      ))}
+                  {previewImage && (
+                    <div className="mt-3 relative group">
+                      <img
+                        src={previewImage}
+                        alt="Product preview"
+                        className="w-full h-32 object-cover rounded-lg border border-gray-200"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleRemoveImage}
+                        className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition shadow-lg"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
                     </div>
                   )}
                 </div>
@@ -566,12 +579,9 @@ const AdminProductsPage = () => {
             </div>
           </div>
 
-          {/* Products List Section */}
           <div className="flex-1">
-            {/* Search and Filter Bar - Always Visible */}
             <div className="bg-white rounded-xl shadow-sm p-4 mb-4">
               <div className="flex flex-col gap-4">
-                {/* Search Input and Buttons Row */}
                 <div className="flex gap-3">
                   <div className="flex-1 relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -605,7 +615,6 @@ const AdminProductsPage = () => {
                   )}
                 </div>
 
-                {/* Filter Row - Always Visible */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-3 border-t border-gray-100">
                   <div>
                     <label className="block text-xs text-gray-500 mb-1">Category</label>
@@ -662,7 +671,6 @@ const AdminProductsPage = () => {
                   </div>
                 </div>
 
-                {/* Active Filters Display */}
                 {hasActiveFilters && (
                   <div className="flex flex-wrap gap-2 pt-2">
                     {searchTerm && (
@@ -706,7 +714,6 @@ const AdminProductsPage = () => {
               </div>
             </div>
 
-            {/* Products Table */}
             <div className="bg-white rounded-xl shadow-sm overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full">
@@ -790,7 +797,6 @@ const AdminProductsPage = () => {
                 </table>
               </div>
 
-              {/* Pagination */}
               <div className="flex flex-col sm:flex-row justify-between items-center gap-4 py-4 px-4 border-t border-gray-100">
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   <span>Show</span>
