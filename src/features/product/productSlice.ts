@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { fetchProducts } from "./productApi";
+import { fetchProducts, fetchProductsForAdmin, updateProduct } from "./productApi";
 
 
 export interface IProduct {
@@ -16,8 +16,13 @@ export interface IProduct {
   image: string;
 }
 
+export interface IProductAdmin extends IProduct {
+    OpeningStock: number;
+}
+
 const initialValues={
     products: [] as IProduct[],
+    productsAdmin: [] as IProductAdmin[],
     loading: false,
     success: false,
     error: false,
@@ -35,6 +40,13 @@ const initialValues={
         category: "",
         minPrice: 0,
         maxPrice: 0
+    },
+    adminProductPagination: {
+        page: 1,
+        limit: 20,
+        total: 0,
+        totalPages: 0,
+        totalProducts: 0
     }
 }
 
@@ -83,6 +95,44 @@ const productSlice = createSlice({
                 state.pagination = action.payload.pagination;
             })
             .addCase(fetchProducts.rejected, (state, action) => {
+                state.loading = false;
+                state.error = true;
+                state.success = false;
+                state.message = action.error.message || "Something went wrong";
+            })
+              .addCase(fetchProductsForAdmin.pending, (state) => {
+                state.loading = true;
+                state.error = false;
+                state.success = false;
+                state.message = "";
+            })
+            .addCase(fetchProductsForAdmin.fulfilled, (state, action) => {
+                state.loading = false;
+                state.success = true;
+                state.productsAdmin = action.payload.data.products;
+                state.adminProductPagination.total = action.payload.data.productsCount;
+                state.adminProductPagination.totalPages = action.payload.data.totalPages;
+                state.adminProductPagination.totalProducts = action.payload.data.totalProducts;
+
+            })
+            .addCase(fetchProductsForAdmin.rejected, (state, action) => {
+                state.loading = false;
+                state.error = true;
+                state.success = false;
+                state.message = action.error.message || "Something went wrong";
+            })
+            .addCase(updateProduct.pending, (state) => {
+                state.loading = true;
+                state.error = false;
+                state.success = false;
+                state.message = "";
+            })
+            .addCase(updateProduct.fulfilled, (state, action) => {
+                state.loading = false;
+                state.success = true;
+                state.message = action.payload.message;
+            })
+            .addCase(updateProduct.rejected, (state, action) => {
                 state.loading = false;
                 state.error = true;
                 state.success = false;

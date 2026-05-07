@@ -18,7 +18,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import toast from "react-hot-toast";
-import { fetchProducts, createProduct, updateProduct, deleteProduct } from "../features/product/productApi";
+import { fetchProductsForAdmin, createProduct, updateProduct, deleteProduct } from "../features/product/productApi";
 import { fetchCategories } from "../features/category/CategoryApi";
 import ProductCardSkeleton from "../components/ProductCardSkleton";
 
@@ -35,9 +35,9 @@ interface ProductFormData {
 
 const AdminProductsPage = () => {
   const dispatch = useAppDispatch();
-  const { products, loading, pagination } = useAppSelector((state) => state.product);
+  const { productsAdmin: products, loading, adminProductPagination: pagination } = useAppSelector((state) => state.product);
   const { categories } = useAppSelector((state) => state.category);
-  
+
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [limit, setLimit] = useState(10);
@@ -45,13 +45,13 @@ const AdminProductsPage = () => {
   const [stockStatus, setStockStatus] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("name");
   const [sortOrder, setSortOrder] = useState<string>("asc");
-  
+
   const [localSearchTerm, setLocalSearchTerm] = useState("");
   const [localSelectedCategory, setLocalSelectedCategory] = useState<string>("all");
   const [localStockStatus, setLocalStockStatus] = useState<string>("all");
   const [localSortBy, setLocalSortBy] = useState<string>("name");
   const [localSortOrder, setLocalSortOrder] = useState<string>("asc");
-  
+
   const [editingProduct, setEditingProduct] = useState<ProductFormData | null>(null);
   const [formData, setFormData] = useState<ProductFormData>({
     name: "",
@@ -75,26 +75,14 @@ const AdminProductsPage = () => {
     activeProducts: 0,
   });
 
-  const fetchProductsWithFilters = () => {
-    const filters: any = {
+  const fetchProductsForAdminWithFilters = () => {
+    const filters = {
       page: currentPage,
       limit: limit,
       productname: searchTerm || "all",
       category: selectedCategory === "all" ? "all" : selectedCategory,
-      sortBy: sortBy,
-      sortOrder: sortOrder,
     };
-
-    if (stockStatus === "inStock") {
-      filters.minStock = 1;
-    } else if (stockStatus === "outOfStock") {
-      filters.stock = 0;
-    } else if (stockStatus === "lowStock") {
-      filters.maxStock = 10;
-      filters.minStock = 1;
-    }
-
-    dispatch(fetchProducts(filters));
+    dispatch(fetchProductsForAdmin(filters));
   };
 
   const handleSearch = () => {
@@ -112,7 +100,7 @@ const AdminProductsPage = () => {
     setLocalStockStatus("all");
     setLocalSortBy("name");
     setLocalSortOrder("asc");
-    
+
     setSearchTerm("");
     setSelectedCategory("all");
     setStockStatus("all");
@@ -122,7 +110,7 @@ const AdminProductsPage = () => {
   };
 
   useEffect(() => {
-    fetchProductsWithFilters();
+    fetchProductsForAdminWithFilters();
   }, [dispatch, currentPage, limit, searchTerm, selectedCategory, stockStatus, sortBy, sortOrder]);
 
   useEffect(() => {
@@ -153,12 +141,12 @@ const AdminProductsPage = () => {
       name: product.name,
       price: product.rate,
       categoryId: product.categoryId || "",
-      openingStock: product.quantity || 0,
+      openingStock: product.OpeningStock || 0,
       unit: product.unit || "kg",
       description: product.description || "",
       image: product.image || "",
     });
-    setPreviewImage(product.image || "");
+    setPreviewImage(`http://localhost:3000/image/${product.image}` || "");
     setSelectedFile(null);
   };
 
@@ -187,12 +175,12 @@ const AdminProductsPage = () => {
         toast.error("Please upload an image file");
         return;
       }
-      
+
       if (file.size > 5 * 1024 * 1024) {
         toast.error("Image size should be less than 5MB");
         return;
       }
-      
+
       setSelectedFile(file);
       const imageUrl = URL.createObjectURL(file);
       setPreviewImage(imageUrl);
@@ -240,22 +228,21 @@ const AdminProductsPage = () => {
     setIsSubmitting(true);
 
     const formDataToSend = new FormData();
-    
+
     formDataToSend.append("name", formData.name);
     formDataToSend.append("rate", formData.price.toString());
     formDataToSend.append("categoryId", formData.categoryId.toString());
     formDataToSend.append("quantity", formData.openingStock.toString());
     formDataToSend.append("unit", formData.unit);
     formDataToSend.append("description", formData.description || "");
-    
+
     if (selectedFile) {
       formDataToSend.append("image", selectedFile);
     }
 
     try {
       if (editingProduct && editingProduct.id) {
-        formDataToSend.append("id", editingProduct.id.toString());
-        await dispatch(updateProduct(formDataToSend));
+        await dispatch(updateProduct({ payload: formDataToSend, id: editingProduct.id }));
         toast.success("Product updated successfully");
         handleCancelEdit();
       } else {
@@ -276,8 +263,8 @@ const AdminProductsPage = () => {
           fileInputRef.current.value = "";
         }
       }
-      
-      fetchProductsWithFilters();
+
+      fetchProductsForAdminWithFilters();
     } catch (error) {
       toast.error("Something went wrong. Please try again.");
       console.error("Error submitting product:", error);
@@ -290,7 +277,7 @@ const AdminProductsPage = () => {
     if (window.confirm("Are you sure you want to delete this product?")) {
       await dispatch(deleteProduct(productId));
       toast.success("Product deleted successfully");
-      fetchProductsWithFilters();
+      fetchProductsForAdminWithFilters();
     }
   };
 
@@ -722,6 +709,7 @@ const AdminProductsPage = () => {
                       <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Product</th>
                       <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Category</th>
                       <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Price</th>
+                      <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Opening Stock</th>
                       <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Stock</th>
                       <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">Actions</th>
                     </tr>
@@ -751,8 +739,7 @@ const AdminProductsPage = () => {
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-3">
                               <img
-                                src={"https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=50"}
-                                alt={product.name}
+                                src={`http://localhost:3000/image/${product.image}` || "https://www.freepnglogos.com/uploads/vegetables-png/vegetables-download-vegetable-photos-png-image-pngimg-3.png"}
                                 className="w-10 h-10 rounded-lg object-cover"
                               />
                               <span className="font-medium text-gray-800 text-sm">{product.name}</span>
@@ -765,11 +752,14 @@ const AdminProductsPage = () => {
                             <span className="font-semibold text-gray-800">Rs. {formatPrice(product.rate)}</span>
                           </td>
                           <td className="px-4 py-3">
-                            <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${product.quantity > 0
-                                ? "bg-green-100 text-green-700"
-                                : "bg-red-100 text-red-700"
+                            <span className="font-semibold text-gray-800"> {product.OpeningStock}</span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${Number(product.quantity) > 0
+                              ? "bg-green-100 text-green-700"
+                              : "bg-red-100 text-red-700"
                               }`}>
-                              {product.quantity > 0 ? `${product.quantity} in stock` : "Out of stock"}
+                              {Number(product.quantity) > 0 ? `${product.quantity} in stock` : "Out of stock"}
                             </span>
                           </td>
                           <td className="px-4 py-3">
@@ -822,8 +812,8 @@ const AdminProductsPage = () => {
                     onClick={() => goToPage(1)}
                     disabled={currentPage === 1}
                     className={`px-3 py-1 rounded-lg border transition text-sm ${currentPage === 1
-                        ? "border-gray-200 text-gray-400 cursor-not-allowed"
-                        : "border-gray-300 text-gray-600 hover:bg-green-50 hover:border-green-500"
+                      ? "border-gray-200 text-gray-400 cursor-not-allowed"
+                      : "border-gray-300 text-gray-600 hover:bg-green-50 hover:border-green-500"
                       }`}
                   >
                     First
@@ -832,8 +822,8 @@ const AdminProductsPage = () => {
                     onClick={() => goToPage(currentPage - 1)}
                     disabled={currentPage === 1}
                     className={`p-2 rounded-lg border transition ${currentPage === 1
-                        ? "border-gray-200 text-gray-400 cursor-not-allowed"
-                        : "border-gray-300 text-gray-600 hover:bg-green-50 hover:border-green-500"
+                      ? "border-gray-200 text-gray-400 cursor-not-allowed"
+                      : "border-gray-300 text-gray-600 hover:bg-green-50 hover:border-green-500"
                       }`}
                   >
                     <ChevronLeft className="w-4 h-4" />
@@ -844,8 +834,8 @@ const AdminProductsPage = () => {
                       key={page}
                       onClick={() => goToPage(page)}
                       className={`px-3 py-1 rounded-lg transition text-sm ${currentPage === page
-                          ? "bg-green-600 text-white"
-                          : "text-gray-600 hover:bg-green-50"
+                        ? "bg-green-600 text-white"
+                        : "text-gray-600 hover:bg-green-50"
                         }`}
                     >
                       {page}
@@ -856,8 +846,8 @@ const AdminProductsPage = () => {
                     onClick={() => goToPage(currentPage + 1)}
                     disabled={currentPage === totalPages}
                     className={`p-2 rounded-lg border transition ${currentPage === totalPages
-                        ? "border-gray-200 text-gray-400 cursor-not-allowed"
-                        : "border-gray-300 text-gray-600 hover:bg-green-50 hover:border-green-500"
+                      ? "border-gray-200 text-gray-400 cursor-not-allowed"
+                      : "border-gray-300 text-gray-600 hover:bg-green-50 hover:border-green-500"
                       }`}
                   >
                     <ChevronRight className="w-4 h-4" />
@@ -866,8 +856,8 @@ const AdminProductsPage = () => {
                     onClick={() => goToPage(totalPages)}
                     disabled={currentPage === totalPages}
                     className={`px-3 py-1 rounded-lg border transition text-sm ${currentPage === totalPages
-                        ? "border-gray-200 text-gray-400 cursor-not-allowed"
-                        : "border-gray-300 text-gray-600 hover:bg-green-50 hover:border-green-500"
+                      ? "border-gray-200 text-gray-400 cursor-not-allowed"
+                      : "border-gray-300 text-gray-600 hover:bg-green-50 hover:border-green-500"
                       }`}
                   >
                     Last

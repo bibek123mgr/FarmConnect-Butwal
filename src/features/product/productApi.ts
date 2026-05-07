@@ -2,16 +2,18 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 import { axiosInstance, axiosInstanceNoCredentials } from "../../lib/axiosInstance";
 import type { AnyActionArg } from "react";
 
-interface IProductFilter {
-    productname: string;
-    category: string | number;
+interface IProductFilter extends IProductFilterAdmin {
     pricerangeFrom: number;
     pricerangeTo: number | string;
+}
+
+interface IProductFilterAdmin {
+    productname: string;
+    category: string | number;
     page: number;
     limit: number;
 }
-
-interface IProductCreate{
+interface IProductCreate {
     name: string;
     description: string;
     unit: string;
@@ -36,11 +38,30 @@ export const fetchProducts = createAsyncThunk(
     }
 );
 
+export const fetchProductsForAdmin = createAsyncThunk(
+    "products/getProductsList/my",
+    async (payload: IProductFilterAdmin, { rejectWithValue }) => {
+        try {
+            const { data } = await axiosInstance.get(`products/my`, { params: payload });
+            return data;
+        } catch (error: any) {
+            return rejectWithValue(
+                error.response?.data || "Something went wrong"
+            );
+        }
+    }
+);
+
 export const createProduct = createAsyncThunk(
     "products/createProduct",
     async (payload: any, { rejectWithValue }) => {
         try {
-            const { data } = await axiosInstance.post(`products`, payload);
+            const { data } = await axiosInstance.post(`products`, payload,
+                {
+                    headers: {
+                        "Content-Type": "multipart/form-data",
+                    },
+            });
             return data;
         } catch (error: any) {
             return rejectWithValue(
@@ -66,9 +87,16 @@ export const deleteProduct = createAsyncThunk(
 
 export const updateProduct = createAsyncThunk(
     "products/updateProduct",
-    async (payload: any, { rejectWithValue }) => {
+    async ({ payload, id }: { payload: any; id: number }, { rejectWithValue }) => {
         try {
-            const { data } = await axiosInstanceNoCredentials.patch(`products/${payload.id}`, payload);
+            console.log(payload);
+            const { data } = await axiosInstance.put(`products/${id}`, payload,
+                {
+                    headers: {
+                        "Content-Type": "multipart/form-data",
+                    },
+                }
+            );
             return data;
         } catch (error: any) {
             return rejectWithValue(
