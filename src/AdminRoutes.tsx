@@ -5,6 +5,8 @@ import Dashboard from "./pages/Dashbioard"
 import AdminProductsPage from "./pages/AdminProductsPage";
 import AdminCategoriesPage from "./pages/AdminCategoryPage";
 import AdminUsersPage from "./AdminUsersPage";
+import AdminShipping from "./pages/AdminShipping";
+import AdminOrderManagement from "./pages/AdminOrderManagement";
 // import AdminProducts from "./components/admin/Products";
 // import AdminOrders from "./components/admin/Orders";
 // import AdminUsers from "./components/admin/Users";
@@ -17,9 +19,10 @@ const AdminRoutes = () => {
         <Route path="/" element={<AdminLayout />}>
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="products" element={<AdminProductsPage />} />
-          {/* <Route path="orders" element={<AdminOrders />} />*/}
+          <Route path="orders" element={<AdminOrderManagement/>} />
           <Route path="users" element={<AdminUsersPage />} />
           <Route path="categories" element={<AdminCategoriesPage />} /> 
+          <Route path="shipping" element={<AdminShipping />} />
         </Route>
       </Route>
     </Routes>

@@ -1,28 +1,28 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { axiosInstance } from "../../lib/axiosInstance";
 
-interface IOrderIterms{
-    productId:number,
-    quantity:number,
-    rate:number
+interface IOrderIterms {
+    productId: number,
+    quantity: number,
+    rate: number
 }
 
 export enum IPaymentMethod {
-    COD="cod",
-    KHALTI="khalti",
-    ESEWA="esewa",
+    COD = "cod",
+    KHALTI = "khalti",
+    ESEWA = "esewa",
 }
 
-interface IOrderCreate{
-    paymentMethod:IPaymentMethod,
-    address:string,
-    items:IOrderIterms[],
+interface IOrderCreate {
+    paymentMethod: IPaymentMethod,
+    address: string,
+    items: IOrderIterms[],
 
 }
 
-export const createOrder=createAsyncThunk(
+export const createOrder = createAsyncThunk(
     "order/createOrder",
-    async (payload : IOrderCreate, { rejectWithValue }) => {
+    async (payload: IOrderCreate, { rejectWithValue }) => {
         try {
             const { data } = await axiosInstance.post(`orders`, payload);
             return data;
@@ -34,7 +34,7 @@ export const createOrder=createAsyncThunk(
     }
 )
 
-export const getAllMyOrders=createAsyncThunk(
+export const getAllMyOrders = createAsyncThunk(
     "order/getAllMyOrders",
     async (_, { rejectWithValue }) => {
         try {
@@ -48,11 +48,11 @@ export const getAllMyOrders=createAsyncThunk(
     }
 )
 
-export const getOrderDetails=createAsyncThunk(
+export const getOrderDetails = createAsyncThunk(
     "order/getOrderDetails",
-    async (id, { rejectWithValue }) => {
+    async (id: number, { rejectWithValue }) => {
         try {
-            const { data } = await axiosInstance.get(`orders/${id}`);
+            const { data } = await axiosInstance.get(`orders/details/${id}`);
             return data;
         } catch (error: any) {
             return rejectWithValue(
@@ -63,7 +63,7 @@ export const getOrderDetails=createAsyncThunk(
 )
 
 
-export const cancelMyOrder=createAsyncThunk(
+export const cancelMyOrder = createAsyncThunk(
     "order/cancelMyOrder",
     async (id, { rejectWithValue }) => {
         try {
