@@ -7,18 +7,15 @@ import {
   XCircle,
   Eye,
   MapPin,
-  Phone,
-  Mail,
   DollarSign,
   Search,
   ChevronDown,
   RefreshCw,
-  Navigation,
   UserCheck,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAppDispatch, useAppSelector } from '../hooks/hooks';
-import { getAllOrders } from '../features/order/OrderApi';
+import { getAllOrders, getVendorOrderDetails } from '../features/order/OrderApi';
 
 interface DeliveryPerson {
   id: number;
@@ -26,6 +23,9 @@ interface DeliveryPerson {
   phone: string;
   isAvailable: boolean;
 }
+
+// Placeholder image as a data URL to avoid infinite loading
+const PLACEHOLDER_IMAGE = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="%23999999" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"%3E%3Crect x="3" y="3" width="18" height="18" rx="2" ry="2"%3E%3C/rect%3E%3Ccircle cx="8.5" cy="8.5" r="1.5"%3E%3C/circle%3E%3Cpolyline points="21 15 16 10 5 21"%3E%3C/polyline%3E%3C/svg%3E';
 
 const AdminOrderManagement = () => {
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
@@ -35,9 +35,11 @@ const AdminOrderManagement = () => {
   const [dateFilter, setDateFilter] = useState('today');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [imageErrors, setImageErrors] = useState<{ [key: string]: boolean }>({});
 
   const dispatch = useAppDispatch();
-  const { storeOrders, loading, success, error, message } = useAppSelector(state => state.order);
+  const { storeOrders, loading, success, error, message, storeOrderDetails } = useAppSelector(state => state.order);
 
   // Static delivery persons for now
   const [deliveryPersons, setDeliveryPersons] = useState<DeliveryPerson[]>([
@@ -61,10 +63,8 @@ const AdminOrderManagement = () => {
     cancelled: storeOrders?.filter((o: any) => o.status === 'CANCELLED').length || 0,
     totalRevenue: storeOrders?.reduce((sum: number, o: any) => sum + Number(o.totalAmount), 0) || 0
   };
-  console.log(stats);
 
   const updateOrderStatus = (orderId: number, newStatus: string) => {
-    // This would typically dispatch an API call to update status
     toast.success(`Order status updated to ${newStatus}`);
   };
 
@@ -123,35 +123,52 @@ const AdminOrderManagement = () => {
     }
   };
 
+  const handleImageError = (productId: number) => {
+    setImageErrors(prev => ({
+      ...prev,
+      [productId]: true
+    }));
+  };
+
+  const getImageUrl = (productImage: string, productId: number) => {
+    if (imageErrors[productId]) {
+      return PLACEHOLDER_IMAGE;
+    }
+    if (productImage && !productImage.startsWith('http')) {
+      return `http://localhost:4000${productImage}`;
+    }
+    return productImage || PLACEHOLDER_IMAGE;
+  };
+
   const filterOrders = () => {
     let filtered = storeOrders ? [...storeOrders] : [];
 
-    // if (searchTerm) {
-    //   filtered = filtered.filter((order: any) =>
-    //     order.id.toString().includes(searchTerm)
-    //   );
-    // }
+    if (searchTerm) {
+      filtered = filtered.filter((order: any) =>
+        order.id.toString().includes(searchTerm)
+      );
+    }
 
-    // if (statusFilter !== 'all') {
-    //   filtered = filtered.filter((order: any) => order.status === statusFilter);
-    // }
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter((order: any) => order.status === statusFilter);
+    }
 
-    // if (dateFilter === 'today') {
-    //   const today = new Date().toDateString();
-    //   filtered = filtered.filter((order: any) => new Date(order.createdAt).toDateString() === today);
-    // } else if (dateFilter === 'yesterday') {
-    //   const yesterday = new Date();
-    //   yesterday.setDate(yesterday.getDate() - 1);
-    //   filtered = filtered.filter((order: any) => new Date(order.createdAt).toDateString() === yesterday.toDateString());
-    // } else if (dateFilter === 'week') {
-    //   const weekAgo = new Date();
-    //   weekAgo.setDate(weekAgo.getDate() - 7);
-    //   filtered = filtered.filter((order: any) => new Date(order.createdAt) >= weekAgo);
-    // } else if (dateFilter === 'month') {
-    //   const monthAgo = new Date();
-    //   monthAgo.setMonth(monthAgo.getMonth() - 1);
-    //   filtered = filtered.filter((order: any) => new Date(order.createdAt) >= monthAgo);
-    // }
+    if (dateFilter === 'today') {
+      const today = new Date().toDateString();
+      filtered = filtered.filter((order: any) => new Date(order.createdAt).toDateString() === today);
+    } else if (dateFilter === 'yesterday') {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      filtered = filtered.filter((order: any) => new Date(order.createdAt).toDateString() === yesterday.toDateString());
+    } else if (dateFilter === 'week') {
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      filtered = filtered.filter((order: any) => new Date(order.createdAt) >= weekAgo);
+    } else if (dateFilter === 'month') {
+      const monthAgo = new Date();
+      monthAgo.setMonth(monthAgo.getMonth() - 1);
+      filtered = filtered.filter((order: any) => new Date(order.createdAt) >= monthAgo);
+    }
 
     return filtered;
   };
@@ -166,7 +183,12 @@ const AdminOrderManagement = () => {
     dispatch(getAllOrders());
   }, [dispatch]);
 
-  if (loading) {
+  const getOrderDetails = (orderId: number) => {
+    dispatch(getVendorOrderDetails(orderId));
+    setIsDetailsModalOpen(true);
+  }
+
+  if (loading && !storeOrders?.length) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -438,7 +460,7 @@ const AdminOrderManagement = () => {
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-center gap-2">
                           <button
-                            onClick={() => setSelectedOrder(order)}
+                            onClick={() => getOrderDetails(order.id)}
                             className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition"
                             title="View Details"
                           >
@@ -590,14 +612,14 @@ const AdminOrderManagement = () => {
         </div>
       )}
 
-      {/* Order Details Modal */}
-      {selectedOrder && !showDeliveryModal && (
+      {/* Order Details Modal - Using API Data with Products */}
+      {isDetailsModalOpen && storeOrderDetails && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl mx-4 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center p-6 border-b border-gray-200 sticky top-0 bg-white">
-              <h2 className="text-xl font-semibold text-gray-900">Order Details #{selectedOrder.id}</h2>
+              <h2 className="text-xl font-semibold text-gray-900">Order Details #{storeOrderDetails.id}</h2>
               <button
-                onClick={() => setSelectedOrder(null)}
+                onClick={() => setIsDetailsModalOpen(false)}
                 className="text-gray-400 hover:text-gray-600"
               >
                 <XCircle className="w-5 h-5" />
@@ -605,12 +627,13 @@ const AdminOrderManagement = () => {
             </div>
 
             <div className="p-6">
+              {/* Order Information */}
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div>
                   <h3 className="text-sm font-medium text-gray-500 mb-2">Order Information</h3>
-                  <p className="font-medium text-gray-900">Order ID: #{selectedOrder.id}</p>
+                  <p className="font-medium text-gray-900">Order ID: #{storeOrderDetails.id}</p>
                   <p className="text-sm text-gray-600 mt-1">
-                    Date: {new Date(selectedOrder.createdAt).toLocaleString()}
+                    Date: {new Date(storeOrderDetails.createdAt).toLocaleString()}
                   </p>
                 </div>
 
@@ -618,45 +641,92 @@ const AdminOrderManagement = () => {
                   <h3 className="text-sm font-medium text-gray-500 mb-2">Delivery Information</h3>
                   <p className="text-sm text-gray-800 flex items-start gap-1">
                     <MapPin className="w-3 h-3 mt-0.5 flex-shrink-0" />
-                    {selectedOrder.address}
+                    {storeOrderDetails.address}
                   </p>
-                  {orderDeliveryPerson[selectedOrder.id] && (
+                  {orderDeliveryPerson[storeOrderDetails.id] && (
                     <p className="text-sm text-gray-600 flex items-center gap-1 mt-2">
                       <Truck className="w-3 h-3" />
-                      Delivery by: {orderDeliveryPerson[selectedOrder.id]?.name}
+                      Delivery by: {orderDeliveryPerson[storeOrderDetails.id]?.name}
                     </p>
                   )}
                 </div>
               </div>
 
+              {/* Order Products */}
+              {storeOrderDetails.products && storeOrderDetails.products.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="text-sm font-medium text-gray-500 mb-3">Order Items</h3>
+                  <div className="space-y-3">
+                    {storeOrderDetails.products.map((product: any, index: number) => (
+                      <div key={index} className="flex items-center gap-4 py-3 border-b border-gray-100">
+                        {/* Product Image */}
+                        <div className="w-16 h-16 flex-shrink-0">
+                          <img
+                            src={getImageUrl(product.productImage, product.productId)}
+                            alt={product.productName}
+                            className="w-full h-full object-cover rounded-lg"
+                            onError={() => handleImageError(product.productId)}
+                          />
+                        </div>
+                        
+                        {/* Product Details */}
+                        <div className="flex-1">
+                          <p className="font-medium text-gray-900">{product.productName}</p>
+                          <p className="text-sm text-gray-500">
+                            Quantity: {product.quantity} × Rs. {product.price}
+                          </p>
+                          <p className="text-xs text-gray-400">
+                            Product ID: {product.productId}
+                          </p>
+                        </div>
+                        
+                        {/* Subtotal */}
+                        <div className="text-right">
+                          <p className="font-semibold text-gray-900">
+                            Rs. {product.subtotal.toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Order Summary */}
               <div className="border-t border-gray-200 pt-4">
                 <div className="flex justify-between items-center">
                   <span className="font-medium text-gray-900">Total Amount</span>
-                  <span className="text-xl font-bold text-green-600">Rs. {selectedOrder.totalAmount.toLocaleString()}</span>
+                  <span className="text-xl font-bold text-green-600">
+                    Rs. {storeOrderDetails.totalAmount?.toLocaleString()}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center mt-2 text-sm text-gray-500">
                   <span>Payment Method</span>
-                  <span>{getPaymentMethodLabel(selectedOrder.paymentMethod)}</span>
+                  <span>{getPaymentMethodLabel(storeOrderDetails.paymentMethod)}</span>
                 </div>
                 <div className="flex justify-between items-center mt-1 text-sm text-gray-500">
                   <span>Payment Status</span>
-                  <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${getPaymentStatusColor(selectedOrder.paymentStatus)}`}>
-                    {selectedOrder.paymentStatus}
+                  <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${getPaymentStatusColor(storeOrderDetails.paymentStatus)}`}>
+                    {storeOrderDetails.paymentStatus}
                   </span>
                 </div>
                 <div className="flex justify-between items-center mt-1 text-sm text-gray-500">
                   <span>Order Status</span>
-                  <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(selectedOrder.status)}`}>
-                    {selectedOrder.status}
+                  <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(storeOrderDetails.status)}`}>
+                    {storeOrderDetails.status}
                   </span>
                 </div>
               </div>
 
+              {/* Action Buttons */}
               <div className="flex gap-3 mt-6">
-                {!orderDeliveryPerson[selectedOrder.id] && selectedOrder.status !== 'DELIVERED' && selectedOrder.status !== 'CANCELLED' && (
+                {!orderDeliveryPerson[storeOrderDetails.id] && 
+                 storeOrderDetails.status !== 'DELIVERED' && 
+                 storeOrderDetails.status !== 'CANCELLED' && (
                   <button
                     onClick={() => {
-                      setSelectedOrder(null);
+                      setIsDetailsModalOpen(false);
+                      setSelectedOrder(storeOrderDetails);
                       setShowDeliveryModal(true);
                     }}
                     className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
@@ -665,7 +735,7 @@ const AdminOrderManagement = () => {
                   </button>
                 )}
                 <button
-                  onClick={() => setSelectedOrder(null)}
+                  onClick={() => setIsDetailsModalOpen(false)}
                   className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
                 >
                   Close

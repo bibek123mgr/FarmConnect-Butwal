@@ -70,6 +70,20 @@ export const getAllMyOrders = createAsyncThunk(
 )
 
 export const getOrderDetails = createAsyncThunk(
+    "order/my/getOrderDetails",
+    async (id: number, { rejectWithValue }) => {
+        try {
+            const { data } = await axiosInstance.get(`orders/my/details/${id}`);
+            return data;
+        } catch (error: any) {
+            return rejectWithValue(
+                error.response?.data || "Something went wrong"
+            );
+        }
+    }
+)
+
+export const getVendorOrderDetails = createAsyncThunk(
     "order/getOrderDetails",
     async (id: number, { rejectWithValue }) => {
         try {

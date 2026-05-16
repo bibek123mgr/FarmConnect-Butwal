@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { createOrder, getAllMyOrders, getAllOrders, getOrderDetails, verifyOnlinePaymentStatus } from "./OrderApi";
+import { createOrder, getAllMyOrders, getAllOrders, getOrderDetails, getVendorOrderDetails, verifyOnlinePaymentStatus } from "./OrderApi";
 
 interface IOrder {
     id: number,
@@ -20,6 +20,20 @@ export interface IAdminFarmOrder {
     paymentStatus: string;
     status: string;
 }
+
+export interface IVendorOrderProductDetails extends IAdminFarmOrder{
+    products:[{
+        id: number;
+        productId: number;
+        productName: string;
+        productImage: string;
+        quantity: number;
+        price: number;
+        subtotal: number;
+    }]
+}
+
+
 export interface IOrderDetailsForUserResponse {
     id: number;
     totalAmount: string;
@@ -28,7 +42,6 @@ export interface IOrderDetailsForUserResponse {
     paymentStatus: string;
     status: string;
     createdAt: string;
-
     vendorOrders: {
         id: number;
         totalAmount: string;
@@ -55,7 +68,8 @@ export interface IOrderDetailsForUserResponse {
 interface IinitialState {
     orders: IOrder[],
     orderDetails: IOrderDetailsForUserResponse,
-    storeOrders:IAdminFarmOrder[]
+    storeOrders:IAdminFarmOrder[],
+    storeOrderDetails:IVendorOrderProductDetails,
     loading: boolean,
     success: boolean,
     error: boolean,
@@ -65,6 +79,7 @@ const initialState: IinitialState = {
     orders: [] as IOrder[],
     orderDetails: {} as IOrderDetailsForUserResponse,
     storeOrders: [] as IAdminFarmOrder[],
+    storeOrderDetails: {} as IVendorOrderProductDetails,
     loading: false,
     success: false,
     error: false,
@@ -120,6 +135,23 @@ const orderSlice = createSlice({
                 state.orderDetails = action.payload.data;
             })
             .addCase(getOrderDetails.rejected, (state, action) => {
+                state.loading = false;
+                state.error = true;
+                state.success = false;
+                state.message = action.error.message || "Something went wrong";
+            })
+            .addCase(getVendorOrderDetails.pending, (state) => {
+                state.loading = true;
+                state.error = false;
+                state.success = false;
+                state.message = "";
+            })
+            .addCase(getVendorOrderDetails.fulfilled, (state, action) => {
+                state.loading = false;
+                state.success = true;
+                state.storeOrderDetails = action.payload.data;
+            })
+            .addCase(getVendorOrderDetails.rejected, (state, action) => {
                 state.loading = false;
                 state.error = true;
                 state.success = false;
