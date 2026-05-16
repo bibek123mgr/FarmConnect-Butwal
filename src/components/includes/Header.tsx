@@ -28,7 +28,7 @@ const Header = () => {
   const { user, isInitialized, message, error, success, loading } = useAppSelector((state) => state.auth);
   const dispatch = useAppDispatch();
 
-  const cartCount = 3;
+  const cartCount = 0;
 
   const notifications = [
     { id: 1, title: "Order Delivered", message: "Your order #1234 has been delivered", time: "5 min ago", read: false },
@@ -36,7 +36,7 @@ const Header = () => {
     { id: 3, title: "New Product Added", message: "Fresh organic apples in stock", time: "2 hours ago", read: true },
   ];
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = 0;
 
   const handleLogout = () => {
     dispatch(LogoutUser());

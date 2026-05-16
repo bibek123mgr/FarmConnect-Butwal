@@ -18,13 +18,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAppDispatch, useAppSelector } from '../hooks/hooks';
-import { getAllMyOrders } from '../features/order/OrderApi';
-
-interface OrderItem {
-  name: string;
-  quantity: number;
-  price: number;
-}
+import { getAllOrders } from '../features/order/OrderApi';
 
 interface DeliveryPerson {
   id: number;
@@ -33,22 +27,8 @@ interface DeliveryPerson {
   isAvailable: boolean;
 }
 
-interface Order {
-  id: number;
-  customerName: string;
-  customerPhone: string;
-  customerEmail: string;
-  deliveryAddress: string;
-  total: number;
-  orderStatus: string;
-  paymentMethod: string;
-  createdAt: string;
-  items: OrderItem[];
-  deliveryPerson: DeliveryPerson | null;
-}
-
 const AdminOrderManagement = () => {
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [showDeliveryModal, setShowDeliveryModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -56,106 +36,10 @@ const AdminOrderManagement = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
+  const dispatch = useAppDispatch();
+  const { storeOrders, loading, success, error, message } = useAppSelector(state => state.order);
 
-  const [orders, setOrders] = useState<Order[]>([
-    {
-      id: 1001,
-      customerName: "Rajesh Hamal",
-      customerPhone: "9841234567",
-      customerEmail: "rajesh@example.com",
-      deliveryAddress: "Baneshwor, Kathmandu",
-      total: 2500,
-      orderStatus: "pending",
-      paymentMethod: "Cash on Delivery",
-      createdAt: "2024-01-15T10:30:00",
-      items: [
-        { name: "Apple", quantity: 2, price: 150 },
-        { name: "Banana", quantity: 3, price: 80 }
-      ],
-      deliveryPerson: null
-    },
-    {
-      id: 1002,
-      customerName: "Sita Rana",
-      customerPhone: "9851234567",
-      customerEmail: "sita@example.com",
-      deliveryAddress: "Lalitpur, Patan",
-      total: 1800,
-      orderStatus: "confirmed",
-      paymentMethod: "Cash on Delivery",
-      createdAt: "2024-01-15T11:15:00",
-      items: [
-        { name: "Rice", quantity: 5, price: 300 },
-        { name: "Lentils", quantity: 2, price: 150 }
-      ],
-      deliveryPerson: null
-    },
-    {
-      id: 1003,
-      customerName: "Hari Bahadur",
-      customerPhone: "9861234567",
-      customerEmail: "hari@example.com",
-      deliveryAddress: "Thamel, Kathmandu",
-      total: 3500,
-      orderStatus: "processing",
-      paymentMethod: "Cash on Delivery",
-      createdAt: "2024-01-15T09:45:00",
-      items: [
-        { name: "Chicken", quantity: 2, price: 500 },
-        { name: "Eggs", quantity: 12, price: 20 }
-      ],
-      deliveryPerson: null
-    },
-    {
-      id: 1004,
-      customerName: "Gita Sharma",
-      customerPhone: "9871234567",
-      customerEmail: "gita@example.com",
-      deliveryAddress: "Boudha, Kathmandu",
-      total: 4200,
-      orderStatus: "out_for_delivery",
-      paymentMethod: "Cash on Delivery",
-      createdAt: "2024-01-14T14:20:00",
-      items: [
-        { name: "Pizza", quantity: 1, price: 800 },
-        { name: "Burger", quantity: 2, price: 250 }
-      ],
-      deliveryPerson: { id: 1, name: "Ram KC", phone: "9812345678", isAvailable: true }
-    },
-    {
-      id: 1005,
-      customerName: "Krishna Prasad",
-      customerPhone: "9881234567",
-      customerEmail: "krishna@example.com",
-      deliveryAddress: "Bhaktapur",
-      total: 5800,
-      orderStatus: "delivered",
-      paymentMethod: "Cash on Delivery",
-      createdAt: "2024-01-14T08:00:00",
-      items: [
-        { name: "Milk", quantity: 5, price: 100 },
-        { name: "Butter", quantity: 2, price: 150 }
-      ],
-      deliveryPerson: { id: 2, name: "Shyam Thapa", phone: "9823456789", isAvailable: true }
-    },
-    {
-      id: 1006,
-      customerName: "Laxmi Timilsina",
-      customerPhone: "9891234567",
-      customerEmail: "laxmi@example.com",
-      deliveryAddress: "Kirtipur, Kathmandu",
-      total: 1200,
-      orderStatus: "cancelled",
-      paymentMethod: "Cash on Delivery",
-      createdAt: "2024-01-13T16:30:00",
-      items: [
-        { name: "Bread", quantity: 3, price: 80 },
-        { name: "Jam", quantity: 1, price: 120 }
-      ],
-      deliveryPerson: null
-    }
-  ]);
-
+  // Static delivery persons for now
   const [deliveryPersons, setDeliveryPersons] = useState<DeliveryPerson[]>([
     { id: 1, name: "Ram KC", phone: "9812345678", isAvailable: true },
     { id: 2, name: "Shyam Thapa", phone: "9823456789", isAvailable: true },
@@ -163,117 +47,111 @@ const AdminOrderManagement = () => {
     { id: 4, name: "Gita Rai", phone: "9845678901", isAvailable: true }
   ]);
 
-  const [stats, setStats] = useState({
-    totalOrders: 6,
-    pending: 1,
-    confirmed: 1,
-    processing: 1,
-    outForDelivery: 1,
-    delivered: 1,
-    cancelled: 1,
-    totalRevenue: 19000
-  });
+  // State to track assigned delivery person for each order
+  const [orderDeliveryPerson, setOrderDeliveryPerson] = useState<{ [key: number]: DeliveryPerson | null }>({});
+
+  // Calculate stats from storeOrders
+  const stats = {
+    totalOrders: storeOrders?.length || 0,
+    pending: storeOrders?.filter((o: any) => o.status === 'PENDING').length || 0,
+    confirmed: storeOrders?.filter((o: any) => o.status === 'CONFIRMED').length || 0,
+    processing: storeOrders?.filter((o: any) => o.status === 'SHIPPED').length || 0,
+    outForDelivery: storeOrders?.filter((o: any) => o.status === 'SHIPPED').length || 0,
+    delivered: storeOrders?.filter((o: any) => o.status === 'DELIVERED').length || 0,
+    cancelled: storeOrders?.filter((o: any) => o.status === 'CANCELLED').length || 0,
+    totalRevenue: storeOrders?.reduce((sum: number, o: any) => sum + Number(o.totalAmount), 0) || 0
+  };
+  console.log(stats);
 
   const updateOrderStatus = (orderId: number, newStatus: string) => {
-    const updatedOrders = orders.map(order =>
-      order.id === orderId ? { ...order, orderStatus: newStatus } : order
-    );
-    setOrders(updatedOrders);
-
-    const newStats = {
-      totalOrders: updatedOrders.length,
-      pending: updatedOrders.filter(o => o.orderStatus === 'pending').length,
-      confirmed: updatedOrders.filter(o => o.orderStatus === 'confirmed').length,
-      processing: updatedOrders.filter(o => o.orderStatus === 'processing').length,
-      outForDelivery: updatedOrders.filter(o => o.orderStatus === 'out_for_delivery').length,
-      delivered: updatedOrders.filter(o => o.orderStatus === 'delivered').length,
-      cancelled: updatedOrders.filter(o => o.orderStatus === 'cancelled').length,
-      totalRevenue: updatedOrders.reduce((sum, o) => sum + o.total, 0)
-    };
-    setStats(newStats);
-
+    // This would typically dispatch an API call to update status
     toast.success(`Order status updated to ${newStatus}`);
   };
 
   const assignDeliveryPerson = (orderId: number, deliveryPersonId: number) => {
     const deliveryPerson = deliveryPersons.find(dp => dp.id === deliveryPersonId);
-    const updatedOrders = orders.map(order =>
-      order.id === orderId
-        ? { ...order, deliveryPerson: deliveryPerson || null, orderStatus: 'out_for_delivery' }
-        : order
-    );
-    setOrders(updatedOrders);
+    setOrderDeliveryPerson(prev => ({
+      ...prev,
+      [orderId]: deliveryPerson || null
+    }));
     setShowDeliveryModal(false);
-
-    const newStats = {
-      ...stats,
-      outForDelivery: stats.outForDelivery + 1,
-      processing: stats.processing - 1
-    };
-    setStats(newStats);
-
     toast.success('Delivery person assigned successfully');
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'confirmed': return 'bg-blue-100 text-blue-800';
-      case 'processing': return 'bg-purple-100 text-purple-800';
-      case 'out_for_delivery': return 'bg-orange-100 text-orange-800';
-      case 'delivered': return 'bg-green-100 text-green-800';
-      case 'cancelled': return 'bg-red-100 text-red-800';
+      case 'PENDING': return 'bg-yellow-100 text-yellow-800';
+      case 'CONFIRMED': return 'bg-blue-100 text-blue-800';
+      case 'SHIPPED': return 'bg-purple-100 text-purple-800';
+      case 'DELIVERED': return 'bg-green-100 text-green-800';
+      case 'CANCELLED': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   const getStatusOptions = (currentStatus: string) => {
     const options = [
-      { value: 'pending', label: 'Pending' },
-      { value: 'confirmed', label: 'Confirmed' },
-      { value: 'processing', label: 'Processing' },
-      { value: 'out_for_delivery', label: 'Out for Delivery' },
-      { value: 'delivered', label: 'Delivered' },
-      { value: 'cancelled', label: 'Cancelled' }
+      { value: 'PENDING', label: 'Pending' },
+      { value: 'CONFIRMED', label: 'Confirmed' },
+      { value: 'SHIPPED', label: 'Shipped' },
+      { value: 'DELIVERED', label: 'Delivered' },
+      { value: 'CANCELLED', label: 'Cancelled' }
     ];
 
-    if (currentStatus === 'delivered' || currentStatus === 'cancelled') {
+    if (currentStatus === 'DELIVERED' || currentStatus === 'CANCELLED') {
       return options.filter(opt => opt.value === currentStatus);
     }
 
     return options;
   };
 
-  const filterOrders = (): Order[] => {
-    let filtered = [...orders];
-
-    if (searchTerm) {
-      filtered = filtered.filter(order =>
-        order.id.toString().includes(searchTerm) ||
-        order.customerName.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+  const getPaymentMethodLabel = (method: string) => {
+    switch (method) {
+      case 'ESEWA': return 'Esewa';
+      case 'COD': return 'Cash on Delivery';
+      case 'CARD': return 'Card Payment';
+      default: return method;
     }
+  };
 
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter(order => order.orderStatus === statusFilter);
+  const getPaymentStatusColor = (status: string) => {
+    switch (status) {
+      case 'PAID': return 'bg-green-100 text-green-800';
+      case 'PENDING': return 'bg-yellow-100 text-yellow-800';
+      case 'FAILED': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
+  };
 
-    if (dateFilter === 'today') {
-      const today = new Date().toDateString();
-      filtered = filtered.filter(order => new Date(order.createdAt).toDateString() === today);
-    } else if (dateFilter === 'yesterday') {
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      filtered = filtered.filter(order => new Date(order.createdAt).toDateString() === yesterday.toDateString());
-    } else if (dateFilter === 'week') {
-      const weekAgo = new Date();
-      weekAgo.setDate(weekAgo.getDate() - 7);
-      filtered = filtered.filter(order => new Date(order.createdAt) >= weekAgo);
-    } else if (dateFilter === 'month') {
-      const monthAgo = new Date();
-      monthAgo.setMonth(monthAgo.getMonth() - 1);
-      filtered = filtered.filter(order => new Date(order.createdAt) >= monthAgo);
-    }
+  const filterOrders = () => {
+    let filtered = storeOrders ? [...storeOrders] : [];
+
+    // if (searchTerm) {
+    //   filtered = filtered.filter((order: any) =>
+    //     order.id.toString().includes(searchTerm)
+    //   );
+    // }
+
+    // if (statusFilter !== 'all') {
+    //   filtered = filtered.filter((order: any) => order.status === statusFilter);
+    // }
+
+    // if (dateFilter === 'today') {
+    //   const today = new Date().toDateString();
+    //   filtered = filtered.filter((order: any) => new Date(order.createdAt).toDateString() === today);
+    // } else if (dateFilter === 'yesterday') {
+    //   const yesterday = new Date();
+    //   yesterday.setDate(yesterday.getDate() - 1);
+    //   filtered = filtered.filter((order: any) => new Date(order.createdAt).toDateString() === yesterday.toDateString());
+    // } else if (dateFilter === 'week') {
+    //   const weekAgo = new Date();
+    //   weekAgo.setDate(weekAgo.getDate() - 7);
+    //   filtered = filtered.filter((order: any) => new Date(order.createdAt) >= weekAgo);
+    // } else if (dateFilter === 'month') {
+    //   const monthAgo = new Date();
+    //   monthAgo.setMonth(monthAgo.getMonth() - 1);
+    //   filtered = filtered.filter((order: any) => new Date(order.createdAt) >= monthAgo);
+    // }
 
     return filtered;
   };
@@ -284,6 +162,21 @@ const AdminOrderManagement = () => {
   const currentOrders = filteredOrders.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
 
+  useEffect(() => {
+    dispatch(getAllOrders());
+  }, [dispatch]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-gray-200 border-t-green-600 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading orders...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -292,6 +185,7 @@ const AdminOrderManagement = () => {
           <p className="text-gray-600 mt-2">Manage and track all customer orders</p>
         </div>
 
+        {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-4 mb-8">
           <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
             <div className="flex items-center justify-between">
@@ -332,23 +226,11 @@ const AdminOrderManagement = () => {
           <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Processing</p>
+                <p className="text-sm text-gray-600">Shipped</p>
                 <p className="text-2xl font-bold text-purple-600">{stats.processing}</p>
               </div>
               <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                <Package className="w-5 h-5 text-purple-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Out for Delivery</p>
-                <p className="text-2xl font-bold text-orange-600">{stats.outForDelivery}</p>
-              </div>
-              <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                <Truck className="w-5 h-5 text-orange-600" />
+                <Truck className="w-5 h-5 text-purple-600" />
               </div>
             </div>
           </div>
@@ -368,8 +250,20 @@ const AdminOrderManagement = () => {
           <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
+                <p className="text-sm text-gray-600">Cancelled</p>
+                <p className="text-2xl font-bold text-red-600">{stats.cancelled}</p>
+              </div>
+              <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                <XCircle className="w-5 h-5 text-red-600" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+            <div className="flex items-center justify-between">
+              <div>
                 <p className="text-sm text-gray-600">Revenue</p>
-                <p className="text-2xl font-bold text-green-600">Rs. {stats.totalRevenue.toLocaleString()}</p>
+                <p className="text-2xl font-bold text-green-600">Rs. {parseFloat(stats.totalRevenue.toString()).toFixed(2)}</p>
               </div>
               <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
                 <DollarSign className="w-5 h-5 text-green-600" />
@@ -378,13 +272,14 @@ const AdminOrderManagement = () => {
           </div>
         </div>
 
+        {/* Filters */}
         <div className="bg-white rounded-xl shadow-sm p-4 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input
                 type="text"
-                placeholder="Search by order ID or customer..."
+                placeholder="Search by order ID..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
@@ -397,12 +292,11 @@ const AdminOrderManagement = () => {
               className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
             >
               <option value="all">All Status</option>
-              <option value="pending">Pending</option>
-              <option value="confirmed">Confirmed</option>
-              <option value="processing">Processing</option>
-              <option value="out_for_delivery">Out for Delivery</option>
-              <option value="delivered">Delivered</option>
-              <option value="cancelled">Cancelled</option>
+              <option value="PENDING">Pending</option>
+              <option value="CONFIRMED">Confirmed</option>
+              <option value="SHIPPED">Shipped</option>
+              <option value="DELIVERED">Delivered</option>
+              <option value="CANCELLED">Cancelled</option>
             </select>
 
             <select
@@ -432,6 +326,7 @@ const AdminOrderManagement = () => {
           </div>
         </div>
 
+        {/* Orders Table */}
         <div className="bg-white rounded-xl shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -441,13 +336,16 @@ const AdminOrderManagement = () => {
                     Order ID
                   </th>
                   <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Customer
+                    Address
                   </th>
                   <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Date
                   </th>
                   <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Total
+                  </th>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Payment
                   </th>
                   <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
@@ -463,22 +361,21 @@ const AdminOrderManagement = () => {
               <tbody className="divide-y divide-gray-200">
                 {currentOrders.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="text-center py-12">
+                    <td colSpan={8} className="text-center py-12">
                       <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                       <h3 className="text-lg font-medium text-gray-900">No orders found</h3>
                       <p className="text-gray-500 mt-1">No orders match your filters</p>
                     </td>
                   </tr>
                 ) : (
-                  currentOrders.map((order) => (
+                  currentOrders.map((order: any) => (
                     <tr key={order.id} className="hover:bg-gray-50 transition">
                       <td className="px-6 py-4">
                         <span className="font-medium text-gray-900">#{order.id}</span>
                       </td>
                       <td className="px-6 py-4">
                         <div>
-                          <p className="font-medium text-gray-900">{order.customerName}</p>
-                          <p className="text-sm text-gray-500">{order.customerPhone}</p>
+                          <p className="text-sm text-gray-900">{order.address}</p>
                         </div>
                       </td>
                       <td className="px-6 py-4">
@@ -492,17 +389,26 @@ const AdminOrderManagement = () => {
                       </td>
                       <td className="px-6 py-4">
                         <span className="font-semibold text-gray-900">
-                          Rs. {order.total.toLocaleString()}
+                          Rs. {order.totalAmount.toLocaleString()}
                         </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div>
+                          <span className="text-sm text-gray-700">{getPaymentMethodLabel(order.paymentMethod)}</span>
+                          <br />
+                          <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${getPaymentStatusColor(order.paymentStatus)}`}>
+                            {order.paymentStatus}
+                          </span>
+                        </div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="relative">
                           <select
-                            value={order.orderStatus}
+                            value={order.status}
                             onChange={(e) => updateOrderStatus(order.id, e.target.value)}
-                            className={`appearance-none px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(order.orderStatus)} focus:outline-none focus:ring-2 focus:ring-green-500 cursor-pointer pr-7`}
+                            className={`appearance-none px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)} focus:outline-none focus:ring-2 focus:ring-green-500 cursor-pointer pr-7`}
                           >
-                            {getStatusOptions(order.orderStatus).map(option => (
+                            {getStatusOptions(order.status).map(option => (
                               <option key={option.value} value={option.value}>
                                 {option.label}
                               </option>
@@ -512,10 +418,10 @@ const AdminOrderManagement = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        {order.deliveryPerson ? (
+                        {orderDeliveryPerson[order.id] ? (
                           <div className="flex items-center gap-2">
                             <UserCheck className="w-4 h-4 text-green-600" />
-                            <span className="text-sm text-gray-700">{order.deliveryPerson.name}</span>
+                            <span className="text-sm text-gray-700">{orderDeliveryPerson[order.id]?.name}</span>
                           </div>
                         ) : (
                           <button
@@ -538,14 +444,6 @@ const AdminOrderManagement = () => {
                           >
                             <Eye className="w-4 h-4" />
                           </button>
-                          {order.orderStatus === 'out_for_delivery' && (
-                            <button
-                              className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
-                              title="Track Delivery"
-                            >
-                              <Navigation className="w-4 h-4" />
-                            </button>
-                          )}
                         </div>
                       </td>
                     </tr>
@@ -555,6 +453,7 @@ const AdminOrderManagement = () => {
             </table>
           </div>
 
+          {/* Pagination */}
           {filteredOrders.length > 0 && (
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4 py-4 px-6 border-t border-gray-200">
               <div className="flex items-center gap-2 text-sm text-gray-600">
@@ -650,6 +549,7 @@ const AdminOrderManagement = () => {
         </div>
       </div>
 
+      {/* Assign Delivery Modal */}
       {showDeliveryModal && selectedOrder && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4">
@@ -666,10 +566,10 @@ const AdminOrderManagement = () => {
             <div className="p-6">
               <div className="mb-4">
                 <p className="text-sm text-gray-600">Order #{selectedOrder.id}</p>
-                <p className="font-medium text-gray-900">{selectedOrder.customerName}</p>
+                <p className="font-medium text-gray-900">{selectedOrder.address}</p>
                 <p className="text-sm text-gray-500 flex items-center gap-1 mt-1">
                   <MapPin className="w-3 h-3" />
-                  {selectedOrder.deliveryAddress}
+                  {selectedOrder.address}
                 </p>
               </div>
 
@@ -690,6 +590,7 @@ const AdminOrderManagement = () => {
         </div>
       )}
 
+      {/* Order Details Modal */}
       {selectedOrder && !showDeliveryModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
@@ -706,15 +607,10 @@ const AdminOrderManagement = () => {
             <div className="p-6">
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-2">Customer Information</h3>
-                  <p className="font-medium text-gray-900">{selectedOrder.customerName}</p>
-                  <p className="text-sm text-gray-600 flex items-center gap-1 mt-1">
-                    <Phone className="w-3 h-3" />
-                    {selectedOrder.customerPhone}
-                  </p>
-                  <p className="text-sm text-gray-600 flex items-center gap-1 mt-1">
-                    <Mail className="w-3 h-3" />
-                    {selectedOrder.customerEmail}
+                  <h3 className="text-sm font-medium text-gray-500 mb-2">Order Information</h3>
+                  <p className="font-medium text-gray-900">Order ID: #{selectedOrder.id}</p>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Date: {new Date(selectedOrder.createdAt).toLocaleString()}
                   </p>
                 </div>
 
@@ -722,49 +618,42 @@ const AdminOrderManagement = () => {
                   <h3 className="text-sm font-medium text-gray-500 mb-2">Delivery Information</h3>
                   <p className="text-sm text-gray-800 flex items-start gap-1">
                     <MapPin className="w-3 h-3 mt-0.5 flex-shrink-0" />
-                    {selectedOrder.deliveryAddress}
+                    {selectedOrder.address}
                   </p>
-                  {selectedOrder.deliveryPerson && (
+                  {orderDeliveryPerson[selectedOrder.id] && (
                     <p className="text-sm text-gray-600 flex items-center gap-1 mt-2">
                       <Truck className="w-3 h-3" />
-                      Delivery by: {selectedOrder.deliveryPerson.name}
+                      Delivery by: {orderDeliveryPerson[selectedOrder.id]?.name}
                     </p>
                   )}
-                </div>
-              </div>
-
-              <div className="mb-6">
-                <h3 className="text-sm font-medium text-gray-500 mb-3">Order Items</h3>
-                <div className="space-y-3">
-                  {selectedOrder.items.map((item, index) => (
-                    <div key={index} className="flex justify-between items-center py-2 border-b border-gray-100">
-                      <div>
-                        <p className="font-medium text-gray-900">{item.name}</p>
-                        <p className="text-sm text-gray-500">Quantity: {item.quantity}</p>
-                      </div>
-                      <p className="font-semibold text-gray-900">Rs. {item.price * item.quantity}</p>
-                    </div>
-                  ))}
                 </div>
               </div>
 
               <div className="border-t border-gray-200 pt-4">
                 <div className="flex justify-between items-center">
                   <span className="font-medium text-gray-900">Total Amount</span>
-                  <span className="text-xl font-bold text-green-600">Rs. {selectedOrder.total.toLocaleString()}</span>
+                  <span className="text-xl font-bold text-green-600">Rs. {selectedOrder.totalAmount.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between items-center mt-2 text-sm text-gray-500">
                   <span>Payment Method</span>
-                  <span>{selectedOrder.paymentMethod}</span>
+                  <span>{getPaymentMethodLabel(selectedOrder.paymentMethod)}</span>
                 </div>
                 <div className="flex justify-between items-center mt-1 text-sm text-gray-500">
-                  <span>Order Date</span>
-                  <span>{new Date(selectedOrder.createdAt).toLocaleString()}</span>
+                  <span>Payment Status</span>
+                  <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${getPaymentStatusColor(selectedOrder.paymentStatus)}`}>
+                    {selectedOrder.paymentStatus}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center mt-1 text-sm text-gray-500">
+                  <span>Order Status</span>
+                  <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(selectedOrder.status)}`}>
+                    {selectedOrder.status}
+                  </span>
                 </div>
               </div>
 
               <div className="flex gap-3 mt-6">
-                {!selectedOrder.deliveryPerson && selectedOrder.orderStatus !== 'delivered' && selectedOrder.orderStatus !== 'cancelled' && (
+                {!orderDeliveryPerson[selectedOrder.id] && selectedOrder.status !== 'DELIVERED' && selectedOrder.status !== 'CANCELLED' && (
                   <button
                     onClick={() => {
                       setSelectedOrder(null);

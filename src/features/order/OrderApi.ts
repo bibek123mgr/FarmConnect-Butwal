@@ -20,6 +20,12 @@ interface IOrderCreate {
 
 }
 
+interface IPaymentReference {
+    paymentMethod: IPaymentMethod,
+    amount: number,
+    gatewayReferenceId: string
+}
+
 export const createOrder = createAsyncThunk(
     "order/createOrder",
     async (payload: IOrderCreate, { rejectWithValue }) => {
@@ -33,6 +39,21 @@ export const createOrder = createAsyncThunk(
         }
     }
 )
+
+export const getAllOrders = createAsyncThunk(
+    "order/getAllOrders",
+    async (_, { rejectWithValue }) => {
+        try {
+            const { data } = await axiosInstance.get(`orders`);
+            return data;
+        } catch (error: any) {
+            return rejectWithValue(
+                error.response?.data || "Something went wrong"
+            );
+        }
+    }
+)
+
 
 export const getAllMyOrders = createAsyncThunk(
     "order/getAllMyOrders",
@@ -68,6 +89,20 @@ export const cancelMyOrder = createAsyncThunk(
     async (id, { rejectWithValue }) => {
         try {
             const { data } = await axiosInstance.delete(`orders/${id}`);
+            return data;
+        } catch (error: any) {
+            return rejectWithValue(
+                error.response?.data || "Something went wrong"
+            );
+        }
+    }
+)
+
+export const verifyOnlinePaymentStatus = createAsyncThunk(
+    "order/verifyOnlinePaymentStatus",
+    async (payload: IPaymentReference, { rejectWithValue }) => {
+        try {
+            const { data } = await axiosInstance.post(`orders/verify-payment`,payload);
             return data;
         } catch (error: any) {
             return rejectWithValue(

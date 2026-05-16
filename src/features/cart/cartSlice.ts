@@ -1,5 +1,5 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
-import { createCart, getMyCart } from "./cartApi";
+import { createCart, getMyCart, removeAllCart } from "./cartApi";
 import currency from "currency.js";
 
 export interface ICart {
@@ -73,7 +73,6 @@ const cartSlice = createSlice({
                 } else {
                     state.cart.push(newCart);
                 }
-                console.log(JSON.parse(JSON.stringify(state.cart)));
             })
             .addCase(createCart.rejected, (state, action) => {
                 state.loading = false;
@@ -92,6 +91,9 @@ const cartSlice = createSlice({
                 state.loading = false;
                 state.error = true;
                 state.message = action.error.message || "Something went wrong";
+            })
+            .addCase(removeAllCart.fulfilled, (state, action) => {
+                state.cart = [];
             })
     }
 });

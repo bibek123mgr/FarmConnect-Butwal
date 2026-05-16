@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { createOrder, getAllMyOrders, getOrderDetails } from "./OrderApi";
+import { createOrder, getAllMyOrders, getAllOrders, getOrderDetails, verifyOnlinePaymentStatus } from "./OrderApi";
 
 interface IOrder {
     id: number,
@@ -9,6 +9,16 @@ interface IOrder {
     paymentStatus: string,
     status: string,
     createdAt: Date,
+}
+
+export interface IAdminFarmOrder {
+    id: number;
+    totalAmount: number;
+    createdAt: string;
+    address: string;
+    paymentMethod: string;
+    paymentStatus: string;
+    status: string;
 }
 export interface IOrderDetailsForUserResponse {
     id: number;
@@ -45,6 +55,7 @@ export interface IOrderDetailsForUserResponse {
 interface IinitialState {
     orders: IOrder[],
     orderDetails: IOrderDetailsForUserResponse,
+    storeOrders:IAdminFarmOrder[]
     loading: boolean,
     success: boolean,
     error: boolean,
@@ -53,6 +64,7 @@ interface IinitialState {
 const initialState: IinitialState = {
     orders: [] as IOrder[],
     orderDetails: {} as IOrderDetailsForUserResponse,
+    storeOrders: [] as IAdminFarmOrder[],
     loading: false,
     success: false,
     error: false,
@@ -125,6 +137,40 @@ const orderSlice = createSlice({
                 state.orders = action.payload.data;
             })
             .addCase(getAllMyOrders.rejected, (state, action) => {
+                state.loading = false;
+                state.error = true;
+                state.success = false;
+                state.message = action.error.message || "Something went wrong";
+            })
+            .addCase(getAllOrders.pending, (state) => {
+                state.loading = true;
+                state.error = false;
+                state.success = false;
+                state.message = "";
+            })
+            .addCase(getAllOrders.fulfilled, (state, action) => {
+                state.loading = false;
+                state.success = true;
+                state.storeOrders = action.payload.data;
+            })
+            .addCase(getAllOrders.rejected, (state, action) => {
+                state.loading = false;
+                state.error = true;
+                state.success = false;
+                state.message = action.error.message || "Something went wrong";
+            })
+            .addCase(verifyOnlinePaymentStatus.pending, (state) => {
+                state.loading = true;
+                state.error = false;
+                state.success = false;
+                state.message = "";
+            })
+            .addCase(verifyOnlinePaymentStatus.fulfilled, (state, action) => {
+                state.loading = false;
+                state.success = true;
+                state.message = action.payload.message;
+            })
+            .addCase(verifyOnlinePaymentStatus.rejected, (state, action) => {
                 state.loading = false;
                 state.error = true;
                 state.success = false;

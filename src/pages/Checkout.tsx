@@ -23,7 +23,8 @@ import { useAppDispatch, useAppSelector } from "../hooks/hooks";
 import { createOrder, IPaymentMethod } from "../features/order/OrderApi";
 import toast from "react-hot-toast";
 import { clearMessage } from "../features/order/OrderSlice";
-import { getMyCart } from "../features/cart/cartApi";
+import { getMyCart, removeAllCart } from "../features/cart/cartApi";
+import { clearCart } from "../features/cart/cartSlice";
 
 const Checkout = () => {
   const [paymentMethod, setPaymentMethod] = useState<IPaymentMethod>(IPaymentMethod.COD);
@@ -67,8 +68,8 @@ const Checkout = () => {
 
   // Calculate totals
   const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const deliveryFee = subtotal > 1000 ? 0 : 80;
-  const discount = 54;
+  const deliveryFee = 0;
+  const discount = 0;
   const total = subtotal + deliveryFee - discount;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -86,6 +87,7 @@ const Checkout = () => {
     if (success) {
       toast.success(message);
       dispatch(clearMessage());
+      dispatch(clearCart());
     }
     if (error) {
       toast.error(message);
@@ -523,7 +525,7 @@ const Checkout = () => {
               {/* Place Order Button */}
               <button
                 onClick={handlePlaceOrder}
-                disabled={isProcessing}
+                disabled={isProcessing || cartItems.length === 0}
                 className="w-full bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white font-semibold py-3 rounded-lg transition-all mt-4 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
               >
                 {isProcessing ? (

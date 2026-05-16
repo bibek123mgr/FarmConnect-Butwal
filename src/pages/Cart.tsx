@@ -18,10 +18,7 @@ import { useEffect } from "react";
 
 const Cart = () => {
 
-  const subtotal = 540;
-  const deliveryFee = 0;
-  const discount = 54;
-  const total = 486;
+
   const dispatch = useAppDispatch();
   const { cart: cartItems } = useAppSelector((state) => state.cart);
 
@@ -51,6 +48,13 @@ const Cart = () => {
     dispatch(getMyCart());
   }, [dispatch]);
 
+  const subtotal = cartItems.reduce((acc, item) => {
+    return acc + (item.price || 0) * (item.quantity || 0);
+  }, 0);
+
+  const deliveryFee = 0;
+  const discount = 0;
+  const total = subtotal;
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -252,11 +256,13 @@ const Cart = () => {
                 </p>
               </div>
 
-              <Link to="/checkout" className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 rounded-lg transition mt-4 flex items-center justify-center gap-2">
+              <Link
+                to={cartItems.length === 0 ? "#" : "/checkout"}
+                className={`${cartItems.length === 0 ? "opacity-50 cursor-not-allowed pointer-events-none" : "hover:bg-green-700"} w-full bg-green-600 text-white font-medium py-3 rounded-lg transition mt-4 flex items-center justify-center gap-2`}
+              >
                 <CreditCard className="w-4 h-4" />
                 Proceed to Checkout
               </Link>
-
               <div className="flex items-center justify-center gap-2 mt-4 text-xs text-gray-400">
                 <Shield className="w-3.5 h-3.5" />
                 Secure Payment Gateway

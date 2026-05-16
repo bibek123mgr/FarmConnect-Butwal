@@ -9,6 +9,7 @@ import ProtectedRoute from "./ProtectedRoute";
 import UserLayout from "./UserLayout";
 import Cart from "./pages/Cart";
 import SignUp from "./pages/SignUp";
+import PaymentSuccess from "./pages/PaymentSuccess";
 
 const UserRoutes = () => {
   return (
@@ -22,6 +23,7 @@ const UserRoutes = () => {
         <Route element={<ProtectedRoute />}>
           <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<Checkout />} />
+          <Route path="/payment-success" element={<PaymentSuccess />} />
           <Route path="/orders" element={<Orders />} />
         </Route>
       </Route>
