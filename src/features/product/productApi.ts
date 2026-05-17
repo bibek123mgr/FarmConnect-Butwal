@@ -105,3 +105,17 @@ export const updateProduct = createAsyncThunk(
         }
     }
 );
+
+export const getProductDetails = createAsyncThunk(
+    "products/getProductDetails",
+    async (id: number, { rejectWithValue }) => {
+        try {
+            const { data } = await axiosInstanceNoCredentials.get(`products/${id}`);
+            return data;
+        } catch (error: any) {
+            return rejectWithValue(
+                error.response?.data || "Something went wrong"
+            );
+        }
+    }
+);

@@ -26,38 +26,91 @@ import { getAllComments, createComment, deleteComment, updateComment } from "../
 import { useParams } from "react-router-dom";
 import { clearMessage, deleteCommentFromState, updateCommentFromState, type IComment } from "../features/comment/CommentSlice";
 import toast from "react-hot-toast";
+import { getProductDetails } from "../features/product/productApi";
+
+// Static features for all products
+const staticFeatures = [
+    "100% Organic & Chemical Free",
+    "Farm Fresh & Hand-picked",
+    "No artificial preservatives",
+    "Rich in nutrients & antioxidants",
+    "Farm-to-table delivery",
+    "Quality guaranteed",
+];
+
+// Static related products
+const staticRelatedProducts = [
+    {
+        id: 1,
+        name: "Organic Fresh Apples",
+        price: 180,
+        originalPrice: 220,
+        image: "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=200",
+        rating: 4.5,
+    },
+    {
+        id: 2,
+        name: "Organic Red Apples",
+        price: 190,
+        originalPrice: 240,
+        image: "https://images.unsplash.com/photo-1570913149827-d2ac84ab3f9a?w=200",
+        rating: 4.3,
+    },
+    {
+        id: 3,
+        name: "Fresh Green Apples",
+        price: 170,
+        originalPrice: 210,
+        image: "https://images.unsplash.com/photo-1579613832111-ac7dfcc7723e?w=200",
+        rating: 4.6,
+    },
+    {
+        id: 4,
+        name: "Golden Delicious",
+        price: 200,
+        originalPrice: 250,
+        image: "https://images.unsplash.com/photo-1579613832111-ac7dfcc7723e?w=200",
+        rating: 4.4,
+    },
+];
+
+// Base64 placeholder image to avoid infinite loading
+const PLACEHOLDER_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='500' height='500' viewBox='0 0 24 24' fill='none' stroke='%23999999' stroke-width='1' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Ccircle cx='8.5' cy='8.5' r='1.5'%3E%3C/circle%3E%3Cpolyline points='21 15 16 10 5 21'%3E%3C/polyline%3E%3C/svg%3E";
 
 const SingleProductPage = () => {
     const [activeTab, setActiveTab] = useState("description");
-    const [selectedImage, setSelectedImage] = useState(0);
     const [quantity, setQuantity] = useState(1);
     const [reviewRating, setReviewRating] = useState(5);
     const [reviewComment, setReviewComment] = useState("");
     const [hoveredRating, setHoveredRating] = useState(0);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [imageError, setImageError] = useState(false);
 
     const dispatch = useAppDispatch();
     const { id } = useParams();
     const ProductId = Number(id);
 
     const { comments, loading, error, success, message } = useAppSelector((state) => state.comment);
-
     const { user } = useAppSelector((state) => state.auth);
+    const { productDetails } = useAppSelector((store) => store.product);
 
     useEffect(() => {
+        dispatch(getProductDetails(ProductId));
         dispatch(getAllComments(ProductId));
-    }, []);
+        // Reset image error when product changes
+        setImageError(false);
+    }, [ProductId, dispatch]);
 
     const handleDeleteReview = (commentId: number) => {
         dispatch(deleteComment(commentId));
         dispatch(deleteCommentFromState(commentId));
-    }
+    };
 
-    const handleEditReview = (review:IComment) => {
+    const handleEditReview = (review: IComment) => {
         const { id, comment, rating } = review;
         dispatch(updateComment({ id, comment, rating }));
         dispatch(updateCommentFromState({ id, comment, rating }));
-    }
+    };
 
     useEffect(() => {
         if (loading) return;
@@ -75,79 +128,48 @@ const SingleProductPage = () => {
         }
     }, [success, dispatch, message, error, loading, ProductId]);
 
-    const product = {
-        id: 1,
-        name: "Organic Fresh Apples - Himalayan Variety",
-        price: 180,
-        originalPrice: 220,
-        discount: 18,
-        rating: 4.5,
-        reviews: 128,
-        inStock: true,
-        image: "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=500",
-        images: [
-            "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=500",
-            "https://images.unsplash.com/photo-1570913149827-d2ac84ab3f9a?w=500",
-            "https://images.unsplash.com/photo-1579613832111-ac7dfcc7723e?w=500",
-            "https://images.unsplash.com/photo-1513279922550-250c2129b6eb?w=500",
-        ],
-        category: "Fresh Fruits",
+    // Dynamic product data from API
+    const product = productDetails || {
+        id: 0,
+        name: "Product Not Found",
+        description: "Product details are not available at the moment.",
         unit: "kg",
-        minOrder: 1,
-        maxOrder: 10,
-        description:
-            "Fresh, crispy, and naturally sweet apples grown in the Himalayan foothills. Our apples are hand-picked at peak ripeness and delivered within 24 hours of harvest. These organic apples are free from harmful pesticides and chemicals, making them a healthy choice for your family.",
-        features: [
-            "100% Organic & Chemical Free",
-            "Hand-picked at peak ripeness",
-            "Fresh from Himalayan orchards",
-            "No artificial wax or coating",
-            "Rich in antioxidants & fiber",
-            "Farm-to-table within 24 hours",
-        ],
-        seller: {
-            name: "Himalayan Organic Farms",
-            location: "Mustang, Nepal",
-            rating: 4.8,
-            products: 45,
-            since: 2015,
-        },
+        rate: "0",
+        image: "",
+        farmName: "Farm Name",
+        categoryName: "Category",
     };
 
-    const relatedProducts = [
-        {
-            id: 2,
-            name: "Organic Red Apples",
-            price: 190,
-            originalPrice: 240,
-            image: "https://images.unsplash.com/photo-1570913149827-d2ac84ab3f9a?w=200",
-            rating: 4.3,
-        },
-        {
-            id: 3,
-            name: "Fresh Green Apples",
-            price: 170,
-            originalPrice: 210,
-            image: "https://images.unsplash.com/photo-1579613832111-ac7dfcc7723e?w=200",
-            rating: 4.6,
-        },
-        {
-            id: 4,
-            name: "Golden Delicious",
-            price: 200,
-            originalPrice: 250,
-            image: "https://images.unsplash.com/photo-1579613832111-ac7dfcc7723e?w=200",
-            rating: 4.4,
-        },
-        {
-            id: 5,
-            name: "Organic Pears",
-            price: 160,
-            originalPrice: 200,
-            image: "https://images.unsplash.com/photo-1513279922550-250c2129b6eb?w=200",
-            rating: 4.7,
-        },
-    ];
+    // Handle image URL - only set once, don't change after error
+    const getImageUrl = () => {
+        if (imageError) {
+            return PLACEHOLDER_IMAGE;
+        }
+        if (!product.image || product.image === "") {
+            return PLACEHOLDER_IMAGE;
+        }
+        if (product.image.startsWith("http")) {
+            return product.image;
+        }
+        return `http://localhost:4000${product.image}`;
+    };
+
+    const handleImageError = () => {
+        if (!imageError) {
+            setImageError(true);
+        }
+    };
+
+    const staticRating = 4.5;
+
+    const formatPrice = (price: string | number) => {
+        const numPrice = typeof price === 'string' ? parseFloat(price) : price;
+        return isNaN(numPrice) ? 0 : numPrice;
+    };
+
+    const productPrice = formatPrice(product.rate);
+    const originalPrice = productPrice;
+    const discount = 0;
 
     const renderStars = (rating: number, size: string = "w-4 h-4") => {
         return [...Array(5)].map((_, i) => (
@@ -187,53 +209,41 @@ const SingleProductPage = () => {
         <div className="min-h-screen bg-gray-50 py-8">
             <div className="container mx-auto px-5">
                 {/* Breadcrumb */}
-                <div className="flex items-center gap-2 text-sm text-gray-500 mb-6">
+                <div className="flex items-center gap-2 text-sm text-gray-500 mb-6 flex-wrap">
                     <Link to="/" className="hover:text-green-600 transition">Home</Link>
                     <span>/</span>
                     <Link to="/products" className="hover:text-green-600 transition">Products</Link>
                     <span>/</span>
-                    <Link to="/products/fruits" className="hover:text-green-600 transition">Fruits</Link>
+                    <Link to={`/products/${product.categoryName?.toLowerCase()}`} className="hover:text-green-600 transition">
+                        {product.categoryName || "Products"}
+                    </Link>
                     <span>/</span>
                     <span className="text-gray-800 font-medium">{product.name}</span>
                 </div>
 
                 <div className="flex flex-col lg:flex-row gap-8">
-                    {/* Left Column - Product Images */}
                     <div className="lg:w-1/2">
-                        <div className="bg-white rounded-lg shadow-sm overflow-hidden mb-4">
+                        <div className="bg-white rounded-lg shadow-sm overflow-hidden mb-4 h-[610px] flex items-center justify-center">
                             <img
-                                src={product.images[selectedImage]}
+                                src={getImageUrl()}
                                 alt={product.name}
-                                className="w-full h-auto object-cover cursor-pointer"
+                                className="max-w-full max-h-full object-contain cursor-pointer"
+                                onError={handleImageError}
                             />
                         </div>
-                        <div className="flex gap-3">
-                            {product.images.map((img, index) => (
-                                <button
-                                    key={index}
-                                    onClick={() => setSelectedImage(index)}
-                                    className={`w-20 h-20 rounded-lg border-2 ${selectedImage === index ? "border-green-600" : "border-gray-200"
-                                        } overflow-hidden hover:border-green-600 transition`}
-                                >
-                                    <img src={img} alt={`Product view ${index + 1}`} className="w-full h-full object-cover" />
-                                </button>
-                            ))}
-                        </div>
                     </div>
-
-                    {/* Right Column - Product Info */}
                     <div className="lg:w-1/2">
                         <div className="bg-white rounded-lg shadow-sm p-6">
                             <div className="mb-3">
                                 <span className="inline-block bg-green-100 text-green-700 text-xs font-medium px-2.5 py-1 rounded">
-                                    {product.category}
+                                    {product.categoryName || "Fresh Produce"}
                                 </span>
                             </div>
                             <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-3">{product.name}</h1>
-                            <div className="flex items-center gap-3 mb-4">
+                            <div className="flex items-center gap-3 mb-4 flex-wrap">
                                 <div className="flex items-center gap-1">
-                                    {renderStars(product.rating)}
-                                    <span className="text-sm font-medium text-gray-700 ml-1">{product.rating}</span>
+                                    {renderStars(staticRating)}
+                                    <span className="text-sm font-medium text-gray-700 ml-1">{staticRating}</span>
                                 </div>
                                 <span className="text-sm text-gray-500">({comments?.length || 0} reviews)</span>
                                 <div className="flex items-center gap-1 text-green-600">
@@ -242,18 +252,22 @@ const SingleProductPage = () => {
                                 </div>
                             </div>
                             <div className="mb-4">
-                                <div className="flex items-baseline gap-2">
-                                    <span className="text-3xl font-bold text-green-600">₹{product.price}</span>
-                                    <span className="text-lg text-gray-400 line-through">₹{product.originalPrice}</span>
-                                    <span className="bg-red-100 text-red-600 text-sm font-semibold px-2 py-0.5 rounded">
-                                        {product.discount}% OFF
-                                    </span>
+                                <div className="flex items-baseline gap-2 flex-wrap">
+                                    <span className="text-3xl font-bold text-green-600">Rs.{productPrice}</span>
+                                    {originalPrice > productPrice && (
+                                        <>
+                                            <span className="text-lg text-gray-400 line-through">Rs.{Math.round(originalPrice)}</span>
+                                            <span className="bg-red-100 text-red-600 text-sm font-semibold px-2 py-0.5 rounded">
+                                                {discount}% OFF
+                                            </span>
+                                        </>
+                                    )}
                                 </div>
-                                <p className="text-xs text-gray-500 mt-1">Inclusive of all taxes • Free delivery on orders above ₹1000</p>
+                                <p className="text-xs text-gray-500 mt-1">Inclusive of all taxes • Per {product.unit}</p>
                             </div>
                             <div className="mb-4">
                                 <label className="text-sm text-gray-600 mb-2 block">Quantity ({product.unit})</label>
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-3 flex-wrap">
                                     <div className="flex items-center border border-gray-200 rounded-lg">
                                         <button
                                             onClick={() => quantity > 1 && setQuantity(quantity - 1)}
@@ -263,18 +277,18 @@ const SingleProductPage = () => {
                                         </button>
                                         <span className="w-12 text-center text-sm font-medium">{quantity}</span>
                                         <button
-                                            onClick={() => quantity < product.maxOrder && setQuantity(quantity + 1)}
+                                            onClick={() => setQuantity(quantity + 1)}
                                             className="w-9 h-9 flex items-center justify-center border-l border-gray-200 hover:text-green-600 transition"
                                         >
                                             <Plus className="w-4 h-4" />
                                         </button>
                                     </div>
                                     <p className="text-xs text-gray-500">
-                                        Min. order: {product.minOrder} {product.unit} | Max: {product.maxOrder} {product.unit}
+                                        Min. order: 1 {product.unit}
                                     </p>
                                 </div>
                             </div>
-                            <div className="flex gap-3 mb-6">
+                            <div className="flex gap-3 mb-6 flex-wrap">
                                 <button className="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-3 rounded-lg transition flex items-center justify-center gap-2">
                                     <ShoppingCart className="w-4 h-4" />
                                     Add to Cart
@@ -292,7 +306,7 @@ const SingleProductPage = () => {
                                     <Truck className="w-4 h-4 text-green-600" />
                                     <div>
                                         <p className="text-xs font-medium text-gray-800">Free Delivery</p>
-                                        <p className="text-xs text-gray-500">On orders ₹1000+</p>
+                                        <p className="text-xs text-gray-500">On orders Rs.1000+</p>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
@@ -324,23 +338,22 @@ const SingleProductPage = () => {
                                             <Leaf className="w-4 h-4 text-green-600" />
                                         </div>
                                         <div>
-                                            <p className="text-sm font-medium text-gray-800">{product.seller.name}</p>
+                                            <p className="text-sm font-medium text-gray-800">{product.farmName || "Local Farm"}</p>
                                             <div className="flex items-center gap-1">
                                                 <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
                                                 <span className="text-xs text-gray-600">
-                                                    {product.seller.rating} · {product.seller.products} products
+                                                    4.5 · Fresh Produce
                                                 </span>
                                             </div>
                                         </div>
                                     </div>
-                                    <Link to="/seller/1" className="text-xs text-green-600 hover:underline">View Shop</Link>
                                 </div>
                                 <div className="flex items-center gap-2 text-xs text-gray-500">
                                     <MapPin className="w-3 h-3" />
-                                    <span>{product.seller.location}</span>
+                                    <span>Local Farm, Nepal</span>
                                     <span>•</span>
                                     <Award className="w-3 h-3" />
-                                    <span>Since {product.seller.since}</span>
+                                    <span>Premium Quality</span>
                                 </div>
                             </div>
                         </div>
@@ -350,10 +363,10 @@ const SingleProductPage = () => {
                 {/* Product Details Tabs Section */}
                 <div className="mt-8">
                     <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-                        <div className="flex border-b border-gray-200">
+                        <div className="flex border-b border-gray-200 overflow-x-auto">
                             <button
                                 onClick={() => setActiveTab("description")}
-                                className={`px-6 py-3 text-sm font-medium transition ${activeTab === "description"
+                                className={`px-6 py-3 text-sm font-medium transition whitespace-nowrap ${activeTab === "description"
                                     ? "text-green-600 border-b-2 border-green-600"
                                     : "text-gray-500 hover:text-gray-700"
                                     }`}
@@ -362,7 +375,7 @@ const SingleProductPage = () => {
                             </button>
                             <button
                                 onClick={() => setActiveTab("reviews")}
-                                className={`px-6 py-3 text-sm font-medium transition ${activeTab === "reviews"
+                                className={`px-6 py-3 text-sm font-medium transition whitespace-nowrap ${activeTab === "reviews"
                                     ? "text-green-600 border-b-2 border-green-600"
                                     : "text-gray-500 hover:text-gray-700"
                                     }`}
@@ -374,10 +387,33 @@ const SingleProductPage = () => {
                         {activeTab === "description" && (
                             <div className="p-6">
                                 <h3 className="text-lg font-semibold text-gray-800 mb-3">Product Description</h3>
-                                <p className="text-gray-600 leading-relaxed">{product.description}</p>
-                                <h3 className="text-lg font-semibold text-gray-800 mt-6 mb-3">Product Features</h3>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
-                                    {product.features.map((feature, idx) => (
+                                <p className="text-gray-600 leading-relaxed">
+                                    {product.description || "No description available for this product."}
+                                </p>
+
+                                <h3 className="text-lg font-semibold text-gray-800 mt-6 mb-3">Product Details</h3>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                                    <div className="flex items-center gap-2 text-sm">
+                                        <span className="text-gray-500">Unit:</span>
+                                        <span className="text-gray-800 font-medium">{product.unit}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-sm">
+                                        <span className="text-gray-500">Category:</span>
+                                        <span className="text-gray-800 font-medium">{product.categoryName}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-sm">
+                                        <span className="text-gray-500">Farm:</span>
+                                        <span className="text-gray-800 font-medium">{product.farmName}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-sm">
+                                        <span className="text-gray-500">Availability:</span>
+                                        <span className="text-green-600 font-medium">In Stock</span>
+                                    </div>
+                                </div>
+
+                                <h3 className="text-lg font-semibold text-gray-800 mb-3">Product Features</h3>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                                    {staticFeatures.map((feature, idx) => (
                                         <div key={idx} className="flex items-center gap-2 text-sm text-gray-600">
                                             <Check className="w-4 h-4 text-green-600" />
                                             {feature}
@@ -393,8 +429,8 @@ const SingleProductPage = () => {
                                 <div className="flex items-center justify-between flex-wrap gap-4 mb-6 pb-6 border-b">
                                     <div className="flex items-center gap-8">
                                         <div className="text-center">
-                                            <div className="text-4xl font-bold text-gray-800">{product.rating}</div>
-                                            <div className="flex items-center gap-1 mt-1">{renderStars(product.rating)}</div>
+                                            <div className="text-4xl font-bold text-gray-800">{staticRating}</div>
+                                            <div className="flex items-center gap-1 mt-1">{renderStars(staticRating)}</div>
                                             <div className="text-sm text-gray-500 mt-1">Based on {comments?.length || 0} reviews</div>
                                         </div>
                                     </div>
@@ -452,16 +488,13 @@ const SingleProductPage = () => {
                                             )}
                                         </button>
                                     </div>
-                                )
-
-                                    : (
-                                        <div className="mb-8 p-4 bg-gray-50 rounded-lg text-center">
-                                            <p className="text-gray-600">
-                                                Please <Link to="/login" className="text-green-600 hover:underline">login</Link> to write a review
-                                            </p>
-                                        </div>
-                                    )}
-
+                                ) : (
+                                    <div className="mb-8 p-4 bg-gray-50 rounded-lg text-center">
+                                        <p className="text-gray-600">
+                                            Please <Link to="/login" className="text-green-600 hover:underline">login</Link> to write a review
+                                        </p>
+                                    </div>
+                                )}
 
                                 <div className="space-y-6">
                                     {loading ? (
@@ -480,34 +513,35 @@ const SingleProductPage = () => {
                                                 <div className="flex items-start gap-3">
                                                     <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
                                                         <span className="text-green-600 font-semibold">
-                                                            {review.createdByName?.charAt(0).toUpperCase()}
+                                                            {review.createdByName?.charAt(0).toUpperCase() || "U"}
                                                         </span>
                                                     </div>
                                                     <div className="flex-1">
                                                         <div className="flex items-center justify-between flex-wrap gap-2 mb-1">
                                                             <div>
-                                                                <h4 className="font-medium text-gray-800">{review.createdByName}</h4>
+                                                                <h4 className="font-medium text-gray-800">{review.createdByName || "User"}</h4>
                                                                 <div className="flex items-center gap-1 mt-1">
                                                                     {renderStars(review.rating, "w-3.5 h-3.5")}
                                                                 </div>
                                                             </div>
 
                                                             <div className="">
-                                                                {user && Number(user.id) === Number(review.createdBy) && <div className="flex items-center gap-2 mb-2">
-                                                                    <button
-                                                                        onClick={() => handleDeleteReview(review.id)}
-                                                                        className="text-xs text-red-600 hover:underline"
-                                                                    >
-                                                                        <Trash className="w-4 h-4" />
-                                                                    </button>
-                                                                    <button
-                                                                        onClick={() => handleEditReview(review)}
-                                                                        className="text-xs text-green-600 hover:underline"
-                                                                    >
-                                                                        <Edit className="w-4 h-4" />
-                                                                    </button>
-                                                                </div> }
-                                                                
+                                                                {user && Number(user.id) === Number(review.createdBy) && (
+                                                                    <div className="flex items-center gap-2 mb-2">
+                                                                        <button
+                                                                            onClick={() => handleDeleteReview(review.id)}
+                                                                            className="text-xs text-red-600 hover:underline"
+                                                                        >
+                                                                            <Trash className="w-4 h-4" />
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={() => handleEditReview(review)}
+                                                                            className="text-xs text-green-600 hover:underline"
+                                                                        >
+                                                                            <Edit className="w-4 h-4" />
+                                                                        </button>
+                                                                    </div>
+                                                                )}
                                                                 <div className="flex text-xs text-gray-400 gap-2">
                                                                     <Calendar className="w-4 h-4" />
                                                                     {new Date(review.createdAt).toLocaleDateString()}
@@ -526,17 +560,21 @@ const SingleProductPage = () => {
                     </div>
                 </div>
 
-                {/* Related Products Section */}
+                {/* Related Products Section - Static */}
                 <div className="mt-8">
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="text-xl font-semibold text-gray-800">You May Also Like</h3>
                         <Link to="/products" className="text-sm text-green-600 hover:underline">View All</Link>
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                        {relatedProducts.map((item) => (
+                        {staticRelatedProducts.map((item) => (
                             <Link key={item.id} to={`/product/${item.id}`} className="bg-white rounded-lg shadow-sm hover:shadow-md transition overflow-hidden group">
                                 <div className="relative">
-                                    <img src={item.image} alt={item.name} className="w-full h-40 object-cover group-hover:scale-105 transition duration-300" />
+                                    <img
+                                        src={item.image}
+                                        alt={item.name}
+                                        className="w-full h-40 object-cover group-hover:scale-105 transition duration-300"
+                                    />
                                     <button className="absolute top-2 right-2 bg-white rounded-full p-1.5 shadow-sm hover:bg-green-600 hover:text-white transition">
                                         <ShoppingCart className="w-3.5 h-3.5" />
                                     </button>
@@ -553,8 +591,8 @@ const SingleProductPage = () => {
                                     </div>
                                     <h4 className="font-medium text-gray-800 text-sm truncate">{item.name}</h4>
                                     <div className="flex items-center gap-2 mt-1">
-                                        <span className="font-semibold text-gray-800 text-sm">₹{item.price}</span>
-                                        <span className="text-xs text-gray-400 line-through">₹{item.originalPrice}</span>
+                                        <span className="font-semibold text-gray-800 text-sm">Rs.{item.price}</span>
+                                        <span className="text-xs text-gray-400 line-through">Rs.{item.originalPrice}</span>
                                     </div>
                                 </div>
                             </Link>

@@ -1,28 +1,29 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { fetchProducts, fetchProductsForAdmin, updateProduct } from "./productApi";
+import { fetchProducts, fetchProductsForAdmin, getProductDetails, updateProduct } from "./productApi";
 
 
 export interface IProduct {
-  id: number;
-  name: string;
-  description: string;
-  unit: string;
-  rate: string;
-  farmId: number;
-  categoryId: number;
-  farmName: string;
-  categoryName: string;
-  quantity: number;
-  image: string;
+    id: number;
+    name: string;
+    description: string;
+    unit: string;
+    rate: string;
+    farmId: number;
+    categoryId: number;
+    farmName: string;
+    categoryName: string;
+    quantity: number;
+    image: string;
 }
 
 export interface IProductAdmin extends IProduct {
     OpeningStock: number;
 }
 
-const initialValues={
+const initialValues = {
     products: [] as IProduct[],
     productsAdmin: [] as IProductAdmin[],
+    productDetails: {} as IProduct,
     loading: false,
     success: false,
     error: false,
@@ -30,12 +31,12 @@ const initialValues={
     product: {} as IProduct,
     totalProducts: 0,
     totalPages: 0,
-    pagination:{
+    pagination: {
         page: 1,
         limit: 20,
         total: 0
     },
-    searchFilters:{
+    searchFilters: {
         title: "",
         category: "",
         minPrice: 0,
@@ -80,7 +81,7 @@ const productSlice = createSlice({
             state.success = false;
         }
     },
-    extraReducers:(builder)=>{
+    extraReducers: (builder) => {
         builder
             .addCase(fetchProducts.pending, (state) => {
                 state.loading = true;
@@ -100,7 +101,24 @@ const productSlice = createSlice({
                 state.success = false;
                 state.message = action.error.message || "Something went wrong";
             })
-              .addCase(fetchProductsForAdmin.pending, (state) => {
+            .addCase(getProductDetails.pending, (state) => {
+                state.loading = true;
+                state.error = false;
+                state.success = false;
+                state.message = "";
+            })
+            .addCase(getProductDetails.fulfilled, (state, action) => {
+                state.loading = false;
+                state.success = true;
+                state.productDetails = action.payload.data;
+            })
+            .addCase(getProductDetails.rejected, (state, action) => {
+                state.loading = false;
+                state.error = true;
+                state.success = false;
+                state.message = action.error.message || "Something went wrong";
+            })
+            .addCase(fetchProductsForAdmin.pending, (state) => {
                 state.loading = true;
                 state.error = false;
                 state.success = false;
@@ -139,8 +157,8 @@ const productSlice = createSlice({
                 state.message = action.error.message || "Something went wrong";
             })
     }
-    
-   
+
+
 });
 
 export const { setSearchFilters, setPagination, setSuccessMessage, setError, clearMessage } = productSlice.actions;
