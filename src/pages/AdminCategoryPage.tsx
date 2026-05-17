@@ -1,4 +1,3 @@
-// AdminCategoriesPage.tsx
 import { useEffect, useState, useRef } from "react";
 import { useAppDispatch, useAppSelector } from "../hooks/hooks";
 import {
@@ -15,8 +14,9 @@ import {
   RefreshCw,
   Image as ImageIcon,
   Tag,
-  FileText,
   Filter,
+  ChevronDown,
+  Plus,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { fetchCategories, createCategory, updateCategory, deleteCategory } from "../features/category/CategoryApi";
@@ -39,6 +39,8 @@ const AdminCategoriesPage = () => {
   const [limit, setLimit] = useState(10);
   const [sortBy, setSortBy] = useState<string>("name");
   const [sortOrder, setSortOrder] = useState<string>("asc");
+  const [showFilters, setShowFilters] = useState(false);
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
   
   // Local filter states (for form inputs before search)
   const [localSearchTerm, setLocalSearchTerm] = useState("");
@@ -117,9 +119,22 @@ const AdminCategoriesPage = () => {
       image: category.image || "",
     });
     setPreviewImage(category.image || "");
+    setShowCategoryModal(true);
+  };
+
+  const handleAddNew = () => {
+    setEditingCategory(null);
+    setFormData({
+      name: "",
+      description: "",
+      image: "",
+    });
+    setPreviewImage("");
+    setShowCategoryModal(true);
   };
 
   const handleCancelEdit = () => {
+    setShowCategoryModal(false);
     setEditingCategory(null);
     setFormData({
       name: "",
@@ -135,6 +150,16 @@ const AdminCategoriesPage = () => {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (!file.type.startsWith('image/')) {
+        toast.error("Please upload an image file");
+        return;
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("Image size should be less than 5MB");
+        return;
+      }
+
       const imageUrl = URL.createObjectURL(file);
       setPreviewImage(imageUrl);
       setFormData({
@@ -179,26 +204,22 @@ const AdminCategoriesPage = () => {
       image: previewImage || "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=500",
     };
 
-    if (editingCategory) {
-      await dispatch(updateCategory({ id: editingCategory.id, ...categoryData }));
-      toast.success("Category updated successfully");
-      handleCancelEdit();
-    } else {
-      await dispatch(createCategory(categoryData));
-      toast.success("Category created successfully");
-      setFormData({
-        name: "",
-        description: "",
-        image: "",
-      });
-      setPreviewImage("");
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
+    try {
+      if (editingCategory) {
+        await dispatch(updateCategory({ id: editingCategory.id, ...categoryData }));
+        toast.success("Category updated successfully");
+        handleCancelEdit();
+      } else {
+        await dispatch(createCategory(categoryData));
+        toast.success("Category created successfully");
+        handleCancelEdit();
       }
+      fetchCategoriesWithFilters();
+    } catch (error) {
+      toast.error("Something went wrong. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setIsSubmitting(false);
-    fetchCategoriesWithFilters();
   };
 
   const handleDelete = async (categoryId: number) => {
@@ -250,374 +271,414 @@ const AdminCategoriesPage = () => {
   const hasActiveFilters = searchTerm !== "";
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
-            Category Management
-          </h1>
-          <p className="text-gray-500 mt-1">Manage your store product categories</p>
+    <div className="min-h-screen bg-gray-50">
+      <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Category Management</h1>
+            <p className="text-gray-600 mt-2">Manage your store product categories</p>
+          </div>
+          <button
+            onClick={handleAddNew}
+            className="bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 px-5 rounded-lg transition flex items-center gap-2 shadow-sm"
+          >
+            <Plus className="w-4 h-4" />
+            Add New Category
+          </button>
         </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-          <div className="bg-white rounded-2xl p-4 shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100">
+          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-gray-500 font-medium">Total Categories</p>
-                <p className="text-2xl font-bold text-gray-800 mt-1">{stats.totalCategories}</p>
+                <p className="text-sm text-gray-600">Total Categories</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.totalCategories}</p>
               </div>
-              <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
                 <Package className="w-5 h-5 text-blue-600" />
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl p-4 shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100">
+          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-gray-500 font-medium">Active Categories</p>
-                <p className="text-2xl font-bold text-green-600 mt-1">{stats.activeCategories}</p>
+                <p className="text-sm text-gray-600">Active Categories</p>
+                <p className="text-2xl font-bold text-green-600">{stats.activeCategories}</p>
               </div>
-              <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
+              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
                 <Tag className="w-5 h-5 text-green-600" />
               </div>
             </div>
           </div>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-6">
-          {/* Category Form Sidebar */}
-          <div className="lg:w-[450px] flex-shrink-0">
-            <div className="bg-white rounded-2xl shadow-lg sticky top-24 overflow-hidden border border-gray-100">
-              <form onSubmit={handleSubmit} className="p-5 space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Category Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    placeholder="e.g., Fruits, Vegetables, Dairy"
-                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
-                    style={{ height: "44px" }}
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                  <textarea
-                    name="description"
-                    value={formData.description}
-                    onChange={handleInputChange}
-                    rows={3}
-                    placeholder="Category description..."
-                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Category Image</label>
-                  <div
-                    onClick={() => fileInputRef.current?.click()}
-                    className="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center cursor-pointer hover:border-green-500 transition-all duration-300 bg-gray-50 hover:bg-green-50"
-                  >
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                      className="hidden"
-                    />
-                    <Upload className="w-8 h-8 text-gray-400 mx-auto mb-1" />
-                    <p className="text-xs text-gray-500">Click to upload category image</p>
-                    <p className="text-xs text-gray-400 mt-1">PNG, JPG up to 5MB</p>
-                  </div>
-
-                  {previewImage && (
-                    <div className="mt-3 relative group inline-block">
-                      <img
-                        src={previewImage}
-                        alt="Category preview"
-                        className="w-32 h-32 object-cover rounded-lg border border-gray-200"
-                      />
-                      <button
-                        type="button"
-                        onClick={handleRemoveImage}
-                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex gap-3 pt-2">
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="flex-1 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white font-medium rounded-xl transition flex items-center justify-center gap-2 disabled:opacity-70 shadow-md text-sm"
-                    style={{ height: "44px" }}
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        {editingCategory ? "Updating..." : "Creating..."}
-                      </>
-                    ) : (
-                      <>
-                        <CheckCircle className="w-4 h-4" />
-                        {editingCategory ? "Update Category" : "Create Category"}
-                      </>
-                    )}
-                  </button>
-                  {editingCategory && (
-                    <button
-                      type="button"
-                      onClick={handleCancelEdit}
-                      className="flex-1 border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium rounded-xl transition text-sm"
-                      style={{ height: "44px" }}
-                    >
-                      Cancel
-                    </button>
-                  )}
-                </div>
-              </form>
+        {/* Search and Filter Bar */}
+        <div className="bg-white rounded-xl shadow-sm p-4 mb-6">
+          <div className="flex flex-col gap-4">
+            <div className="flex gap-3">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <input
+                  type="text"
+                  placeholder="Search categories by name..."
+                  value={localSearchTerm}
+                  onChange={(e) => setLocalSearchTerm(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                  className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                />
+              </div>
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 transition flex items-center gap-2"
+              >
+                <Filter className="w-4 h-4" />
+                Filters
+                <ChevronDown className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+              </button>
+              <button
+                onClick={handleSearch}
+                className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition flex items-center gap-2"
+              >
+                <Search className="w-4 h-4" />
+                Search
+              </button>
+              {hasActiveFilters && (
+                <button
+                  onClick={clearFilters}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-red-600 hover:bg-red-50 transition flex items-center gap-2"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  Clear
+                </button>
+              )}
             </div>
+
+            {showFilters && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-100">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
+                  <div className="flex gap-2">
+                    <select
+                      value={localSortBy}
+                      onChange={(e) => setLocalSortBy(e.target.value)}
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                    >
+                      <option value="name">Name</option>
+                      <option value="createdAt">Date Added</option>
+                    </select>
+                    <button
+                      onClick={() => handleLocalSortChange(localSortBy)}
+                      className="px-3 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 transition"
+                    >
+                      {localSortOrder === "asc" ? "↑" : "↓"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {hasActiveFilters && (
+              <div className="flex flex-wrap gap-2 pt-2">
+                {searchTerm && (
+                  <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-lg text-xs">
+                    Search: {searchTerm}
+                    <button onClick={() => {
+                      setLocalSearchTerm("");
+                      setSearchTerm("");
+                      setCurrentPage(1);
+                    }} className="hover:text-green-900">
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Categories Table */}
+        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                  <th className="text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {loading ? (
+                  [...Array(limit)].map((_, index) => (
+                    <tr key={index}>
+                      <td colSpan={3} className="px-6 py-4">
+                        <CategoryCardSkeleton />
+                      </td>
+                    </tr>
+                  ))
+                ) : categories?.length === 0 ? (
+                  <tr>
+                    <td colSpan={3} className="text-center py-12">
+                      <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900">No categories found</h3>
+                      <p className="text-gray-500 mt-1">Add your first category using the button above</p>
+                    </td>
+                  </tr>
+                ) : (
+                  categories?.map((category) => (
+                    <tr key={category.id} className="hover:bg-gray-50 transition">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          {category.image ? (
+                            <img
+                              src={category.image}
+                              alt={category.name}
+                              className="w-10 h-10 rounded-lg object-cover"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = "https://via.placeholder.com/40?text=No+Image";
+                              }}
+                            />
+                          ) : (
+                            <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                              <ImageIcon className="w-5 h-5 text-gray-400" />
+                            </div>
+                          )}
+                          <div>
+                            <p className="font-medium text-gray-900">{category.name}</p>
+                            <p className="text-xs text-gray-500">ID: #{category.id}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <p className="text-sm text-gray-600 line-clamp-2 max-w-md">
+                          {category.description || "No description available"}
+                        </p>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            onClick={() => handleEdit(category)}
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                            title="Edit Category"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(category.id)}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
+                            title="Delete Category"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
 
-          {/* Categories List Section */}
-          <div className="flex-1">
-            {/* Search and Filter Bar - Always Visible */}
-            <div className="bg-white rounded-xl shadow-sm p-4 mb-4">
-              <div className="flex flex-col gap-4">
-                {/* Search Input and Buttons Row */}
-                <div className="flex gap-3">
-                  <div className="flex-1 relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <input
-                      type="text"
-                      placeholder="Search categories..."
-                      value={localSearchTerm}
-                      onChange={(e) => setLocalSearchTerm(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                      className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
-                      style={{ height: "42px" }}
-                    />
-                  </div>
+          {/* Pagination */}
+          {totalCategories > 0 && (
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 py-4 px-6 border-t border-gray-200">
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <span>Show</span>
+                <select
+                  value={limit}
+                  onChange={handleLimitChange}
+                  className="px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                >
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
+                <span>entries</span>
+                <span className="ml-4">
+                  Showing {categories?.length > 0 ? ((currentPage - 1) * limit) + 1 : 0} to {Math.min(currentPage * limit, totalCategories)} of {totalCategories} categories
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => goToPage(1)}
+                  disabled={currentPage === 1}
+                  className={`px-3 py-1 rounded-lg border transition text-sm ${
+                    currentPage === 1
+                      ? "border-gray-200 text-gray-400 cursor-not-allowed"
+                      : "border-gray-300 text-gray-600 hover:bg-green-50 hover:border-green-500"
+                  }`}
+                >
+                  First
+                </button>
+                <button
+                  onClick={() => goToPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className={`p-2 rounded-lg border transition ${
+                    currentPage === 1
+                      ? "border-gray-200 text-gray-400 cursor-not-allowed"
+                      : "border-gray-300 text-gray-600 hover:bg-green-50 hover:border-green-500"
+                  }`}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+
+                {getPageNumbers().map((page) => (
                   <button
-                    onClick={handleSearch}
-                    className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl transition flex items-center gap-2 shadow-sm"
-                    style={{ height: "42px" }}
+                    key={page}
+                    onClick={() => goToPage(page)}
+                    className={`px-3 py-1 rounded-lg transition text-sm ${
+                      currentPage === page
+                        ? "bg-green-600 text-white"
+                        : "text-gray-600 hover:bg-green-50"
+                    }`}
                   >
-                    <Search className="w-4 h-4" />
-                    Search
+                    {page}
                   </button>
-                  {hasActiveFilters && (
-                    <button
-                      onClick={clearFilters}
-                      className="px-4 py-2 border border-gray-200 rounded-xl text-sm text-red-600 hover:bg-red-50 transition flex items-center gap-2"
-                      style={{ height: "42px" }}
-                    >
-                      <RefreshCw className="w-4 h-4" />
-                      Clear
-                    </button>
-                  )}
+                ))}
+
+                <button
+                  onClick={() => goToPage(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className={`p-2 rounded-lg border transition ${
+                    currentPage === totalPages
+                      ? "border-gray-200 text-gray-400 cursor-not-allowed"
+                      : "border-gray-300 text-gray-600 hover:bg-green-50 hover:border-green-500"
+                  }`}
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => goToPage(totalPages)}
+                  disabled={currentPage === totalPages}
+                  className={`px-3 py-1 rounded-lg border transition text-sm ${
+                    currentPage === totalPages
+                      ? "border-gray-200 text-gray-400 cursor-not-allowed"
+                      : "border-gray-300 text-gray-600 hover:bg-green-50 hover:border-green-500"
+                  }`}
+                >
+                  Last
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Add/Edit Category Modal */}
+      {showCategoryModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4">
+            <div className="flex justify-between items-center p-6 border-b border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-900">
+                {editingCategory ? "Edit Category" : "Add New Category"}
+              </h2>
+              <button
+                onClick={handleCancelEdit}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Category Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  placeholder="e.g., Fruits, Vegetables, Dairy"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                <textarea
+                  name="description"
+                  value={formData.description}
+                  onChange={handleInputChange}
+                  rows={3}
+                  placeholder="Category description..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Category Image</label>
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-green-500 transition bg-gray-50 hover:bg-green-50"
+                >
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                  />
+                  <Upload className="w-8 h-8 text-gray-400 mx-auto mb-1" />
+                  <p className="text-xs text-gray-500">Click to upload category image</p>
+                  <p className="text-xs text-gray-400 mt-1">PNG, JPG up to 5MB</p>
                 </div>
 
-
-
-                {/* Active Filters Display */}
-                {hasActiveFilters && (
-                  <div className="flex flex-wrap gap-2 pt-2">
-                    {searchTerm && (
-                      <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-lg text-xs">
-                        Search: {searchTerm}
-                        <button onClick={() => {
-                          setLocalSearchTerm("");
-                          setSearchTerm("");
-                          setCurrentPage(1);
-                        }} className="hover:text-green-900">
-                          <X className="w-3 h-3" />
-                        </button>
-                      </span>
-                    )}
+                {previewImage && (
+                  <div className="mt-3 relative group inline-block">
+                    <img
+                      src={previewImage}
+                      alt="Category preview"
+                      className="w-24 h-24 object-cover rounded-lg border border-gray-200"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleRemoveImage}
+                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition shadow-lg"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
                   </div>
                 )}
               </div>
-            </div>
 
-            {/* Categories Table - Matching Products Page Style */}
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50 border-b border-gray-200">
-                    <tr>
-                      <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Category</th>
-                      <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Description</th>
-                      <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {loading ? (
-                      [...Array(limit)].map((_, index) => (
-                        <tr key={index}>
-                          <td colSpan={3} className="px-4 py-4">
-                            <CategoryCardSkeleton />
-                          </td>
-                        </tr>
-                      ))
-                    ) : categories?.length === 0 ? (
-                      <tr>
-                        <td colSpan={3} className="text-center py-12">
-                          <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <Package className="w-10 h-10 text-gray-400" />
-                          </div>
-                          <h3 className="text-lg font-medium text-gray-800 mb-2">No categories found</h3>
-                          <p className="text-gray-500 text-sm">Add your first category using the form</p>
-                        </td>
-                      </tr>
-                    ) : (
-                      categories?.map((category) => (
-                        <tr key={category.id} className="hover:bg-gray-50 transition">
-                          <td className="px-4 py-3">
-                            <div className="flex items-center gap-3">
-                              {category.image ? (
-                                <img
-                                  src={category.image}
-                                  alt={category.name}
-                                  className="w-10 h-10 rounded-lg object-cover"
-                                />
-                              ) : (
-                                <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                                  <ImageIcon className="w-5 h-5 text-gray-400" />
-                                </div>
-                              )}
-                              <span className="font-medium text-gray-800 text-sm">{category.name}</span>
-                            </div>
-                          </td>
-                          <td className="px-4 py-3">
-                            <p className="text-sm text-gray-600 line-clamp-2">
-                              {category.description || "No description"}
-                            </p>
-                          </td>
-                          <td className="px-4 py-3">
-                            <div className="flex items-center justify-center gap-2">
-                              <button
-                                onClick={() => handleEdit(category)}
-                                className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition"
-                                title="Edit"
-                              >
-                                <Edit2 className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={() => handleDelete(category.id)}
-                                className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition"
-                                title="Delete"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 rounded-lg transition flex items-center justify-center gap-2 disabled:opacity-70"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      {editingCategory ? "Updating..." : "Creating..."}
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="w-4 h-4" />
+                      {editingCategory ? "Update Category" : "Create Category"}
+                    </>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCancelEdit}
+                  className="flex-1 border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium py-2.5 rounded-lg transition"
+                >
+                  Cancel
+                </button>
               </div>
-
-              {/* Pagination - Matching Products Page Style */}
-              {categories?.length > 0 && (
-                <div className="flex flex-col sm:flex-row justify-between items-center gap-4 py-4 px-4 border-t border-gray-100">
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <span>Show</span>
-                    <select
-                      value={limit}
-                      onChange={handleLimitChange}
-                      className="px-2 py-1 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                      style={{ height: "32px" }}
-                    >
-                      <option value={5}>5</option>
-                      <option value={10}>10</option>
-                      <option value={20}>20</option>
-                      <option value={50}>50</option>
-                    </select>
-                    <span>entries</span>
-                    <span className="ml-4">
-                      Showing {categories?.length > 0 ? ((currentPage - 1) * limit) + 1 : 0} to {Math.min(currentPage * limit, totalCategories)} of {totalCategories} categories
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => goToPage(1)}
-                      disabled={currentPage === 1}
-                      className={`px-3 py-1 rounded-lg border transition text-sm ${
-                        currentPage === 1
-                          ? "border-gray-200 text-gray-400 cursor-not-allowed"
-                          : "border-gray-300 text-gray-600 hover:bg-green-50 hover:border-green-500"
-                      }`}
-                    >
-                      First
-                    </button>
-                    <button
-                      onClick={() => goToPage(currentPage - 1)}
-                      disabled={currentPage === 1}
-                      className={`p-2 rounded-lg border transition ${
-                        currentPage === 1
-                          ? "border-gray-200 text-gray-400 cursor-not-allowed"
-                          : "border-gray-300 text-gray-600 hover:bg-green-50 hover:border-green-500"
-                      }`}
-                    >
-                      <ChevronLeft className="w-4 h-4" />
-                    </button>
-
-                    {getPageNumbers().map((page) => (
-                      <button
-                        key={page}
-                        onClick={() => goToPage(page)}
-                        className={`px-3 py-1 rounded-lg transition text-sm ${
-                          currentPage === page
-                            ? "bg-green-600 text-white"
-                            : "text-gray-600 hover:bg-green-50"
-                        }`}
-                      >
-                        {page}
-                      </button>
-                    ))}
-
-                    <button
-                      onClick={() => goToPage(currentPage + 1)}
-                      disabled={currentPage === totalPages}
-                      className={`p-2 rounded-lg border transition ${
-                        currentPage === totalPages
-                          ? "border-gray-200 text-gray-400 cursor-not-allowed"
-                          : "border-gray-300 text-gray-600 hover:bg-green-50 hover:border-green-500"
-                      }`}
-                    >
-                      <ChevronRight className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => goToPage(totalPages)}
-                      disabled={currentPage === totalPages}
-                      className={`px-3 py-1 rounded-lg border transition text-sm ${
-                        currentPage === totalPages
-                          ? "border-gray-200 text-gray-400 cursor-not-allowed"
-                          : "border-gray-300 text-gray-600 hover:bg-green-50 hover:border-green-500"
-                      }`}
-                    >
-                      Last
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
+            </form>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

@@ -6,7 +6,7 @@ import toast from "react-hot-toast";
 import { clearMessage } from "../features/cart/cartSlice";
 import ProductCardSkeleton from "./ProductCardSkleton";
 import { Link } from "react-router-dom";
-import { ArrowBigRight, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 const ProductSection = () => {
   const dispatch = useAppDispatch();
@@ -25,7 +25,6 @@ const ProductSection = () => {
   const { loading, success, error, message } = useAppSelector(
     (state) => state.cart
   )
-  console.log(ProductList);
   useEffect(() => {
     if (loading) return;
 

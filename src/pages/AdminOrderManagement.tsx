@@ -143,32 +143,32 @@ const AdminOrderManagement = () => {
   const filterOrders = () => {
     let filtered = storeOrders ? [...storeOrders] : [];
 
-    if (searchTerm) {
-      filtered = filtered.filter((order: any) =>
-        order.id.toString().includes(searchTerm)
-      );
-    }
+    // if (searchTerm) {
+    //   filtered = filtered.filter((order: any) =>
+    //     order.id.toString().includes(searchTerm)
+    //   );
+    // }
 
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter((order: any) => order.status === statusFilter);
-    }
+    // if (statusFilter !== 'all') {
+    //   filtered = filtered.filter((order: any) => order.status === statusFilter);
+    // }
 
-    if (dateFilter === 'today') {
-      const today = new Date().toDateString();
-      filtered = filtered.filter((order: any) => new Date(order.createdAt).toDateString() === today);
-    } else if (dateFilter === 'yesterday') {
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      filtered = filtered.filter((order: any) => new Date(order.createdAt).toDateString() === yesterday.toDateString());
-    } else if (dateFilter === 'week') {
-      const weekAgo = new Date();
-      weekAgo.setDate(weekAgo.getDate() - 7);
-      filtered = filtered.filter((order: any) => new Date(order.createdAt) >= weekAgo);
-    } else if (dateFilter === 'month') {
-      const monthAgo = new Date();
-      monthAgo.setMonth(monthAgo.getMonth() - 1);
-      filtered = filtered.filter((order: any) => new Date(order.createdAt) >= monthAgo);
-    }
+    // if (dateFilter === 'today') {
+    //   const today = new Date().toDateString();
+    //   filtered = filtered.filter((order: any) => new Date(order.createdAt).toDateString() === today);
+    // } else if (dateFilter === 'yesterday') {
+    //   const yesterday = new Date();
+    //   yesterday.setDate(yesterday.getDate() - 1);
+    //   filtered = filtered.filter((order: any) => new Date(order.createdAt).toDateString() === yesterday.toDateString());
+    // } else if (dateFilter === 'week') {
+    //   const weekAgo = new Date();
+    //   weekAgo.setDate(weekAgo.getDate() - 7);
+    //   filtered = filtered.filter((order: any) => new Date(order.createdAt) >= weekAgo);
+    // } else if (dateFilter === 'month') {
+    //   const monthAgo = new Date();
+    //   monthAgo.setMonth(monthAgo.getMonth() - 1);
+    //   filtered = filtered.filter((order: any) => new Date(order.createdAt) >= monthAgo);
+    // }
 
     return filtered;
   };

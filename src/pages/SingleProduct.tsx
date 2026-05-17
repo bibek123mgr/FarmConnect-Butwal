@@ -25,8 +25,11 @@ import { useAppDispatch, useAppSelector } from "../hooks/hooks";
 import { getAllComments, createComment, deleteComment, updateComment } from "../features/comment/CommentApi";
 import { useParams } from "react-router-dom";
 import { clearMessage, deleteCommentFromState, updateCommentFromState, type IComment } from "../features/comment/CommentSlice";
+import { clearMessage as clearCartMessage } from "../features/cart/cartSlice";
 import toast from "react-hot-toast";
 import { getProductDetails } from "../features/product/productApi";
+import type { IProduct } from "../features/product/productSlice";
+import { createCart, type IAddToCart } from "../features/cart/cartApi";
 
 // Static features for all products
 const staticFeatures = [
@@ -77,6 +80,71 @@ const staticRelatedProducts = [
 // Base64 placeholder image to avoid infinite loading
 const PLACEHOLDER_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='500' height='500' viewBox='0 0 24 24' fill='none' stroke='%23999999' stroke-width='1' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Ccircle cx='8.5' cy='8.5' r='1.5'%3E%3C/circle%3E%3Cpolyline points='21 15 16 10 5 21'%3E%3C/polyline%3E%3C/svg%3E";
 
+// Skeleton Components
+const ProductImageSkeleton = () => (
+    <div className="bg-white rounded-lg shadow-sm overflow-hidden mb-4 h-[610px] flex items-center justify-center animate-pulse">
+        <div className="w-full h-full bg-gray-200"></div>
+    </div>
+);
+
+const ProductInfoSkeleton = () => (
+    <div className="bg-white rounded-lg shadow-sm p-6 animate-pulse">
+        <div className="h-6 w-24 bg-gray-200 rounded mb-3"></div>
+        <div className="h-8 w-3/4 bg-gray-200 rounded mb-3"></div>
+        <div className="flex items-center gap-3 mb-4">
+            <div className="h-5 w-32 bg-gray-200 rounded"></div>
+            <div className="h-5 w-20 bg-gray-200 rounded"></div>
+        </div>
+        <div className="mb-4">
+            <div className="h-8 w-32 bg-gray-200 rounded mb-2"></div>
+            <div className="h-4 w-48 bg-gray-200 rounded"></div>
+        </div>
+        <div className="mb-4">
+            <div className="h-5 w-20 bg-gray-200 rounded mb-2"></div>
+            <div className="flex items-center gap-3">
+                <div className="h-10 w-32 bg-gray-200 rounded"></div>
+                <div className="h-4 w-40 bg-gray-200 rounded"></div>
+            </div>
+        </div>
+        <div className="flex gap-3 mb-6">
+            <div className="flex-1 h-12 bg-gray-200 rounded"></div>
+            <div className="flex-1 h-12 bg-gray-200 rounded"></div>
+            <div className="w-12 h-12 bg-gray-200 rounded"></div>
+        </div>
+        <div className="grid grid-cols-2 gap-3 mb-6">
+            {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="h-16 bg-gray-200 rounded"></div>
+            ))}
+        </div>
+        <div className="border-t pt-4">
+            <div className="h-16 bg-gray-200 rounded"></div>
+        </div>
+    </div>
+);
+
+const DescriptionSkeleton = () => (
+    <div className="p-6 animate-pulse">
+        <div className="h-6 w-40 bg-gray-200 rounded mb-3"></div>
+        <div className="space-y-2 mb-6">
+            <div className="h-4 w-full bg-gray-200 rounded"></div>
+            <div className="h-4 w-5/6 bg-gray-200 rounded"></div>
+            <div className="h-4 w-4/6 bg-gray-200 rounded"></div>
+        </div>
+        <div className="h-6 w-32 bg-gray-200 rounded mb-3"></div>
+        <div className="grid grid-cols-2 gap-4 mb-6">
+            {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="h-10 bg-gray-200 rounded"></div>
+            ))}
+        </div>
+        <div className="h-6 w-32 bg-gray-200 rounded mb-3"></div>
+        <div className="grid grid-cols-2 gap-4">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="h-6 bg-gray-200 rounded"></div>
+            ))}
+        </div>
+    </div>
+);
+
 const SingleProductPage = () => {
     const [activeTab, setActiveTab] = useState("description");
     const [quantity, setQuantity] = useState(1);
@@ -85,6 +153,7 @@ const SingleProductPage = () => {
     const [hoveredRating, setHoveredRating] = useState(0);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [imageError, setImageError] = useState(false);
+    const [isProductLoading, setIsProductLoading] = useState(true);
 
     const dispatch = useAppDispatch();
     const { id } = useParams();
@@ -92,14 +161,30 @@ const SingleProductPage = () => {
 
     const { comments, loading, error, success, message } = useAppSelector((state) => state.comment);
     const { user } = useAppSelector((state) => state.auth);
-    const { productDetails } = useAppSelector((store) => store.product);
+    const { productDetails, loading: productLoading } = useAppSelector((store) => store.product);
 
     useEffect(() => {
+        // Set loading state
+        setIsProductLoading(true);
+        
+        // Fetch product details and comments
         dispatch(getProductDetails(ProductId));
         dispatch(getAllComments(ProductId));
-        // Reset image error when product changes
         setImageError(false);
+        
+        // Scroll to top
+        window.scrollTo(0, 0);
     }, [ProductId, dispatch]);
+
+    // Update loading state when product data arrives
+    useEffect(() => {
+        if (!productLoading && productDetails) {
+            setIsProductLoading(false);
+        } else if (!productLoading && !productDetails && ProductId) {
+            // If loading is done but no product details (product not found)
+            setIsProductLoading(false);
+        }
+    }, [productLoading, productDetails, ProductId]);
 
     const handleDeleteReview = (commentId: number) => {
         dispatch(deleteComment(commentId));
@@ -111,6 +196,24 @@ const SingleProductPage = () => {
         dispatch(updateComment({ id, comment, rating }));
         dispatch(updateCommentFromState({ id, comment, rating }));
     };
+
+    const { loading: cartLoading, success: cartSuccess, error: cartError, message: cartMessage } = useAppSelector(
+        (state) => state.cart
+    );
+    
+    useEffect(() => {
+        if (cartLoading) return;
+
+        if (cartSuccess) {
+            toast.success(cartMessage);
+            dispatch(clearCartMessage());
+        }
+
+        if (cartError) {
+            toast.error(cartMessage);
+            dispatch(clearCartMessage());
+        }
+    }, [cartLoading, cartSuccess, cartError, cartMessage, dispatch]);
 
     useEffect(() => {
         if (loading) return;
@@ -140,7 +243,6 @@ const SingleProductPage = () => {
         categoryName: "Category",
     };
 
-    // Handle image URL - only set once, don't change after error
     const getImageUrl = () => {
         if (imageError) {
             return PLACEHOLDER_IMAGE;
@@ -205,10 +307,79 @@ const SingleProductPage = () => {
         dispatch(createComment(reviewData));
     };
 
+    const handleAddToCart = (product: IProduct) => {
+        const { id, rate } = product;
+        const payload: IAddToCart = {
+            productId: id,
+            quantity: quantity,
+            price: Number(rate)
+        };
+        dispatch(createCart(payload));
+    };
+
+    // Show skeleton while loading
+    if (isProductLoading) {
+        return (
+            <div className="min-h-screen bg-gray-50 py-8">
+                <div className="container mx-auto px-5">
+                    {/* Breadcrumb Skeleton */}
+                    <div className="flex items-center gap-2 mb-6">
+                        <div className="h-4 w-16 bg-gray-200 rounded animate-pulse"></div>
+                        <span>/</span>
+                        <div className="h-4 w-20 bg-gray-200 rounded animate-pulse"></div>
+                        <span>/</span>
+                        <div className="h-4 w-24 bg-gray-200 rounded animate-pulse"></div>
+                        <span>/</span>
+                        <div className="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
+                    </div>
+
+                    <div className="flex flex-col lg:flex-row gap-8">
+                        <div className="lg:w-1/2">
+                            <ProductImageSkeleton />
+                        </div>
+                        <div className="lg:w-1/2">
+                            <ProductInfoSkeleton />
+                        </div>
+                    </div>
+
+                    {/* Tabs Skeleton */}
+                    <div className="mt-8">
+                        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+                            <div className="flex border-b border-gray-200">
+                                <div className="px-6 py-3 h-10 w-24 bg-gray-200 m-1 rounded animate-pulse"></div>
+                                <div className="px-6 py-3 h-10 w-24 bg-gray-200 m-1 rounded animate-pulse"></div>
+                            </div>
+                            <DescriptionSkeleton />
+                        </div>
+                    </div>
+
+                    {/* Related Products Skeleton */}
+                    <div className="mt-8">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="h-6 w-40 bg-gray-200 rounded animate-pulse"></div>
+                            <div className="h-4 w-20 bg-gray-200 rounded animate-pulse"></div>
+                        </div>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                            {[1, 2, 3, 4].map((i) => (
+                                <div key={i} className="bg-white rounded-lg shadow-sm overflow-hidden animate-pulse">
+                                    <div className="h-40 bg-gray-200"></div>
+                                    <div className="p-3">
+                                        <div className="h-4 w-20 bg-gray-200 rounded mb-2"></div>
+                                        <div className="h-5 w-32 bg-gray-200 rounded mb-2"></div>
+                                        <div className="h-4 w-24 bg-gray-200 rounded"></div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="min-h-screen bg-gray-50 py-8">
             <div className="container mx-auto px-5">
-                {/* Breadcrumb */}
                 <div className="flex items-center gap-2 text-sm text-gray-500 mb-6 flex-wrap">
                     <Link to="/" className="hover:text-green-600 transition">Home</Link>
                     <span>/</span>
@@ -289,7 +460,10 @@ const SingleProductPage = () => {
                                 </div>
                             </div>
                             <div className="flex gap-3 mb-6 flex-wrap">
-                                <button className="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-3 rounded-lg transition flex items-center justify-center gap-2">
+                                <button 
+                                    className="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-3 rounded-lg transition flex items-center justify-center gap-2"
+                                    onClick={() => handleAddToCart(product)}
+                                >
                                     <ShoppingCart className="w-4 h-4" />
                                     Add to Cart
                                 </button>
