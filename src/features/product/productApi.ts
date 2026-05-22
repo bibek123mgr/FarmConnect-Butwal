@@ -1,6 +1,5 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { axiosInstance, axiosInstanceNoCredentials } from "../../lib/axiosInstance";
-import type { AnyActionArg } from "react";
 
 interface IProductFilter extends IProductFilterAdmin {
     pricerangeFrom: number;
@@ -37,6 +36,21 @@ export const fetchProducts = createAsyncThunk(
         }
     }
 );
+
+export const fetchTopSellingProducts = createAsyncThunk(
+    "products/getTopSellingProductsList",
+    async (_, { rejectWithValue }) => {
+        try {
+            const { data } = await axiosInstanceNoCredentials.get(`products/top-selling`);
+            return data;
+        } catch (error: any) {
+            return rejectWithValue(
+                error.response?.data || "Something went wrong"
+            );
+        }
+    }
+);
+
 
 export const fetchProductsForAdmin = createAsyncThunk(
     "products/getProductsList/my",

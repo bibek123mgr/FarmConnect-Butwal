@@ -1,12 +1,13 @@
 import { Route, Routes } from "react-router-dom";
 import AdminProtectedRoute from "./AdminProtectedRoute";
 import AdminLayout from "./AdminLayout";
-import Dashboard from "./pages/Dashbioard"
+import Dashboard from "./pages/Dashboard"
 import AdminProductsPage from "./pages/AdminProductsPage";
 import AdminCategoriesPage from "./pages/AdminCategoryPage";
 import AdminUsersPage from "./AdminUsersPage";
 import AdminShipping from "./pages/AdminShipping";
 import AdminOrderManagement from "./pages/AdminOrderManagement";
+import AdminStoreSettings from "./pages/AdminStoreSetting";
 // import AdminProducts from "./components/admin/Products";
 // import AdminOrders from "./components/admin/Orders";
 // import AdminUsers from "./components/admin/Users";
@@ -23,6 +24,7 @@ const AdminRoutes = () => {
           <Route path="users" element={<AdminUsersPage />} />
           <Route path="categories" element={<AdminCategoriesPage />} /> 
           <Route path="shipping" element={<AdminShipping />} />
+          <Route path="/settings" element={<AdminStoreSettings />} />
         </Route>
       </Route>
     </Routes>
