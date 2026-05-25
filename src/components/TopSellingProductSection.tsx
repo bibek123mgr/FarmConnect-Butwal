@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { fetchProducts, fetchTopSellingProducts } from "../features/product/productApi";
+import { fetchTopSellingProducts } from "../features/product/productApi";
 import ProductCard from "./ProductCard";
 import { useAppDispatch, useAppSelector } from "../hooks/hooks";
 import toast from "react-hot-toast";
