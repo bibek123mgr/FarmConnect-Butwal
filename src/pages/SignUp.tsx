@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import { Eye, EyeOff, User, Lock, Leaf, Home, Mail, UserPlus } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../hooks/hooks";
-import { RegisterUser } from "../features/auth/AuthApi";
+import { LoginUserWithGoogle, RegisterUser } from "../features/auth/AuthApi";
+import { BsGoogle } from "react-icons/bs";
 
 export interface SignUpPayload {
     name: string;
@@ -11,6 +12,9 @@ export interface SignUpPayload {
     password: string;
     confirmPassword?: string;
 }
+
+declare const google: any;
+
 
 const SignUp = () => {
     const [showPassword, setShowPassword] = useState(false);
@@ -34,6 +38,20 @@ const SignUp = () => {
         terms?: string;
     }>({});
 
+    useEffect(() => {
+        google.accounts.id.initialize({
+            client_id: "131274795330-17cj5fugslri5n3q5ur99qvpbeo236c5.apps.googleusercontent.com",
+            callback: (response: any) => {
+                dispatch(LoginUserWithGoogle(response.credential));
+            }
+        });
+        google.accounts.id.renderButton(
+            document.getElementById("googleSignInButton"),
+            { theme: "outline", size: "large", width: "100%" }
+        );
+
+    }, []);
+
     const { success, error, loading } = useAppSelector((state: any) => state.auth);
 
     useEffect(() => {
@@ -47,21 +65,21 @@ const SignUp = () => {
 
     const validateForm = () => {
         const newErrors: typeof errors = {};
-        
+
         // Validate name
         if (!formData.name) {
             newErrors.name = "Name is required";
         } else if (formData.name.length < 2) {
             newErrors.name = "Name must be at least 2 characters";
         }
-        
+
         // Validate email
         if (!formData.email) {
             newErrors.email = "Email is required";
         } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
             newErrors.email = "Please enter a valid email address";
         }
-        
+
         // Validate password
         if (!formData.password) {
             newErrors.password = "Password is required";
@@ -70,26 +88,26 @@ const SignUp = () => {
         } else if (!/(?=.*[A-Za-z])(?=.*\d)/.test(formData.password)) {
             newErrors.password = "Password must contain both letters and numbers";
         }
-        
+
         // Validate confirm password
         if (!formData.confirmPassword) {
             newErrors.confirmPassword = "Please confirm your password";
         } else if (formData.password !== formData.confirmPassword) {
             newErrors.confirmPassword = "Passwords do not match";
         }
-        
+
         // Validate terms
         if (!acceptTerms) {
             newErrors.terms = "You must accept the terms and conditions";
         }
-        
+
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
 
     const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
         e.preventDefault();
-        
+
         if (validateForm()) {
             const { confirmPassword, ...registerData } = formData;
             dispatch(RegisterUser(registerData));
@@ -113,7 +131,7 @@ const SignUp = () => {
     return (
         <div className="my-12 flex items-center justify-center bg-gray-50 p-4">
             <div className="w-full max-w-md bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden group">
-                
+
                 {/* HEADER */}
                 <div className="bg-green-600 text-white p-6 text-center">
                     <div className="flex justify-center mb-2">
@@ -160,9 +178,8 @@ const SignUp = () => {
                         <label className="text-sm text-gray-600 mb-1 block">
                             Full Name <span className="text-red-500">*</span>
                         </label>
-                        <div className={`flex items-center gap-2 border rounded-lg px-3 py-2 focus-within:border-green-500 transition ${
-                            errors.name ? 'border-red-500' : 'border-gray-200'
-                        }`}>
+                        <div className={`flex items-center gap-2 border rounded-lg px-3 py-2 focus-within:border-green-500 transition ${errors.name ? 'border-red-500' : 'border-gray-200'
+                            }`}>
                             <User className="w-4 h-4 text-gray-400" />
                             <input
                                 type="text"
@@ -182,9 +199,8 @@ const SignUp = () => {
                         <label className="text-sm text-gray-600 mb-1 block">
                             Email Address <span className="text-red-500">*</span>
                         </label>
-                        <div className={`flex items-center gap-2 border rounded-lg px-3 py-2 focus-within:border-green-500 transition ${
-                            errors.email ? 'border-red-500' : 'border-gray-200'
-                        }`}>
+                        <div className={`flex items-center gap-2 border rounded-lg px-3 py-2 focus-within:border-green-500 transition ${errors.email ? 'border-red-500' : 'border-gray-200'
+                            }`}>
                             <Mail className="w-4 h-4 text-gray-400" />
                             <input
                                 type="email"
@@ -204,9 +220,8 @@ const SignUp = () => {
                         <label className="text-sm text-gray-600 mb-1 block">
                             Password <span className="text-red-500">*</span>
                         </label>
-                        <div className={`flex items-center justify-between border rounded-lg px-3 py-2 focus-within:border-green-500 transition ${
-                            errors.password ? 'border-red-500' : 'border-gray-200'
-                        }`}>
+                        <div className={`flex items-center justify-between border rounded-lg px-3 py-2 focus-within:border-green-500 transition ${errors.password ? 'border-red-500' : 'border-gray-200'
+                            }`}>
                             <div className="flex items-center gap-2 w-full">
                                 <Lock className="w-4 h-4 text-gray-400" />
                                 <input
@@ -242,9 +257,8 @@ const SignUp = () => {
                         <label className="text-sm text-gray-600 mb-1 block">
                             Confirm Password <span className="text-red-500">*</span>
                         </label>
-                        <div className={`flex items-center justify-between border rounded-lg px-3 py-2 focus-within:border-green-500 transition ${
-                            errors.confirmPassword ? 'border-red-500' : 'border-gray-200'
-                        }`}>
+                        <div className={`flex items-center justify-between border rounded-lg px-3 py-2 focus-within:border-green-500 transition ${errors.confirmPassword ? 'border-red-500' : 'border-gray-200'
+                            }`}>
                             <div className="flex items-center gap-2 w-full">
                                 <Lock className="w-4 h-4 text-gray-400" />
                                 <input
@@ -303,7 +317,7 @@ const SignUp = () => {
                     </div>
 
                     {/* Submit Button */}
-                    <button 
+                    <button
                         className="w-full bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-2.5 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         onClick={handleSubmit}
                         disabled={loading}
@@ -319,6 +333,13 @@ const SignUp = () => {
                                 Sign Up
                             </>
                         )}
+                    </button>
+
+                    <span className="block text-center text-sm text-gray-500 my-4">or</span>
+
+                    <button className="" id="googleSignInButton">
+                        <BsGoogle className="w-4 h-4 inline-block mr-3" />
+                        Sign Up with Google
                     </button>
 
                     {/* Back to Home Link */}

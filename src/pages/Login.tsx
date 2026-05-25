@@ -2,14 +2,14 @@ import { useEffect, useState } from "react";
 import { Eye, EyeOff, User, Lock, Leaf, Home } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../hooks/hooks";
-import { getUserProfile, LoginUser } from "../features/auth/AuthApi";
-import { clearMessage } from "../features/auth/AuthSlice";
-import toast from "react-hot-toast";
-
+import { getUserProfile, LoginUser, LoginUserWithGoogle } from "../features/auth/AuthApi";
+import { BsGoogle } from "react-icons/bs";
 export interface LoginPayload {
     email: string;
     password: string;
 }
+
+declare const google: any;
 
 
 const Login = () => {
@@ -24,6 +24,20 @@ const Login = () => {
     });
 
     const { success, error } = useAppSelector((state: any) => state.auth);
+
+    useEffect(() => {
+        google.accounts.id.initialize({
+            client_id: "131274795330-17cj5fugslri5n3q5ur99qvpbeo236c5.apps.googleusercontent.com",
+            callback: (response: any) => {
+                dispatch(LoginUserWithGoogle(response.credential));
+            }
+        });
+        google.accounts.id.renderButton(
+            document.getElementById("googleSignInButton"),
+            { theme: "outline", size: "large", width: "100%" }
+        );
+
+    }, []);
 
     useEffect(() => {
         if (success) {
@@ -164,6 +178,13 @@ const Login = () => {
                         onClick={(e) => handleSubmit(e)}
                     >
                         Login
+                    </button>
+
+                    <span className="block text-center text-sm text-gray-500 my-4">or</span>
+
+                    <button className="" id="googleSignInButton">
+                        <BsGoogle className="w-4 h-4 inline-block mr-3" />
+                        Sign Up with Google
                     </button>
 
                     <Link to="/" className="flex items-center justify-center gap-2 mt-4 text-sm text-gray-500 hover:text-green-600 cursor-pointer transition">

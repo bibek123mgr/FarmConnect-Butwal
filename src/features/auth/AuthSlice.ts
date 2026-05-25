@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { getUserProfile, LoginUser, LogoutUser, RegisterUser } from "./AuthApi";
+import { getUserProfile, LoginUser, LoginUserWithGoogle, LogoutUser, RegisterUser } from "./AuthApi";
 
 export interface IUser {
     id: number;
@@ -29,7 +29,7 @@ interface IAuthState {
 
 const initialState: IAuthState = {
     user: null,
-    users: [] ,
+    users: [],
     loading: false,
     error: false,
     message: "",
@@ -68,6 +68,28 @@ const authSlice = createSlice({
                 state.message = action.payload.message;
             })
             .addCase(LoginUser.rejected, (state, action) => {
+                state.loading = false;
+                state.error = true;
+                state.success = false;
+                state.message =
+                    (action.payload as any)?.message ||
+                    (action.payload as any)?.errors?.[0]?.toString() ||
+                    action.error.message ||
+                    "Something went wrong";
+            })
+            .addCase(LoginUserWithGoogle.pending, (state) => {
+                state.loading = true;
+                state.error = false;
+                state.success = false;
+                state.message = "";
+            })
+            .addCase(LoginUserWithGoogle.fulfilled, (state, action) => {
+                state.loading = false;
+                state.success = true;
+                state.user = action.payload.user;
+                state.message = action.payload.message;
+            })
+            .addCase(LoginUserWithGoogle.rejected, (state, action) => {
                 state.loading = false;
                 state.error = true;
                 state.success = false;

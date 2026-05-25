@@ -21,9 +21,22 @@ export const LoginUser = createAsyncThunk(
         }
     });
 
+export const LoginUserWithGoogle = createAsyncThunk(
+    "auth/login-with-google",
+    async (credentials: string, { rejectWithValue }) => {
+        try {
+            const { data } = await axiosInstance.post(`auth/login-with-google`, {credentials});
+            return data;
+        } catch (error: any) {
+            return rejectWithValue(
+                error.response?.data || "Something went wrong"
+            );
+        }
+    });
+
 export const RegisterUser = createAsyncThunk(
     "auth/register",
-    async (payload:IRegisterPayload, { rejectWithValue }) => {
+    async (payload: IRegisterPayload, { rejectWithValue }) => {
         try {
             const { data } = await axiosInstance.post(`auth/register`, payload);
             return data;
