@@ -4,260 +4,96 @@ import {
     ChevronLeft,
     ChevronRight,
     Store,
-    ShoppingCart,
     Mail,
     Calendar,
     Eye,
-    RefreshCw,
-    Filter,
-    ChevronDown,
     X,
     MapPin,
-    Phone,
     Shield,
-    Award,
-    Clock,
     CheckCircle,
     DollarSign,
-    Percent,
     AlertCircle,
     Edit2,
-    UserCheck,
-    UserX,
     Clock as ClockIcon,
-    MessageSquare,
-    Star,
     TrendingUp,
     Users,
     Building2,
-    CreditCard,
-    FileText,
     Save,
+    Filter,
+    ChevronDown,
+    RefreshCw,
 } from "lucide-react";
-import { useAppDispatch } from "./hooks/hooks";
-// import type { IUser } from "../../features/auth/AuthSlice";
-
-// Vendor specific interface
-interface Vendor {
-    id: number;
-    role: string;
-    storeName: string;
-    storeDescription?: string;
-    storeLogo?: string;
-    storeBanner?: string;
-    storeAddress?: string;
-    storePhone?: string;
-    status: 'pending' | 'approved' | 'suspended' | 'rejected';
-    commissionRate: number;
-    totalSales: number;
-    totalProducts: number;
-    totalOrders: number;
-    rating: number;
-    totalReviews: number;
-    rejectionReason?: string;
-    approvedAt?: string;
-    suspendedAt?: string;
-    verificationStatus: 'pending' | 'verified' | 'rejected';
-    businessLicense?: string;
-    taxId?: string;
-    name: string;
-    email: string;
-    createdAt: string;
-    updatedAt: string;
-}
+import { useAppDispatch, useAppSelector } from "./hooks/hooks";
+import { fetchVendors } from "./features/vendor/vendorApi";
+import type { IVendor } from "./features/vendor/vendorSlice";
 
 interface StatusUpdateData {
-    status: 'pending' | 'approved' | 'suspended' | 'rejected';
+    status: 'active' | 'inactive';
     remarks: string;
 }
 
 const AdminVendorManagement = () => {
     const dispatch = useAppDispatch();
-    // Mock data - replace with actual API calls
-    const [vendors, setVendors] = useState<Vendor[]>([]);
-    const [loading, setLoading] = useState(true);
+    const { vendors, pagination, loading } = useAppSelector((state) => state.vendor);
 
-    const [searchTerm, setSearchTerm] = useState("");
-    const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
-    const [statusFilter, setStatusFilter] = useState<string>("all");
-    const [verificationFilter, setVerificationFilter] = useState<string>("all");
-    const [showFilters, setShowFilters] = useState(false);
+    const [selectedVendor, setSelectedVendor] = useState<IVendor | null>(null);
     const [showStatusModal, setShowStatusModal] = useState(false);
     const [statusUpdate, setStatusUpdate] = useState<StatusUpdateData>({
-        status: 'approved',
+        status: 'active',
         remarks: ''
     });
+
+    // Filter states
+    const [searchTerm, setSearchTerm] = useState("");
+    const [statusFilter, setStatusFilter] = useState<string>("all");
     const [currentPage, setCurrentPage] = useState(1);
     const [limit, setLimit] = useState(10);
 
+    // Local filter states for UI
     const [localSearchTerm, setLocalSearchTerm] = useState("");
     const [localStatusFilter, setLocalStatusFilter] = useState<string>("all");
-    const [localVerificationFilter, setLocalVerificationFilter] = useState<string>("all");
 
+    // Fetch vendors when filters change
     useEffect(() => {
-        // Fetch vendors - replace with actual API call
-        fetchVendors();
-    }, []);
-
-    const fetchVendors = async () => {
-        setLoading(true);
-        // Simulate API call
-        setTimeout(() => {
-            const mockVendors: Vendor[] = [
-                {
-                    id: 1,
-                    name: "John Farmer",
-                    email: "john@greenfarm.com",
-                    role: "farmer",
-                    createdAt: "2024-01-15T10:00:00Z",
-                    updatedAt: "2024-01-15T10:00:00Z",
-                    storeName: "Green Valley Farms",
-                    storeDescription: "Organic vegetables and fruits",
-                    storeAddress: "123 Farm Road, Rural County, CA 90210",
-                    storePhone: "+1 (555) 123-4567",
-                    status: 'approved',
-                    commissionRate: 10,
-                    totalSales: 45678,
-                    totalProducts: 45,
-                    totalOrders: 234,
-                    rating: 4.8,
-                    totalReviews: 127,
-                    verificationStatus: 'verified',
-                    businessLicense: "BL-2024-001",
-                    taxId: "TAX-123456",
-                    approvedAt: "2024-01-20T10:00:00Z"
-                },
-                {
-                    id: 2,
-                    name: "Sarah Wilson",
-                    email: "sarah@organicfresh.com",
-                    role: "farmer",
-                    createdAt: "2024-02-10T10:00:00Z",
-                    updatedAt: "2024-02-10T10:00:00Z",
-                    storeName: "Organic Fresh Market",
-                    storeDescription: "Fresh organic produce delivered daily",
-                    storeAddress: "456 Market St, Cityville, ST 12345",
-                    storePhone: "+1 (555) 234-5678",
-                    status: 'pending',
-                    commissionRate: 12,
-                    totalSales: 0,
-                    totalProducts: 0,
-                    totalOrders: 0,
-                    rating: 0,
-                    totalReviews: 0,
-                    verificationStatus: 'pending',
-                },
-                {
-                    id: 3,
-                    name: "Mike Johnson",
-                    email: "mike@dairyfresh.com",
-                    role: "farmer",
-                    createdAt: "2024-01-05T10:00:00Z",
-                    updatedAt: "2024-01-05T10:00:00Z",
-                    storeName: "Dairy Fresh Products",
-                    storeDescription: "Fresh dairy and organic milk",
-                    storeAddress: "789 Dairy Lane, Milk Town, ST 67890",
-                    storePhone: "+1 (555) 345-6789",
-                    status: 'suspended',
-                    commissionRate: 10,
-                    totalSales: 12345,
-                    totalProducts: 23,
-                    totalOrders: 89,
-                    rating: 3.5,
-                    totalReviews: 45,
-                    verificationStatus: 'verified',
-                    suspendedAt: "2024-03-01T10:00:00Z",
-                    rejectionReason: "Multiple customer complaints about product quality"
-                },
-                {
-                    id: 4,
-                    name: "Emily Chen",
-                    email: "emily@organictea.com",
-                    role: "farmer",
-                    createdAt: "2024-03-20T10:00:00Z",
-                    updatedAt: "2024-03-20T10:00:00Z",
-                    storeName: "Organic Tea Gardens",
-                    storeDescription: "Premium organic tea leaves",
-                    storeAddress: "321 Tea Plantation Rd, Hill Town, ST 34567",
-                    storePhone: "+1 (555) 456-7890",
-                    status: 'rejected',
-                    commissionRate: 15,
-                    totalSales: 0,
-                    totalProducts: 0,
-                    totalOrders: 0,
-                    rating: 0,
-                    totalReviews: 0,
-                    verificationStatus: 'rejected',
-                    rejectionReason: "Business license verification failed"
-                }
-            ];
-            setVendors(mockVendors);
-            setLoading(false);
-        }, 1000);
-    };
+        const filters = {
+            page: currentPage,
+            limit: limit,
+            search: searchTerm || undefined,
+            status: statusFilter !== "all" ? statusFilter : undefined,
+        };
+        dispatch(fetchVendors(filters));
+    }, [dispatch, currentPage, limit, searchTerm, statusFilter]);
 
     const handleSearch = () => {
         setSearchTerm(localSearchTerm);
         setStatusFilter(localStatusFilter);
-        setVerificationFilter(localVerificationFilter);
         setCurrentPage(1);
-    };
-
-    const handleSelectVendor = (vendor: Vendor) => {
-        setSelectedVendor(vendor);
-    };
-
-    const handleUpdateStatus = () => {
-        if (!selectedVendor) return;
-
-        // Update vendor status - replace with actual API call
-        const updatedVendors = vendors.map(vendor =>
-            vendor.id === selectedVendor.id
-                ? {
-                    ...vendor,
-                    status: statusUpdate.status,
-                    rejectionReason: statusUpdate.status === 'rejected' ? statusUpdate.remarks : vendor.rejectionReason,
-                    approvedAt: statusUpdate.status === 'approved' ? new Date().toISOString() : vendor.approvedAt,
-                    suspendedAt: statusUpdate.status === 'suspended' ? new Date().toISOString() : vendor.suspendedAt,
-                }
-                : vendor
-        );
-
-        setVendors(updatedVendors);
-        setSelectedVendor({ ...selectedVendor, status: statusUpdate.status });
-        setShowStatusModal(false);
-        setStatusUpdate({ status: 'approved', remarks: '' });
     };
 
     const clearFilters = () => {
         setLocalSearchTerm("");
         setLocalStatusFilter("all");
-        setLocalVerificationFilter("all");
         setSearchTerm("");
         setStatusFilter("all");
-        setVerificationFilter("all");
         setCurrentPage(1);
     };
 
-    const filteredVendors = vendors?.filter((vendor) => {
-        const matchesSearch =
-            vendor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            vendor.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            vendor.storeName.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesStatus = statusFilter === "all" || vendor.status === statusFilter;
-        const matchesVerification = verificationFilter === "all" || vendor.verificationStatus === verificationFilter;
-        return matchesSearch && matchesStatus && matchesVerification;
-    });
+    const handleSelectVendor = (vendor: IVendor) => {
+        setSelectedVendor(vendor);
+    };
 
-    // Pagination logic
-    const totalFilteredVendors = filteredVendors?.length || 0;
-    const totalPages = Math.ceil(totalFilteredVendors / limit);
-    const startIndex = (currentPage - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedVendors = filteredVendors?.slice(startIndex, endIndex);
+    const handleUpdateStatus = async () => {
+        if (!selectedVendor) return;
+        // Here you would call your API to update vendor status
+        // await dispatch(updateVendorStatus({ id: selectedVendor.id, isActive: statusUpdate.status === 'active', remarks: statusUpdate.remarks }));
+        setShowStatusModal(false);
+        setStatusUpdate({ status: 'active', remarks: '' });
+        // Refetch vendors after update
+        // dispatch(fetchVendors({ page: currentPage, limit: limit, search: searchTerm, status: statusFilter }));
+    };
 
     const goToPage = (page: number) => {
-        if (page >= 1 && page <= totalPages) {
+        if (page >= 1 && page <= pagination.totalPages) {
             setCurrentPage(page);
             window.scrollTo({ top: 0, behavior: "smooth" });
         }
@@ -272,7 +108,7 @@ const AdminVendorManagement = () => {
         const pages = [];
         const maxVisible = 5;
         let start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
-        let end = Math.min(totalPages, start + maxVisible - 1);
+        let end = Math.min(pagination.totalPages, start + maxVisible - 1);
         if (end - start + 1 < maxVisible) {
             start = Math.max(1, end - maxVisible + 1);
         }
@@ -291,63 +127,42 @@ const AdminVendorManagement = () => {
         });
     };
 
-    const formatCurrency = (amount: number) => {
+    const formatCurrency = (amount: string | number) => {
+        const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
         return new Intl.NumberFormat('en-US', {
             style: 'currency',
             currency: 'USD'
-        }).format(amount);
+        }).format(numAmount || 0);
     };
 
-    const getStatusColor = (status: string) => {
-        switch (status) {
-            case 'approved':
-                return "bg-green-100 text-green-800";
-            case 'pending':
-                return "bg-yellow-100 text-yellow-800";
-            case 'suspended':
-                return "bg-red-100 text-red-800";
-            case 'rejected':
-                return "bg-gray-100 text-gray-800";
-            default:
-                return "bg-gray-100 text-gray-800";
-        }
+    const getStatusColor = (isActive: boolean) => {
+        return isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800";
     };
 
-    const getStatusIcon = (status: string) => {
-        switch (status) {
-            case 'approved':
-                return <CheckCircle className="w-3.5 h-3.5" />;
-            case 'pending':
-                return <ClockIcon className="w-3.5 h-3.5" />;
-            case 'suspended':
-                return <AlertCircle className="w-3.5 h-3.5" />;
-            case 'rejected':
-                return <X className="w-3.5 h-3.5" />;
-            default:
-                return <ClockIcon className="w-3.5 h-3.5" />;
-        }
+    const getStatusIcon = (isActive: boolean) => {
+        return isActive ? <CheckCircle className="w-3.5 h-3.5" /> : <AlertCircle className="w-3.5 h-3.5" />;
     };
 
-    const getVerificationColor = (status: string) => {
-        switch (status) {
-            case 'verified':
-                return "bg-blue-100 text-blue-800";
-            case 'pending':
-                return "bg-orange-100 text-orange-800";
-            case 'rejected':
-                return "bg-red-100 text-red-800";
-            default:
-                return "bg-gray-100 text-gray-800";
-        }
+    const getStatusText = (isActive: boolean) => {
+        return isActive ? "Active" : "Inactive";
     };
 
-    const totalVendors = filteredVendors?.length || 0;
-    const totalApproved = filteredVendors?.filter(v => v.status === "approved").length || 0;
-    const totalPending = filteredVendors?.filter(v => v.status === "pending").length || 0;
-    const totalSuspended = filteredVendors?.filter(v => v.status === "suspended").length || 0;
-    const totalRevenue = filteredVendors?.reduce((sum, v) => sum + v.totalSales, 0) || 0;
+    const getVerificationColor = (isVerified: boolean) => {
+        return isVerified ? "bg-blue-100 text-blue-800" : "bg-orange-100 text-orange-800";
+    };
 
-    const hasActiveFilters = searchTerm !== "" || statusFilter !== "all" || verificationFilter !== "all";
+    const getVerificationText = (isVerified: boolean) => {
+        return isVerified ? "Verified" : "Pending";
+    };
+
+    // Calculate stats from current vendors
+    const totalVendors = pagination.total || 0;
+    const totalActive = vendors?.filter(v => v.isActive === true).length || 0;
+    const totalInactive = vendors?.filter(v => v.isActive === false).length || 0;
+    const totalVerified = vendors?.filter(v => v.isVerified === true).length || 0;
+    const totalRevenue = vendors?.reduce((sum, v) => sum + (parseFloat(v.totalSalesRevenue) || 0), 0) || 0;
+
+    const hasActiveFilters = searchTerm !== "" || statusFilter !== "all";
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -360,29 +175,65 @@ const AdminVendorManagement = () => {
 
                 {/* Stats Cards */}
                 <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-                    {[
-                        { label: "Total Vendors", value: totalVendors, color: "purple", icon: Store },
-                        { label: "Approved", value: totalApproved, color: "green", icon: CheckCircle },
-                        { label: "Pending", value: totalPending, color: "yellow", icon: ClockIcon },
-                        { label: "Suspended", value: totalSuspended, color: "red", icon: AlertCircle },
-                        { label: "Total Revenue", value: formatCurrency(totalRevenue), color: "blue", icon: DollarSign },
-                    ].map((stat, index) => (
-                        <div
-                            key={index}
-                            className={`bg-white rounded-xl p-4 shadow-sm border border-gray-200 ${index === 4 ? 'col-span-2 lg:col-span-1' : ''
-                                }`}
-                        >
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm text-gray-600">{stat.label}</p>
-                                    <p className={`text-2xl font-bold text-${stat.color}-600`}>{stat.value}</p>
-                                </div>
-                                <div className={`w-10 h-10 bg-${stat.color}-100 rounded-lg flex items-center justify-center`}>
-                                    <stat.icon className={`w-5 h-5 text-${stat.color}-600`} />
-                                </div>
+                    <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-gray-600">Total Vendors</p>
+                                <p className="text-2xl font-bold text-gray-900">{totalVendors}</p>
+                            </div>
+                            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                                <Store className="w-5 h-5 text-purple-600" />
                             </div>
                         </div>
-                    ))}
+                    </div>
+
+                    <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-gray-600">Active</p>
+                                <p className="text-2xl font-bold text-green-600">{totalActive}</p>
+                            </div>
+                            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                                <CheckCircle className="w-5 h-5 text-green-600" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-gray-600">Inactive</p>
+                                <p className="text-2xl font-bold text-red-600">{totalInactive}</p>
+                            </div>
+                            <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                                <AlertCircle className="w-5 h-5 text-red-600" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-gray-600">Verified</p>
+                                <p className="text-2xl font-bold text-blue-600">{totalVerified}</p>
+                            </div>
+                            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <Shield className="w-5 h-5 text-blue-600" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 sm:col-span-2 lg:col-span-1">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-gray-600">Total Revenue</p>
+                                <p className="text-2xl font-bold text-orange-600">{formatCurrency(totalRevenue)}</p>
+                            </div>
+                            <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                                <DollarSign className="w-5 h-5 text-orange-600" />
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Search and Filter Bar */}
@@ -393,21 +244,22 @@ const AdminVendorManagement = () => {
                                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                                 <input
                                     type="text"
-                                    placeholder="Search vendors by name, email or store name..."
+                                    placeholder="Search vendors by name, email or farm name..."
                                     value={localSearchTerm}
                                     onChange={(e) => setLocalSearchTerm(e.target.value)}
                                     onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                                     className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                                 />
                             </div>
-                            <button
-                                onClick={() => setShowFilters(!showFilters)}
+                            <select
+                                value={localStatusFilter}
+                                onChange={(e) => setLocalStatusFilter(e.target.value)}
                                 className="px-4 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 transition flex items-center gap-2"
                             >
-                                <Filter className="w-4 h-4" />
-                                Filters
-                                <ChevronDown className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
-                            </button>
+                                <option value="all">All Status</option>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
                             <button
                                 onClick={handleSearch}
                                 className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition flex items-center gap-2"
@@ -426,37 +278,6 @@ const AdminVendorManagement = () => {
                             )}
                         </div>
 
-                        {showFilters && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-100">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                                    <select
-                                        value={localStatusFilter}
-                                        onChange={(e) => setLocalStatusFilter(e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                                    >
-                                        <option value="all">All Status</option>
-                                        <option value="approved">Approved</option>
-                                        <option value="pending">Pending</option>
-                                        <option value="suspended">Suspended</option>
-                                        <option value="rejected">Rejected</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Verification</label>
-                                    <select
-                                        value={localVerificationFilter}
-                                        onChange={(e) => setLocalVerificationFilter(e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                                    >
-                                        <option value="all">All</option>
-                                        <option value="verified">Verified</option>
-                                        <option value="pending">Pending</option>
-                                        <option value="rejected">Rejected</option>
-                                    </select>
-                                </div>
-                            </div>
-                        )}
 
                         {hasActiveFilters && (
                             <div className="flex flex-wrap gap-2 pt-2">
@@ -484,18 +305,6 @@ const AdminVendorManagement = () => {
                                         </button>
                                     </span>
                                 )}
-                                {verificationFilter !== "all" && (
-                                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-orange-100 text-orange-700 rounded-lg text-xs">
-                                        Verification: {verificationFilter}
-                                        <button onClick={() => {
-                                            setLocalVerificationFilter("all");
-                                            setVerificationFilter("all");
-                                            setCurrentPage(1);
-                                        }} className="hover:text-orange-900">
-                                            <X className="w-3 h-3" />
-                                        </button>
-                                    </span>
-                                )}
                             </div>
                         )}
                     </div>
@@ -507,11 +316,12 @@ const AdminVendorManagement = () => {
                         <table className="w-full">
                             <thead className="bg-gray-50 border-b border-gray-200">
                                 <tr>
-                                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Store / Vendor</th>
+                                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Farm / Owner</th>
                                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Verification</th>
-                                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Sales</th>
-                                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Rating</th>
+                                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Products</th>
+                                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Orders</th>
+                                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Revenue</th>
                                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Joined</th>
                                     <th className="text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                 </tr>
@@ -520,63 +330,70 @@ const AdminVendorManagement = () => {
                                 {loading ? (
                                     [...Array(limit)].map((_, i) => (
                                         <tr key={i}>
-                                            <td colSpan={7} className="px-6 py-4">
+                                            <td colSpan={8} className="px-6 py-4">
                                                 <div className="animate-pulse">
                                                     <div className="h-16 bg-gray-100 rounded-lg"></div>
                                                 </div>
                                             </td>
                                         </tr>
                                     ))
-                                ) : paginatedVendors?.length === 0 ? (
+                                ) : vendors?.length === 0 ? (
                                     <tr>
-                                        <td colSpan={7} className="text-center py-12">
+                                        <td colSpan={8} className="text-center py-12">
                                             <Store className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                                             <h3 className="text-lg font-medium text-gray-900">No vendors found</h3>
                                             <p className="text-gray-500 mt-1">Try adjusting your filters</p>
                                         </td>
                                     </tr>
                                 ) : (
-                                    paginatedVendors?.map((vendor) => (
+                                    vendors?.map((vendor: IVendor) => (
                                         <tr
                                             key={vendor.id}
                                             className="hover:bg-gray-50 transition cursor-pointer"
-
+                                            onClick={() => handleSelectVendor(vendor)}
                                         >
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 bg-gradient-to-br from-green-100 to-green-200 rounded-lg flex items-center justify-center">
-                                                        <Store className="w-5 h-5 text-green-600" />
-                                                    </div>
+                                                    {vendor.logo ? (
+                                                        <img
+                                                            src={vendor.logo}
+                                                            alt={vendor.farmName}
+                                                            className="w-10 h-10 rounded-lg object-cover"
+                                                            onError={(e) => {
+                                                                (e.target as HTMLImageElement).src = "https://placehold.co/40x40?text=No+Image";
+                                                            }}
+                                                        />
+                                                    ) : (
+                                                        <div className="w-10 h-10 bg-gradient-to-br from-green-100 to-green-200 rounded-lg flex items-center justify-center">
+                                                            <Store className="w-5 h-5 text-green-600" />
+                                                        </div>
+                                                    )}
                                                     <div>
-                                                        <p className="font-medium text-gray-900">{vendor.storeName}</p>
-                                                        <p className="text-sm text-gray-500">{vendor.name}</p>
-                                                        <p className="text-xs text-gray-400">{vendor.email}</p>
+                                                        <p className="font-medium text-gray-900">{vendor.farmName}</p>
+                                                        <p className="text-sm text-gray-500">{vendor.user.name}</p>
+                                                        <p className="text-xs text-gray-400">{vendor.user.email}</p>
                                                     </div>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(vendor.status)}`}>
-                                                    {getStatusIcon(vendor.status)}
-                                                    {vendor.status.charAt(0).toUpperCase() + vendor.status.slice(1)}
+                                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(vendor.isActive)}`}>
+                                                    {getStatusIcon(vendor.isActive)}
+                                                    {getStatusText(vendor.isActive)}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${getVerificationColor(vendor.verificationStatus)}`}>
-                                                    {vendor.verificationStatus.charAt(0).toUpperCase() + vendor.verificationStatus.slice(1)}
+                                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${getVerificationColor(vendor.isVerified)}`}>
+                                                    {getVerificationText(vendor.isVerified)}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <div>
-                                                    <p className="font-medium text-gray-900">{formatCurrency(vendor.totalSales)}</p>
-                                                    <p className="text-xs text-gray-500">{vendor.totalOrders} orders</p>
-                                                </div>
+                                                <span className="text-gray-700">{vendor.totalProducts}</span>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <div className="flex items-center gap-1">
-                                                    <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                                                    <span className="font-medium text-gray-900">{vendor.rating.toFixed(1)}</span>
-                                                    <span className="text-xs text-gray-500">({vendor.totalReviews})</span>
-                                                </div>
+                                                <span className="text-gray-700">{vendor.totalOrders}</span>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <span className="font-medium text-gray-900">{formatCurrency(vendor.totalSalesRevenue)}</span>
                                             </td>
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-1.5 text-sm text-gray-500">
@@ -606,7 +423,7 @@ const AdminVendorManagement = () => {
                     </div>
 
                     {/* Pagination */}
-                    {totalFilteredVendors > 0 && (
+                    {totalVendors > 0 && (
                         <div className="flex flex-col sm:flex-row justify-between items-center gap-4 py-4 px-6 border-t border-gray-200">
                             <div className="flex items-center gap-2 text-sm text-gray-600">
                                 <span>Show</span>
@@ -622,7 +439,7 @@ const AdminVendorManagement = () => {
                                 </select>
                                 <span>entries</span>
                                 <span className="ml-4">
-                                    Showing {startIndex + 1} to {Math.min(endIndex, totalFilteredVendors)} of {totalFilteredVendors} vendors
+                                    Showing {vendors?.length > 0 ? ((currentPage - 1) * limit) + 1 : 0} to {Math.min(currentPage * limit, totalVendors)} of {totalVendors} vendors
                                 </span>
                             </div>
 
@@ -663,8 +480,8 @@ const AdminVendorManagement = () => {
 
                                 <button
                                     onClick={() => goToPage(currentPage + 1)}
-                                    disabled={currentPage === totalPages}
-                                    className={`p-2 rounded-lg border transition ${currentPage === totalPages
+                                    disabled={currentPage === pagination.totalPages}
+                                    className={`p-2 rounded-lg border transition ${currentPage === pagination.totalPages
                                         ? "border-gray-200 text-gray-400 cursor-not-allowed"
                                         : "border-gray-300 text-gray-600 hover:bg-green-50 hover:border-green-500"
                                         }`}
@@ -672,9 +489,9 @@ const AdminVendorManagement = () => {
                                     <ChevronRight className="w-4 h-4" />
                                 </button>
                                 <button
-                                    onClick={() => goToPage(totalPages)}
-                                    disabled={currentPage === totalPages}
-                                    className={`px-3 py-1 rounded-lg border transition text-sm ${currentPage === totalPages
+                                    onClick={() => goToPage(pagination.totalPages)}
+                                    disabled={currentPage === pagination.totalPages}
+                                    className={`px-3 py-1 rounded-lg border transition text-sm ${currentPage === pagination.totalPages
                                         ? "border-gray-200 text-gray-400 cursor-not-allowed"
                                         : "border-gray-300 text-gray-600 hover:bg-green-50 hover:border-green-500"
                                         }`}
@@ -687,60 +504,47 @@ const AdminVendorManagement = () => {
                 </div>
             </div>
 
-            {/* Vendor Details Modal */}
+            {/* Vendor Details Modal - Same as before */}
             {selectedVendor && (
                 <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
                     <div className="bg-white rounded-2xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-                        {/* Modal Header */}
                         <div className="sticky top-0 bg-gradient-to-r from-green-600 to-green-500 px-6 py-4 flex justify-between items-center">
                             <div className="flex items-center gap-3">
                                 <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
                                     <Store className="w-6 h-6 text-white" />
                                 </div>
                                 <div>
-                                    <h2 className="text-xl font-bold text-white">{selectedVendor.storeName}</h2>
+                                    <h2 className="text-xl font-bold text-white">{selectedVendor.farmName}</h2>
                                     <p className="text-green-100 text-sm">Vendor ID: #{selectedVendor.id}</p>
                                 </div>
                             </div>
-                            <button
-                                onClick={() => setSelectedVendor(null)}
-                                className="p-2 hover:bg-white/10 rounded-lg transition text-white"
-                            >
+                            <button onClick={() => setSelectedVendor(null)} className="p-2 hover:bg-white/10 rounded-lg transition text-white">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
 
-                        {/* Modal Content */}
                         <div className="p-6">
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                {/* Left Column - Vendor Info */}
                                 <div className="space-y-5">
                                     <div>
                                         <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
                                             <Building2 className="w-4 h-4 text-green-600" />
-                                            Store Information
+                                            Farm Information
                                         </h3>
                                         <div className="space-y-2.5 pl-6">
                                             <div>
-                                                <p className="text-xs text-gray-500">Store Name</p>
-                                                <p className="text-sm text-gray-800 font-medium">{selectedVendor.storeName}</p>
+                                                <p className="text-xs text-gray-500">Farm Name</p>
+                                                <p className="text-sm text-gray-800 font-medium">{selectedVendor.farmName}</p>
                                             </div>
                                             <div>
-                                                <p className="text-xs text-gray-500">Store Description</p>
-                                                <p className="text-sm text-gray-600">{selectedVendor.storeDescription || "N/A"}</p>
+                                                <p className="text-xs text-gray-500">Description</p>
+                                                <p className="text-sm text-gray-600">{selectedVendor.description || "N/A"}</p>
                                             </div>
                                             <div>
-                                                <p className="text-xs text-gray-500">Store Address</p>
+                                                <p className="text-xs text-gray-500">Address</p>
                                                 <div className="flex items-start gap-1.5 text-sm text-gray-800">
                                                     <MapPin className="w-3.5 h-3.5 text-gray-400 mt-0.5" />
-                                                    <span>{selectedVendor.storeAddress || "N/A"}</span>
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <p className="text-xs text-gray-500">Store Phone</p>
-                                                <div className="flex items-center gap-1.5 text-sm text-gray-800">
-                                                    <Phone className="w-3.5 h-3.5 text-gray-400" />
-                                                    <span>{selectedVendor.storePhone || "N/A"}</span>
+                                                    <span>{selectedVendor.address}, {selectedVendor.district}, {selectedVendor.province}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -754,52 +558,47 @@ const AdminVendorManagement = () => {
                                         <div className="space-y-2.5 pl-6">
                                             <div>
                                                 <p className="text-xs text-gray-500">Owner Name</p>
-                                                <p className="text-sm text-gray-800">{selectedVendor.name}</p>
+                                                <p className="text-sm text-gray-800">{selectedVendor.user.name}</p>
                                             </div>
                                             <div>
                                                 <p className="text-xs text-gray-500">Email Address</p>
                                                 <div className="flex items-center gap-1.5 text-sm text-gray-800">
                                                     <Mail className="w-3.5 h-3.5 text-gray-400" />
-                                                    <span>{selectedVendor.email}</span>
+                                                    <span>{selectedVendor.user.email}</span>
                                                 </div>
                                             </div>
                                             <div>
                                                 <p className="text-xs text-gray-500">Member Since</p>
                                                 <div className="flex items-center gap-1.5 text-sm text-gray-800">
                                                     <Calendar className="w-3.5 h-3.5 text-gray-400" />
-                                                    {formatDate(selectedVendor.createdAt)}
+                                                    {formatDate(selectedVendor.user.createdAt)}
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* Right Column - Business & Performance */}
                                 <div className="space-y-5">
                                     <div>
                                         <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
                                             <Shield className="w-4 h-4 text-green-600" />
-                                            Business Verification
+                                            Business Details
                                         </h3>
                                         <div className="space-y-2.5 pl-6">
                                             <div>
+                                                <p className="text-xs text-gray-500">PAN Number</p>
+                                                <p className="text-sm text-gray-800 font-mono">{selectedVendor.panNo || "N/A"}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-xs text-gray-500">VAT Number</p>
+                                                <p className="text-sm text-gray-800 font-mono">{selectedVendor.vatNo || "N/A"}</p>
+                                            </div>
+                                            <div>
                                                 <p className="text-xs text-gray-500">Verification Status</p>
-                                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium mt-1 ${getVerificationColor(selectedVendor.verificationStatus)}`}>
-                                                    {selectedVendor.verificationStatus.charAt(0).toUpperCase() + selectedVendor.verificationStatus.slice(1)}
+                                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium mt-1 ${getVerificationColor(selectedVendor.isVerified)}`}>
+                                                    {getVerificationText(selectedVendor.isVerified)}
                                                 </span>
                                             </div>
-                                            {selectedVendor.businessLicense && (
-                                                <div>
-                                                    <p className="text-xs text-gray-500">Business License</p>
-                                                    <p className="text-sm text-gray-800 font-mono">{selectedVendor.businessLicense}</p>
-                                                </div>
-                                            )}
-                                            {selectedVendor.taxId && (
-                                                <div>
-                                                    <p className="text-xs text-gray-500">Tax ID</p>
-                                                    <p className="text-sm text-gray-800 font-mono">{selectedVendor.taxId}</p>
-                                                </div>
-                                            )}
                                         </div>
                                     </div>
 
@@ -810,8 +609,8 @@ const AdminVendorManagement = () => {
                                         </h3>
                                         <div className="grid grid-cols-2 gap-3 pl-6">
                                             <div className="bg-gray-50 rounded-lg p-3">
-                                                <p className="text-xs text-gray-500">Total Sales</p>
-                                                <p className="text-lg font-bold text-gray-900">{formatCurrency(selectedVendor.totalSales)}</p>
+                                                <p className="text-xs text-gray-500">Total Revenue</p>
+                                                <p className="text-lg font-bold text-gray-900">{formatCurrency(selectedVendor.totalSalesRevenue)}</p>
                                             </div>
                                             <div className="bg-gray-50 rounded-lg p-3">
                                                 <p className="text-xs text-gray-500">Total Products</p>
@@ -822,8 +621,10 @@ const AdminVendorManagement = () => {
                                                 <p className="text-lg font-bold text-gray-900">{selectedVendor.totalOrders}</p>
                                             </div>
                                             <div className="bg-gray-50 rounded-lg p-3">
-                                                <p className="text-xs text-gray-500">Commission Rate</p>
-                                                <p className="text-lg font-bold text-gray-900">{selectedVendor.commissionRate}%</p>
+                                                <p className="text-xs text-gray-500">Status</p>
+                                                <p className={`text-lg font-bold ${selectedVendor.isActive ? 'text-green-600' : 'text-red-600'}`}>
+                                                    {getStatusText(selectedVendor.isActive)}
+                                                </p>
                                             </div>
                                         </div>
                                     </div>
@@ -831,46 +632,28 @@ const AdminVendorManagement = () => {
                                     <div className="pt-3 border-t border-gray-100">
                                         <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
                                             <ClockIcon className="w-4 h-4 text-green-600" />
-                                            Status History
+                                            Account Timeline
                                         </h3>
                                         <div className="space-y-2.5 pl-6">
                                             <div>
-                                                <p className="text-xs text-gray-500">Current Status</p>
-                                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium mt-1 ${getStatusColor(selectedVendor.status)}`}>
-                                                    {getStatusIcon(selectedVendor.status)}
-                                                    {selectedVendor.status.charAt(0).toUpperCase() + selectedVendor.status.slice(1)}
-                                                </span>
+                                                <p className="text-xs text-gray-500">Account Created</p>
+                                                <p className="text-sm text-gray-800">{formatDate(selectedVendor.createdAt)}</p>
                                             </div>
-                                            {selectedVendor.approvedAt && (
-                                                <div>
-                                                    <p className="text-xs text-gray-500">Approved On</p>
-                                                    <p className="text-sm text-gray-800">{formatDate(selectedVendor.approvedAt)}</p>
-                                                </div>
-                                            )}
-                                            {selectedVendor.rejectionReason && (
-                                                <div>
-                                                    <p className="text-xs text-gray-500">Rejection/Suspension Reason</p>
-                                                    <p className="text-sm text-red-600 bg-red-50 p-2 rounded-lg mt-1">{selectedVendor.rejectionReason}</p>
-                                                </div>
-                                            )}
+                                            <div>
+                                                <p className="text-xs text-gray-500">Last Updated</p>
+                                                <p className="text-sm text-gray-800">{formatDate(selectedVendor.updatedAt)}</p>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Action Buttons */}
                             <div className="mt-6 pt-6 border-t border-gray-200 flex justify-end gap-3">
-                                <button
-                                    onClick={() => setShowStatusModal(true)}
-                                    className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition flex items-center gap-2"
-                                >
+                                <button onClick={() => setShowStatusModal(true)} className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition flex items-center gap-2">
                                     <Edit2 className="w-4 h-4" />
                                     Update Status
                                 </button>
-                                <button
-                                    onClick={() => setSelectedVendor(null)}
-                                    className="px-6 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg transition"
-                                >
+                                <button onClick={() => setSelectedVendor(null)} className="px-6 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg transition">
                                     Close
                                 </button>
                             </div>
@@ -885,46 +668,40 @@ const AdminVendorManagement = () => {
                     <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
                         <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
                             <h3 className="text-lg font-semibold text-gray-900">Update Vendor Status</h3>
-                            <button
-                                onClick={() => {
-                                    setShowStatusModal(false);
-                                    setStatusUpdate({ status: 'approved', remarks: '' });
-                                }}
-                                className="p-1 hover:bg-gray-100 rounded-lg transition"
-                            >
+                            <button onClick={() => { setShowStatusModal(false); setStatusUpdate({ status: 'active', remarks: '' }); }} className="p-1 hover:bg-gray-100 rounded-lg transition">
                                 <X className="w-5 h-5 text-gray-500" />
                             </button>
                         </div>
 
                         <div className="p-6 space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Vendor
-                                </label>
-                                <p className="text-gray-900 font-medium">{selectedVendor.storeName}</p>
-                                <p className="text-sm text-gray-500">{selectedVendor.name}</p>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Vendor</label>
+                                <p className="text-gray-900 font-medium">{selectedVendor.farmName}</p>
+                                <p className="text-sm text-gray-500">{selectedVendor.user.name}</p>
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    New Status *
-                                </label>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Current Status</label>
+                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedVendor.isActive)}`}>
+                                    {getStatusIcon(selectedVendor.isActive)}
+                                    {getStatusText(selectedVendor.isActive)}
+                                </span>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">New Status *</label>
                                 <select
                                     value={statusUpdate.status}
                                     onChange={(e) => setStatusUpdate({ ...statusUpdate, status: e.target.value as any })}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                                 >
-                                    <option value="approved">Approved</option>
-                                    <option value="pending">Pending</option>
-                                    <option value="suspended">Suspended</option>
-                                    <option value="rejected">Rejected</option>
+                                    <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
                                 </select>
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Remarks / Reason *
-                                </label>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Remarks / Reason</label>
                                 <textarea
                                     value={statusUpdate.remarks}
                                     onChange={(e) => setStatusUpdate({ ...statusUpdate, remarks: e.target.value })}
@@ -933,30 +710,13 @@ const AdminVendorManagement = () => {
                                     placeholder="Enter remarks or reason for status change..."
                                 />
                             </div>
-
-                            {(statusUpdate.status === 'rejected' || statusUpdate.status === 'suspended') && !statusUpdate.remarks && (
-                                <p className="text-sm text-red-600 flex items-center gap-1">
-                                    <AlertCircle className="w-4 h-4" />
-                                    Remarks are required for rejection or suspension
-                                </p>
-                            )}
                         </div>
 
                         <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
-                            <button
-                                onClick={() => {
-                                    setShowStatusModal(false);
-                                    setStatusUpdate({ status: 'approved', remarks: '' });
-                                }}
-                                className="px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg transition"
-                            >
+                            <button onClick={() => { setShowStatusModal(false); setStatusUpdate({ status: 'active', remarks: '' }); }} className="px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg transition">
                                 Cancel
                             </button>
-                            <button
-                                onClick={handleUpdateStatus}
-                                disabled={(statusUpdate.status === 'rejected' || statusUpdate.status === 'suspended') && !statusUpdate.remarks}
-                                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
+                            <button onClick={handleUpdateStatus} className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition flex items-center gap-2">
                                 <Save className="w-4 h-4" />
                                 Update Status
                             </button>
