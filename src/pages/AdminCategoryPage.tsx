@@ -17,9 +17,11 @@ import {
   Filter,
   ChevronDown,
   Plus,
+  TrendingUp,
+  Star
 } from "lucide-react";
 import toast from "react-hot-toast";
-import { fetchCategories, createCategory, updateCategory, deleteCategory } from "../features/category/CategoryApi";
+import { fetchCategories, createCategory, updateCategory, deleteCategory, fetchCategoryStats } from "../features/category/CategoryApi";
 import CategoryCardSkeleton from "../components/CategoryCardSkeleton";
 
 interface CategoryFormData {
@@ -31,8 +33,8 @@ interface CategoryFormData {
 
 const AdminCategoriesPage = () => {
   const dispatch = useAppDispatch();
-  const { categories, loading, pagination } = useAppSelector((state) => state.category);
-  
+  const { categories, stats, loading, pagination } = useAppSelector((state) => state.category);
+
   // Filter states
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -41,12 +43,12 @@ const AdminCategoriesPage = () => {
   const [sortOrder, setSortOrder] = useState<string>("asc");
   const [showFilters, setShowFilters] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
-  
+
   // Local filter states (for form inputs before search)
   const [localSearchTerm, setLocalSearchTerm] = useState("");
   const [localSortBy, setLocalSortBy] = useState<string>("name");
   const [localSortOrder, setLocalSortOrder] = useState<string>("asc");
-  
+
   const [editingCategory, setEditingCategory] = useState<CategoryFormData | null>(null);
   const [formData, setFormData] = useState<CategoryFormData>({
     name: "",
@@ -56,11 +58,6 @@ const AdminCategoriesPage = () => {
   const [previewImage, setPreviewImage] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const [stats, setStats] = useState({
-    totalCategories: 0,
-    activeCategories: 0,
-  });
 
   // Function to fetch categories with current filters
   const fetchCategoriesWithFilters = () => {
@@ -88,7 +85,7 @@ const AdminCategoriesPage = () => {
     setLocalSearchTerm("");
     setLocalSortBy("name");
     setLocalSortOrder("asc");
-    
+
     setSearchTerm("");
     setSortBy("name");
     setSortOrder("asc");
@@ -100,15 +97,9 @@ const AdminCategoriesPage = () => {
     fetchCategoriesWithFilters();
   }, [dispatch, currentPage, limit, searchTerm, sortBy, sortOrder]);
 
-  // Update stats when categories change
   useEffect(() => {
-    if (categories) {
-      setStats({
-        totalCategories: pagination?.total || categories.length,
-        activeCategories: categories.length,
-      });
-    }
-  }, [categories, pagination]);
+    dispatch(fetchCategoryStats())
+  }, [])
 
   const handleEdit = (category: any) => {
     setEditingCategory(category);
@@ -270,6 +261,7 @@ const AdminCategoriesPage = () => {
 
   const hasActiveFilters = searchTerm !== "";
 
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -289,12 +281,12 @@ const AdminCategoriesPage = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
           <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Total Categories</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalCategories}</p>
+                <p className="text-2xl font-bold text-gray-900">{stats?.categories?.total}</p>
               </div>
               <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
                 <Package className="w-5 h-5 text-blue-600" />
@@ -306,10 +298,36 @@ const AdminCategoriesPage = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Active Categories</p>
-                <p className="text-2xl font-bold text-green-600">{stats.activeCategories}</p>
+                <p className="text-2xl font-bold text-green-600">{stats?.categories?.active}</p>
               </div>
               <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
                 <Tag className="w-5 h-5 text-green-600" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Top Category</p>
+                <p className="text-lg font-bold text-orange-600 truncate">{stats?.topProductCategory?.name}</p>
+                <p className="text-xs text-gray-500">{stats?.topProductCategory?.productCount} products</p>
+              </div>
+              <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                <TrendingUp className="w-5 h-5 text-orange-600" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Best Selling</p>
+                <p className="text-lg font-bold text-purple-600 truncate">{stats?.topSellingCategory?.name}</p>
+                <p className="text-xs text-gray-500">{stats?.topSellingCategory?.totalSold} sold</p>
+              </div>
+              <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                <Star className="w-5 h-5 text-purple-600" />
               </div>
             </div>
           </div>
@@ -414,14 +432,14 @@ const AdminCategoriesPage = () => {
                 {loading ? (
                   [...Array(limit)].map((_, index) => (
                     <tr key={index}>
-                      <td colSpan={3} className="px-6 py-4">
+                      <td colSpan={5} className="px-6 py-4">
                         <CategoryCardSkeleton />
                       </td>
                     </tr>
                   ))
                 ) : categories?.length === 0 ? (
                   <tr>
-                    <td colSpan={3} className="text-center py-12">
+                    <td colSpan={5} className="text-center py-12">
                       <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                       <h3 className="text-lg font-medium text-gray-900">No categories found</h3>
                       <p className="text-gray-500 mt-1">Add your first category using the button above</p>
@@ -438,7 +456,7 @@ const AdminCategoriesPage = () => {
                               alt={category.name}
                               className="w-10 h-10 rounded-lg object-cover"
                               onError={(e) => {
-                                (e.target as HTMLImageElement).src = "https://via.placeholder.com/40?text=No+Image";
+                                (e.target as HTMLImageElement).src = "https://placehold.co/40x40?text=No+Image";
                               }}
                             />
                           ) : (
@@ -507,22 +525,20 @@ const AdminCategoriesPage = () => {
                 <button
                   onClick={() => goToPage(1)}
                   disabled={currentPage === 1}
-                  className={`px-3 py-1 rounded-lg border transition text-sm ${
-                    currentPage === 1
-                      ? "border-gray-200 text-gray-400 cursor-not-allowed"
-                      : "border-gray-300 text-gray-600 hover:bg-green-50 hover:border-green-500"
-                  }`}
+                  className={`px-3 py-1 rounded-lg border transition text-sm ${currentPage === 1
+                    ? "border-gray-200 text-gray-400 cursor-not-allowed"
+                    : "border-gray-300 text-gray-600 hover:bg-green-50 hover:border-green-500"
+                    }`}
                 >
                   First
                 </button>
                 <button
                   onClick={() => goToPage(currentPage - 1)}
                   disabled={currentPage === 1}
-                  className={`p-2 rounded-lg border transition ${
-                    currentPage === 1
-                      ? "border-gray-200 text-gray-400 cursor-not-allowed"
-                      : "border-gray-300 text-gray-600 hover:bg-green-50 hover:border-green-500"
-                  }`}
+                  className={`p-2 rounded-lg border transition ${currentPage === 1
+                    ? "border-gray-200 text-gray-400 cursor-not-allowed"
+                    : "border-gray-300 text-gray-600 hover:bg-green-50 hover:border-green-500"
+                    }`}
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
@@ -531,11 +547,10 @@ const AdminCategoriesPage = () => {
                   <button
                     key={page}
                     onClick={() => goToPage(page)}
-                    className={`px-3 py-1 rounded-lg transition text-sm ${
-                      currentPage === page
-                        ? "bg-green-600 text-white"
-                        : "text-gray-600 hover:bg-green-50"
-                    }`}
+                    className={`px-3 py-1 rounded-lg transition text-sm ${currentPage === page
+                      ? "bg-green-600 text-white"
+                      : "text-gray-600 hover:bg-green-50"
+                      }`}
                   >
                     {page}
                   </button>
@@ -544,22 +559,20 @@ const AdminCategoriesPage = () => {
                 <button
                   onClick={() => goToPage(currentPage + 1)}
                   disabled={currentPage === totalPages}
-                  className={`p-2 rounded-lg border transition ${
-                    currentPage === totalPages
-                      ? "border-gray-200 text-gray-400 cursor-not-allowed"
-                      : "border-gray-300 text-gray-600 hover:bg-green-50 hover:border-green-500"
-                  }`}
+                  className={`p-2 rounded-lg border transition ${currentPage === totalPages
+                    ? "border-gray-200 text-gray-400 cursor-not-allowed"
+                    : "border-gray-300 text-gray-600 hover:bg-green-50 hover:border-green-500"
+                    }`}
                 >
                   <ChevronRight className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => goToPage(totalPages)}
                   disabled={currentPage === totalPages}
-                  className={`px-3 py-1 rounded-lg border transition text-sm ${
-                    currentPage === totalPages
-                      ? "border-gray-200 text-gray-400 cursor-not-allowed"
-                      : "border-gray-300 text-gray-600 hover:bg-green-50 hover:border-green-500"
-                  }`}
+                  className={`px-3 py-1 rounded-lg border transition text-sm ${currentPage === totalPages
+                    ? "border-gray-200 text-gray-400 cursor-not-allowed"
+                    : "border-gray-300 text-gray-600 hover:bg-green-50 hover:border-green-500"
+                    }`}
                 >
                   Last
                 </button>
@@ -571,15 +584,26 @@ const AdminCategoriesPage = () => {
 
       {/* Add/Edit Category Modal */}
       {showCategoryModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4">
-            <div className="flex justify-between items-center p-6 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900">
-                {editingCategory ? "Edit Category" : "Add New Category"}
-              </h2>
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
+            {/* Modal Header */}
+            <div className="sticky top-0 bg-gradient-to-r from-green-600 to-green-500 px-6 py-4 rounded-t-2xl flex justify-between items-center">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                  <Tag className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-white">
+                    {editingCategory ? "Edit Category" : "Add New Category"}
+                  </h2>
+                  <p className="text-green-100 text-sm">
+                    {editingCategory ? `Editing: ${editingCategory.name}` : "Fill in the category details"}
+                  </p>
+                </div>
+              </div>
               <button
                 onClick={handleCancelEdit}
-                className="text-gray-400 hover:text-gray-600"
+                className="p-2 hover:bg-white/10 rounded-lg transition text-white"
               >
                 <X className="w-5 h-5" />
               </button>

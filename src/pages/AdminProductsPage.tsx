@@ -20,11 +20,12 @@ import {
   Plus,
   Filter,
   ChevronDown,
+  Clock,
+  Tag,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { fetchProductsForAdmin, createProduct, updateProduct, deleteProduct } from "../features/product/productApi";
 import { fetchCategories } from "../features/category/CategoryApi";
-import ProductCardSkeleton from "../components/ProductCardSkleton";
 
 interface ProductFormData {
   id?: number;
@@ -73,14 +74,6 @@ const AdminProductsPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [stats, setStats] = useState({
-    totalProducts: 0,
-    totalValue: 0,
-    outOfStock: 0,
-    lowStock: 0,
-    activeProducts: 0,
-  });
-
   const fetchProductsForAdminWithFilters = () => {
     const filters = {
       page: currentPage,
@@ -117,28 +110,11 @@ const AdminProductsPage = () => {
 
   useEffect(() => {
     fetchProductsForAdminWithFilters();
-  }, [dispatch, currentPage, limit, searchTerm, selectedCategory, stockStatus, sortBy, sortOrder]);
+  }, [dispatch, currentPage, limit, searchTerm, selectedCategory]);
 
   useEffect(() => {
     dispatch(fetchCategories());
   }, [dispatch]);
-
-  useEffect(() => {
-    if (products) {
-      const totalProducts = products.length;
-      const outOfStock = products.filter((p) => (p.quantity || 0) === 0).length;
-      const lowStock = products.filter((p) => (p.quantity || 0) > 0 && (p.quantity || 0) < 10).length;
-      const activeProducts = products.filter((p) => (p.quantity || 0) > 0).length;
-
-      setStats({
-        totalProducts,
-        totalValue: 0,
-        outOfStock,
-        lowStock,
-        activeProducts,
-      });
-    }
-  }, [products]);
 
   const handleEdit = (product: any) => {
     setEditingProduct(product);
@@ -292,7 +268,7 @@ const AdminProductsPage = () => {
     }
   };
 
-  const totalPages = pagination?.total || 1;
+  const totalPages = pagination?.totalPages || 1;
   const totalProducts = pagination?.total || 0;
 
   const goToPage = (page: number) => {
@@ -334,12 +310,36 @@ const AdminProductsPage = () => {
 
   const getStockBadge = (quantity: number) => {
     if (quantity === 0) {
-      return { text: "Out of Stock", color: "bg-red-100 text-red-800" };
+      return { text: "Out of Stock", color: "bg-red-100 text-red-800", icon: AlertTriangle };
     } else if (quantity < 10) {
-      return { text: `Low Stock (${quantity})`, color: "bg-orange-100 text-orange-800" };
+      return { text: `Low Stock (${quantity})`, color: "bg-orange-100 text-orange-800", icon: AlertTriangle };
     } else {
-      return { text: `${quantity} in stock`, color: "bg-green-100 text-green-800" };
+      return { text: `${quantity} in stock`, color: "bg-green-100 text-green-800", icon: CheckCircle };
     }
+  };
+
+  // Calculate stats from API data
+  const inStockCount = products?.filter(p => (p.quantity || 0) > 0).length || 0;
+  const outOfStockCount = products?.filter(p => (p.quantity || 0) === 0).length || 0;
+  const lowStockCount = products?.filter(p => (p.quantity || 0) > 0 && (p.quantity || 0) < 10).length || 0;
+  const totalValue = products?.reduce((sum, p) => sum + ((parseFloat(p.rate) || 0) * (p.quantity || 0)), 0) || 0;
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
+
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "N/A";
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
   };
 
   return (
@@ -360,67 +360,30 @@ const AdminProductsPage = () => {
           </button>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Total Products</p>
-                <p className="text-2xl font-bold text-gray-900">{totalProducts}</p>
-              </div>
-              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Package className="w-5 h-5 text-blue-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">In Stock</p>
-                <p className="text-2xl font-bold text-green-600">{stats.activeProducts}</p>
-              </div>
-              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                <TrendingUp className="w-5 h-5 text-green-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Out of Stock</p>
-                <p className="text-2xl font-bold text-red-600">{stats.outOfStock}</p>
-              </div>
-              <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-                <TrendingDown className="w-5 h-5 text-red-600" />
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+          {[
+            { label: "Total Products", value: totalProducts, color: "purple", icon: Package },
+            { label: "Opening Stock", value: inStockCount, color: "green", icon: TrendingUp },
+            { label: "Out of Stock", value: outOfStockCount, color: "yellow", icon: TrendingDown },
+            { label: "Low Stock", value: lowStockCount, color: "red", icon: AlertTriangle },
+            { label: "Inventory Value", value: formatCurrency(totalValue), color: "blue", icon: DollarSign },
+          ].map((stat, index) => (
+            <div
+              key={index}
+              className={`bg-white rounded-xl p-4 shadow-sm border border-gray-200 ${index === 4 ? 'col-span-2 lg:col-span-1' : ''
+                }`}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">{stat.label}</p>
+                  <p className={`text-2xl font-bold text-${stat.color}-600`}>{stat.value}</p>
+                </div>
+                <div className={`w-10 h-10 bg-${stat.color}-100 rounded-lg flex items-center justify-center`}>
+                  <stat.icon className={`w-5 h-5 text-${stat.color}-600`} />
+                </div>
               </div>
             </div>
-          </div>
-
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Low Stock</p>
-                <p className="text-2xl font-bold text-orange-600">{stats.lowStock}</p>
-              </div>
-              <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                <AlertTriangle className="w-5 h-5 text-orange-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Categories</p>
-                <p className="text-2xl font-bold text-purple-600">{categories?.length || 0}</p>
-              </div>
-              <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                <Filter className="w-5 h-5 text-purple-600" />
-              </div>
-            </div>
-          </div>
+          ))}
         </div>
 
         {/* Search and Filters */}
@@ -465,7 +428,7 @@ const AdminProductsPage = () => {
             </div>
 
             {showFilters && (
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-4 border-t border-gray-100">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-gray-100">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
                   <select
@@ -570,23 +533,25 @@ const AdminProductsPage = () => {
                   <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
                   <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
                   <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Opening Stock</th>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Stock Status</th>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                   <th className="text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {loading ? (
-                  [...Array(limit)].map((_, index) => (
-                    <tr key={index}>
-                      <td colSpan={6} className="px-6 py-4">
-                        <ProductCardSkeleton />
+                  [...Array(limit)].map((_, i) => (
+                    <tr key={i}>
+                      <td colSpan={7} className="px-6 py-4">
+                        <div className="animate-pulse">
+                          <div className="h-16 bg-gray-100 rounded-lg"></div>
+                        </div>
                       </td>
                     </tr>
                   ))
                 ) : products?.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="text-center py-12">
+                    <td colSpan={7} className="text-center py-12">
                       <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                       <h3 className="text-lg font-medium text-gray-900">No products found</h3>
                       <p className="text-gray-500 mt-1">Try adjusting your filters or add a new product</p>
@@ -594,17 +559,18 @@ const AdminProductsPage = () => {
                   </tr>
                 ) : (
                   products?.map((product) => {
-                    const stockBadge = getStockBadge(Number(product.quantity));
+                    const stockBadge = getStockBadge(Number(product.quantity || 0));
+                    const StockIcon = stockBadge.icon;
                     return (
                       <tr key={product.id} className="hover:bg-gray-50 transition">
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
                             <img
-                              src={`http://localhost:3000/image/${product.image}` || "https://via.placeholder.com/40"}
+                              src={`http://localhost:3000/image/${product.image}`}
                               alt={product.name}
                               className="w-10 h-10 rounded-lg object-cover"
                               onError={(e) => {
-                                (e.target as HTMLImageElement).src = "https://via.placeholder.com/40?text=No+Image";
+                                (e.target as HTMLImageElement).src = "https://placehold.co/40x40?text=No+Image";
                               }}
                             />
                             <div>
@@ -614,22 +580,30 @@ const AdminProductsPage = () => {
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          <span className="inline-block px-2 py-1 bg-gray-100 text-gray-700 rounded-lg text-xs">
-                            {product.categoryName}
+                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 rounded-lg text-xs">
+                            <Tag className="w-3 h-3" />
+                            {product.categoryName || "Uncategorized"}
                           </span>
                         </td>
                         <td className="px-6 py-4">
-                          <span className="font-semibold text-gray-900">Rs. {formatPrice(product.rate)}</span>
+                          <span className="font-semibold text-gray-900">₹{formatPrice(product.rate)}</span>
                           <p className="text-xs text-gray-500">per {product.unit}</p>
                         </td>
                         <td className="px-6 py-4">
-                          <span className="text-gray-700">{product.OpeningStock || 0} {product.unit}</span>
+                          <span className="text-gray-700">{product.quantity || 0} {product.unit}</span>
                         </td>
                         <td className="px-6 py-4">
-                          <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${stockBadge.color}`}>
+                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${stockBadge.color}`}>
+                            <StockIcon className="w-3.5 h-3.5" />
                             {stockBadge.text}
                           </span>
                         </td>
+                        {/* <td className="px-6 py-4">
+                          <div className="flex items-center gap-1.5 text-sm text-gray-500">
+                            <Clock className="w-3.5 h-3.5" />
+                            {formatDate(product.cre)}
+                          </div>
+                        </td> */}
                         <td className="px-6 py-4">
                           <div className="flex items-center justify-center gap-2">
                             <button
@@ -682,9 +656,9 @@ const AdminProductsPage = () => {
                   onClick={() => goToPage(1)}
                   disabled={currentPage === 1}
                   className={`px-3 py-1 rounded-lg border transition text-sm ${currentPage === 1
-                    ? 'border-gray-200 text-gray-400 cursor-not-allowed'
-                    : 'border-gray-300 text-gray-600 hover:bg-green-50 hover:border-green-500'
-                  }`}
+                    ? "border-gray-200 text-gray-400 cursor-not-allowed"
+                    : "border-gray-300 text-gray-600 hover:bg-green-50 hover:border-green-500"
+                    }`}
                 >
                   First
                 </button>
@@ -692,9 +666,9 @@ const AdminProductsPage = () => {
                   onClick={() => goToPage(currentPage - 1)}
                   disabled={currentPage === 1}
                   className={`p-2 rounded-lg border transition ${currentPage === 1
-                    ? 'border-gray-200 text-gray-400 cursor-not-allowed'
-                    : 'border-gray-300 text-gray-600 hover:bg-green-50 hover:border-green-500'
-                  }`}
+                    ? "border-gray-200 text-gray-400 cursor-not-allowed"
+                    : "border-gray-300 text-gray-600 hover:bg-green-50 hover:border-green-500"
+                    }`}
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
@@ -704,9 +678,9 @@ const AdminProductsPage = () => {
                     key={page}
                     onClick={() => goToPage(page)}
                     className={`px-3 py-1 rounded-lg transition text-sm ${currentPage === page
-                      ? 'bg-green-600 text-white'
-                      : 'text-gray-600 hover:bg-green-50'
-                    }`}
+                      ? "bg-green-600 text-white"
+                      : "text-gray-600 hover:bg-green-50"
+                      }`}
                   >
                     {page}
                   </button>
@@ -716,9 +690,9 @@ const AdminProductsPage = () => {
                   onClick={() => goToPage(currentPage + 1)}
                   disabled={currentPage === totalPages}
                   className={`p-2 rounded-lg border transition ${currentPage === totalPages
-                    ? 'border-gray-200 text-gray-400 cursor-not-allowed'
-                    : 'border-gray-300 text-gray-600 hover:bg-green-50 hover:border-green-500'
-                  }`}
+                    ? "border-gray-200 text-gray-400 cursor-not-allowed"
+                    : "border-gray-300 text-gray-600 hover:bg-green-50 hover:border-green-500"
+                    }`}
                 >
                   <ChevronRight className="w-4 h-4" />
                 </button>
@@ -726,9 +700,9 @@ const AdminProductsPage = () => {
                   onClick={() => goToPage(totalPages)}
                   disabled={currentPage === totalPages}
                   className={`px-3 py-1 rounded-lg border transition text-sm ${currentPage === totalPages
-                    ? 'border-gray-200 text-gray-400 cursor-not-allowed'
-                    : 'border-gray-300 text-gray-600 hover:bg-green-50 hover:border-green-500'
-                  }`}
+                    ? "border-gray-200 text-gray-400 cursor-not-allowed"
+                    : "border-gray-300 text-gray-600 hover:bg-green-50 hover:border-green-500"
+                    }`}
                 >
                   Last
                 </button>
@@ -738,17 +712,27 @@ const AdminProductsPage = () => {
         </div>
       </div>
 
-      {/* Add/Edit Product Modal */}
+      {/* Add/Edit Product Modal - Same as before */}
       {showProductModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center p-6 border-b border-gray-200 sticky top-0 bg-white">
-              <h2 className="text-xl font-semibold text-gray-900">
-                {editingProduct ? "Edit Product" : "Add New Product"}
-              </h2>
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-gradient-to-r from-green-600 to-green-500 px-6 py-4 flex justify-between items-center">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                  <Package className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-white">
+                    {editingProduct ? "Edit Product" : "Add New Product"}
+                  </h2>
+                  <p className="text-green-100 text-sm">
+                    {editingProduct ? `Editing: ${editingProduct.name}` : "Fill in the product details"}
+                  </p>
+                </div>
+              </div>
               <button
                 onClick={handleCancelEdit}
-                className="text-gray-400 hover:text-gray-600"
+                className="p-2 hover:bg-white/10 rounded-lg transition text-white"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -756,7 +740,7 @@ const AdminProductsPage = () => {
 
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
+                <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Product Name <span className="text-red-500">*</span>
                   </label>
@@ -776,7 +760,7 @@ const AdminProductsPage = () => {
                     Price <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">Rs.</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">₹</span>
                     <input
                       type="number"
                       name="price"
@@ -784,7 +768,7 @@ const AdminProductsPage = () => {
                       onChange={handleInputChange}
                       step="0.01"
                       placeholder="0.00"
-                      className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                      className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                       required
                     />
                   </div>

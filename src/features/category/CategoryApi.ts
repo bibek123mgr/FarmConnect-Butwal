@@ -1,5 +1,5 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { axiosInstanceNoCredentials } from "../../lib/axiosInstance";
+import { axiosInstance, axiosInstanceNoCredentials } from "../../lib/axiosInstance";
 
 
 export const fetchCategories = createAsyncThunk(
@@ -15,6 +15,21 @@ export const fetchCategories = createAsyncThunk(
         }
     }
 );
+
+export const fetchCategoryStats = createAsyncThunk(
+    "categories/fetchCategoryStats",
+    async (_, { rejectWithValue }) => {
+        try {
+            const { data } = await axiosInstance.get(`categories/stats`);
+            return data;
+        } catch (error: any) {
+            return rejectWithValue(
+                error.response?.data || "Something went wrong"
+            );
+        }
+    }
+);
+
 
 export const createCategory = createAsyncThunk(
     "categories/createCategory",
@@ -46,7 +61,7 @@ export const updateCategory = createAsyncThunk(
 
 export const deleteCategory = createAsyncThunk(
     "categories/deleteCategory",
-    async (id:number, { rejectWithValue }) => {
+    async (id: number, { rejectWithValue }) => {
         try {
             const { data } = await axiosInstanceNoCredentials.delete(`categories/${id}`);
             return data;

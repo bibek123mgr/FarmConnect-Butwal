@@ -5,7 +5,6 @@ import {
   ShoppingCart,
   Users,
   Tags,
-  Layers,
   Settings,
   LogOut,
   BarChart3,
@@ -14,9 +13,16 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
-  Boxes,
   FolderTree,
-  Grid3x3,
+  DollarSign,
+  CreditCard,
+  FileText,
+  Shield,
+  Store,
+  UserPlus,
+  Clock,
+  ShoppingBag,
+  Percent,
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../hooks/hooks";
 import { LogoutUser } from "../../features/auth/AuthApi";
@@ -31,23 +37,78 @@ const AdminSidebar = ({ sidebarOpen, setSidebarOpen, isMobile }: AdminSidebarPro
   const dispatch = useAppDispatch();
   const { user } = useAppSelector(state => state.auth);
 
-  const menuItems = [
-    { path: "/admin", name: "Dashboard", icon: LayoutDashboard, roles: ["admin", "super_admin"] },
-    { path: "/admin/products", name: "Products", icon: Package, roles: ["admin", "super_admin"] },
-    { path: "/admin/orders", name: "Orders", icon: ShoppingCart, roles: ["admin", "super_admin"] },
-    { path: "/admin/users", name: "Users", icon: Users, roles: ["super_admin"] },
-    { path: "/admin/categories", name: "Categories", icon: FolderTree, roles: ["admin", "super_admin"] },
-    { path: "/admin/brands", name: "Brands", icon: Tags, roles: ["admin", "super_admin"] },
-    { path: "/admin/analytics", name: "Analytics", icon: BarChart3, roles: ["admin", "super_admin"] },
-    { path: "/admin/reviews", name: "Reviews", icon: Star, roles: ["admin", "super_admin"] },
-    { path: "/admin/shipping", name: "Shipping", icon: Truck, roles: ["admin", "super_admin"] },
-    { path: "/admin/settings", name: "Settings", icon: Settings, roles: ["admin", "super_admin"] },
+  const menuGroups = [
+    {
+      title: "Main",
+      items: [
+        { path: "/admin", name: "Dashboard", icon: LayoutDashboard, roles: ["admin", "superadmin"] },
+        { path: "/admin/analytics", name: "Analytics", icon: BarChart3, roles: ["admin", "superadmin"] },
+      ]
+    },
+    {
+      title: "Vendor Management",
+      items: [
+        { path: "/admin/vendors", name: "All Vendors", icon: Store, roles: ["superadmin"] },
+        // { path: "/admin/vendor-requests", name: "Vendor Requests", icon: UserPlus, roles: ["superadmin"] },
+        // { path: "/admin/vendor-approvals", name: "Pending Approvals", icon: Clock, roles: ["superadmin"] },
+        // { path: "/admin/vendor-stores", name: "Store Settings", icon: ShoppingBag, roles: ["superadmin"] },
+        { path: "/admin/commissions", name: "Commission Rates", icon: Percent, roles: ["superadmin"] },
+      ]
+    },
+    {
+      title: "Store Management",
+      items: [
+        { path: "/admin/products", name: "All Products", icon: Package, roles: ["admin", "superadmin"] },
+        { path: "/admin/orders", name: "All Orders", icon: ShoppingCart, roles: ["admin", "superadmin"] },
+        { path: "/admin/categories", name: "Categories", icon: FolderTree, roles: ["admin", "superadmin"] },
+        { path: "/admin/brands", name: "Brands", icon: Tags, roles: ["admin", "superadmin"] },
+      ]
+    },
+    {
+      title: "Operations",
+      items: [
+        { path: "/admin/reviews", name: "Reviews", icon: Star, roles: ["admin", "superadmin"] },
+        { path: "/admin/shipping", name: "Shipping", icon: Truck, roles: ["admin", "superadmin"] },
+        { path: "/admin/disputes", name: "Disputes", icon: Shield, roles: ["superadmin"] },
+      ]
+    },
+    {
+      title: "Financial",
+      items: [
+        { path: "/admin/payouts", name: "Vendor Payouts", icon: DollarSign, roles: ["superadmin"] },
+        { path: "/admin/transactions", name: "Transactions", icon: CreditCard, roles: ["superadmin"] },
+        { path: "/admin/reports", name: "Financial Reports", icon: FileText, roles: ["superadmin"] },
+      ]
+    },
+    {
+      title: "System",
+      items: [
+        { path: "/admin/settings", name: "Settings", icon: Settings, roles: ["admin", "superadmin"] },
+      ]
+    }
   ];
 
+  // Filter items based on user role
+  const filteredMenuGroups = menuGroups.map(group => ({
+    ...group,
+    items: group.items.filter(item => item.roles.includes(user?.role || "admin"))
+  })).filter(group => group.items.length > 0);
 
   const handleLogout = async () => {
     await dispatch(LogoutUser());
     window.location.href = "/login";
+  };
+
+  // Format role display name
+  const getRoleDisplayName = (role: string) => {
+    switch (role) {
+      case "superadmin":
+        return "Superadmin";
+      case "admin":
+        return "Admin";
+      default:
+        return role;
+    }
   };
 
   return (
@@ -60,23 +121,44 @@ const AdminSidebar = ({ sidebarOpen, setSidebarOpen, isMobile }: AdminSidebarPro
       )}
 
       <aside
-        className={`fixed left-0 top-0 h-full bg-white shadow-2xl z-50 transition-all duration-300 ${
-          isMobile 
-            ? `${sidebarOpen ? "translate-x-0" : "-translate-x-full"} w-64`
-            : `${sidebarOpen ? "w-64" : "w-20"}`
-        }`}
+        className={`fixed left-0 top-0 h-full bg-white shadow-2xl z-50 transition-all duration-300 flex flex-col ${isMobile
+          ? `${sidebarOpen ? "translate-x-0" : "-translate-x-full"} w-64`
+          : `${sidebarOpen ? "w-64" : "w-20"}`
+          }`}
       >
-        <div className="flex flex-col h-full">
-          <div className={`flex items-center justify-between p-4 border-b ${!isMobile && !sidebarOpen ? "justify-center" : ""}`}>
+        {/* Header Section with User Info */}
+        <div className={`flex flex-col border-b ${!isMobile && !sidebarOpen ? "items-center" : ""}`}>
+          <div className={`flex items-center justify-between p-4 w-full ${!isMobile && !sidebarOpen ? "justify-center" : ""}`}>
             {(!isMobile && sidebarOpen) || (isMobile && sidebarOpen) ? (
-              <div className="flex items-center gap-2">
-                <Package className="w-8 h-8 text-green-600" />
-                <span className="font-bold text-xl text-gray-800">AdminPanel</span>
+              <div className="pb-4 pt-2">
+                <div className="flex items-center gap-3 p-2 rounded-lg bg-gray-50">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-r from-green-500 to-green-600 flex items-center justify-center shadow-md">
+                    <span className="text-white font-semibold text-sm">
+                      {user?.name?.charAt(0).toUpperCase() || "A"}
+                    </span>
+                  </div>
+                  <div className="flex flex-col flex-1 min-w-0">
+                    <span className="font-semibold text-gray-800 text-sm truncate">
+                      {user?.name || "Admin User"}
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      {getRoleDisplayName(user?.role || "admin")}
+                    </span>
+                  </div>
+                </div>
               </div>
             ) : (
-              !isMobile && !sidebarOpen && <Package className="w-8 h-8 text-green-600" />
+              !isMobile && !sidebarOpen && (
+                <div className="py-3">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-green-500 to-green-600 flex items-center justify-center shadow-md">
+                    <span className="text-white font-semibold text-xs">
+                      {user?.name?.charAt(0).toUpperCase() || "A"}
+                    </span>
+                  </div>
+                </div>
+              )
             )}
-            
+
             <div className="flex items-center gap-2">
               {isMobile && sidebarOpen && (
                 <button
@@ -96,43 +178,69 @@ const AdminSidebar = ({ sidebarOpen, setSidebarOpen, isMobile }: AdminSidebarPro
               )}
             </div>
           </div>
+        </div>
 
-          <nav className="flex-1 overflow-y-auto py-4">
-            <ul className="space-y-1">
-              {menuItems.map((item) => (
-                <li key={item.path}>
-                  <NavLink
-                    to={item.path}
-                    onClick={() => isMobile && setSidebarOpen(false)}
-                    className={({ isActive }) =>
-                      `flex items-center gap-3 px-4 py-3 mx-2 rounded-lg transition ${
-                        isActive
+        {/* Navigation Section with Groups */}
+        <nav className="flex-1 overflow-y-auto py-4">
+          {filteredMenuGroups.map((group, groupIndex) => (
+            <div key={groupIndex} className="mb-6">
+              {/* Group Title - Only show when sidebar is open */}
+              {((!isMobile && sidebarOpen) || (isMobile && sidebarOpen)) && (
+                <div className="px-4 py-2">
+                  <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                    {group.title}
+                  </h3>
+                </div>
+              )}
+
+              {/* Group Items */}
+              <ul className="space-y-1">
+                {group.items.map((item) => (
+                  <li key={item.path}>
+                    <NavLink
+                      to={item.path}
+                      onClick={() => isMobile && setSidebarOpen(false)}
+                      className={({ isActive }) =>
+                        `flex items-center gap-3 px-4 py-3 mx-2 rounded-lg transition ${isActive
                           ? "bg-gradient-to-r from-green-50 to-green-100 text-green-600"
                           : "text-gray-600 hover:bg-gray-50"
-                      } ${!isMobile && !sidebarOpen ? "justify-center" : ""}`
-                    }
-                    title={!isMobile && !sidebarOpen ? item.name : ""}
-                  >
-                    <item.icon className="w-5 h-5" />
-                    {((!isMobile && sidebarOpen) || (isMobile && sidebarOpen)) && (
-                      <span className="text-sm">{item.name}</span>
-                    )}
-                  </NavLink>
-                </li>
-              ))}
-            </ul>
-          </nav>
+                        } ${!isMobile && !sidebarOpen ? "justify-center" : ""}`
+                      }
+                      title={!isMobile && !sidebarOpen ? item.name : ""}
+                    >
+                      <item.icon className="w-5 h-5" />
+                      {((!isMobile && sidebarOpen) || (isMobile && sidebarOpen)) && (
+                        <span className="text-sm">{item.name}</span>
+                      )}
+                    </NavLink>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </nav>
 
-          <div className="border-t p-4">
+        {/* Footer Section */}
+        <div className="border-t mt-auto">
+
+          {/* Collapsed Footer Info */}
+          {!isMobile && !sidebarOpen && (
+            <div className="py-3 flex justify-center">
+              <div className="w-1 h-1 rounded-full bg-gray-300"></div>
+            </div>
+          )}
+
+          {/* Logout Button */}
+          <div className="p-4">
             <button
               onClick={handleLogout}
-              className={`flex items-center gap-3 w-full px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition ${
-                !isMobile && !sidebarOpen ? "justify-center" : ""
-              }`}
+              className={`flex items-center gap-3 w-full px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition ${!isMobile && !sidebarOpen ? "justify-center" : ""
+                }`}
+              title={!isMobile && !sidebarOpen ? "Logout" : ""}
             >
               <LogOut className="w-5 h-5" />
               {((!isMobile && sidebarOpen) || (isMobile && sidebarOpen)) && (
-                <span className="text-sm">Logout</span>
+                <span className="text-sm font-medium">Logout</span>
               )}
             </button>
           </div>

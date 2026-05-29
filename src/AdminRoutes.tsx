@@ -8,6 +8,7 @@ import AdminUsersPage from "./AdminUsersPage";
 import AdminShipping from "./pages/AdminShipping";
 import AdminOrderManagement from "./pages/AdminOrderManagement";
 import AdminStoreSettings from "./pages/AdminStoreSetting";
+import AdminVendorManagement from "./AdminVendorManagement";
 // import AdminProducts from "./components/admin/Products";
 // import AdminOrders from "./components/admin/Orders";
 // import AdminUsers from "./components/admin/Users";
@@ -25,6 +26,7 @@ const AdminRoutes = () => {
           <Route path="categories" element={<AdminCategoriesPage />} /> 
           <Route path="shipping" element={<AdminShipping />} />
           <Route path="/settings" element={<AdminStoreSettings />} />
+          <Route path="/vendors" element={<AdminVendorManagement />} />
         </Route>
       </Route>
     </Routes>
