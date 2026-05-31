@@ -16,15 +16,13 @@ import {
   AlertTriangle,
   Upload,
   RefreshCw,
-  Eye,
   Plus,
   Filter,
   ChevronDown,
-  Clock,
   Tag,
 } from "lucide-react";
 import toast from "react-hot-toast";
-import { fetchProductsForAdmin, createProduct, updateProduct, deleteProduct } from "../features/product/productApi";
+import { fetchProductsForAdmin, createProduct, updateProduct, deleteProduct, fetchProductStats } from "../features/product/productApi";
 import { fetchCategories } from "../features/category/CategoryApi";
 
 interface ProductFormData {
@@ -40,7 +38,7 @@ interface ProductFormData {
 
 const AdminProductsPage = () => {
   const dispatch = useAppDispatch();
-  const { productsAdmin: products, loading, adminProductPagination: pagination } = useAppSelector((state) => state.product);
+  const { productsAdmin: products, loading, adminProductPagination: pagination, productStats } = useAppSelector((state) => state.product);
   const { categories } = useAppSelector((state) => state.category);
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -83,6 +81,10 @@ const AdminProductsPage = () => {
     };
     dispatch(fetchProductsForAdmin(filters));
   };
+
+  useEffect(() => {
+    dispatch(fetchProductStats());
+  }, []);
 
   const handleSearch = () => {
     setSearchTerm(localSearchTerm);
@@ -318,30 +320,6 @@ const AdminProductsPage = () => {
     }
   };
 
-  // Calculate stats from API data
-  const inStockCount = products?.filter(p => (p.quantity || 0) > 0).length || 0;
-  const outOfStockCount = products?.filter(p => (p.quantity || 0) === 0).length || 0;
-  const lowStockCount = products?.filter(p => (p.quantity || 0) > 0 && (p.quantity || 0) < 10).length || 0;
-  const totalValue = products?.reduce((sum, p) => sum + ((parseFloat(p.rate) || 0) * (p.quantity || 0)), 0) || 0;
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
-
-  const formatDate = (dateString: string) => {
-    if (!dateString) return "N/A";
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
-
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -362,15 +340,14 @@ const AdminProductsPage = () => {
 
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
           {[
-            { label: "Total Products", value: totalProducts, color: "purple", icon: Package },
-            { label: "Opening Stock", value: inStockCount, color: "green", icon: TrendingUp },
-            { label: "Out of Stock", value: outOfStockCount, color: "yellow", icon: TrendingDown },
-            { label: "Low Stock", value: lowStockCount, color: "red", icon: AlertTriangle },
-            { label: "Inventory Value", value: formatCurrency(totalValue), color: "blue", icon: DollarSign },
+            { label: "Total Products", value: productStats?.totalProducts, color: "purple", icon: Package },
+            { label: "Total Active Products", value: productStats?.totalActiveProducts, color: "green", icon: TrendingUp },
+            { label: "Out of Stock", value: productStats?.totalLowStockProduct, color: "yellow", icon: TrendingDown },
+            { label: "Low Stock", value: productStats?.totakOutOfStockProduct, color: "red", icon: AlertTriangle },
           ].map((stat, index) => (
             <div
               key={index}
-              className={`bg-white rounded-xl p-4 shadow-sm border border-gray-200 ${index === 4 ? 'col-span-2 lg:col-span-1' : ''
+              className={`bg-white rounded-xl p-4 shadow-sm border border-gray-200 
                 }`}
             >
               <div className="flex items-center justify-between">
@@ -533,7 +510,7 @@ const AdminProductsPage = () => {
                   <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
                   <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
                   <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
                   <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                   <th className="text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
@@ -586,11 +563,11 @@ const AdminProductsPage = () => {
                           </span>
                         </td>
                         <td className="px-6 py-4">
-                          <span className="font-semibold text-gray-900">₹{formatPrice(product.rate)}</span>
+                          <span className="font-semibold text-gray-900">Rs .{formatPrice(product.rate)}</span>
                           <p className="text-xs text-gray-500">per {product.unit}</p>
                         </td>
                         <td className="px-6 py-4">
-                          <span className="text-gray-700">{product.quantity || 0} {product.unit}</span>
+                          <span className="text-gray-700">{product.OpeningStock || 0} {product.unit}</span>
                         </td>
                         <td className="px-6 py-4">
                           <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${stockBadge.color}`}>
@@ -760,7 +737,7 @@ const AdminProductsPage = () => {
                     Price <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">₹</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">Rs .</span>
                     <input
                       type="number"
                       name="price"

@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { fetchVendors } from "./vendorApi";
+import { fetchVendors, fetchVendorStats } from "./vendorApi";
 
 export interface VendorUser {
     name: string;
@@ -27,8 +27,16 @@ export interface IVendor {
     totalSalesRevenue: string;
     user: VendorUser;
 }
+
+export interface IVendorStats {
+    totalVendors: number;
+    activerVendors: number;
+    inactiveVendors: number;
+    verifiedVendors: number;
+}
 const initialState = {
     vendors: [] as IVendor[],
+    stats: {} as IVendorStats,
     pagination: {
         page: 1,
         total: 0,
@@ -72,6 +80,25 @@ const vendorSlice = createSlice({
                 state.success = false;
                 state.message = action.error.message || "Something went wrong";
             })
+             .addCase(fetchVendorStats.pending, (state) => {
+                state.loading = true;
+                state.error = false;
+                state.success = false;
+                state.message = "";
+            })
+            .addCase(fetchVendorStats.fulfilled, (state, action) => {
+                state.loading = false;
+                state.success = true;
+                state.stats = action.payload.data;
+            })
+            .addCase(fetchVendorStats.rejected, (state, action) => {
+                state.loading = false;
+                state.error = true;
+                state.success = false;
+                state.message = action.error.message || "Something went wrong";
+            })
+            
+
     },
 });
 

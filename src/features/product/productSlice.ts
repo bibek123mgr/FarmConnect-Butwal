@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { fetchProducts, fetchProductsForAdmin, fetchTopSellingProducts, getProductDetails, updateProduct } from "./productApi";
+import { fetchProducts, fetchProductsForAdmin, fetchProductStats, fetchTopSellingProducts, getProductDetails, updateProduct } from "./productApi";
 
 
 export interface IProduct {
@@ -20,11 +20,19 @@ export interface IProductAdmin extends IProduct {
     OpeningStock: number;
 }
 
+export interface IProductStats {
+    totalProducts: number;
+    totalActiveProducts: number;
+    totakOutOfStockProduct: number;
+    totalLowStockProduct: number;
+}
+
 const initialValues = {
     products: [] as IProduct[],
     topSellingProducts: [] as IProduct[],
     productsAdmin: [] as IProductAdmin[],
     productDetails: {} as IProduct,
+    productStats: {} as IProductStats,
     loading: false,
     success: false,
     error: false,
@@ -102,7 +110,24 @@ const productSlice = createSlice({
                 state.success = false;
                 state.message = action.error.message || "Something went wrong";
             })
-             .addCase(fetchTopSellingProducts.pending, (state) => {
+            .addCase(fetchProductStats.pending, (state) => {
+                state.loading = true;
+                state.error = false;
+                state.success = false;
+                state.message = "";
+            })
+            .addCase(fetchProductStats.fulfilled, (state, action) => {
+                state.loading = false;
+                state.success = true;
+                state.productStats = action.payload.data;
+            })
+            .addCase(fetchProductStats.rejected, (state, action) => {
+                state.loading = false;
+                state.error = true;
+                state.success = false;
+                state.message = action.error.message || "Something went wrong";
+            })
+            .addCase(fetchTopSellingProducts.pending, (state) => {
                 state.loading = true;
                 state.error = false;
                 state.success = false;

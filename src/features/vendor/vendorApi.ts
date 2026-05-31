@@ -20,3 +20,17 @@ export const fetchVendors = createAsyncThunk(
         }
     }
 )
+
+export const fetchVendorStats = createAsyncThunk(
+    "vendor/fetchVendorStats",
+    async (_, { rejectWithValue }) => {
+        try {
+            const { data } = await axiosInstance.get(`vendors/stats`);
+            return data;
+        } catch (error: any) {
+            return rejectWithValue(
+                error.response?.data || "Something went wrong"
+            );
+        }
+    }
+)

@@ -24,7 +24,7 @@ import {
     RefreshCw,
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "./hooks/hooks";
-import { fetchVendors } from "./features/vendor/vendorApi";
+import { fetchVendors, fetchVendorStats } from "./features/vendor/vendorApi";
 import type { IVendor } from "./features/vendor/vendorSlice";
 
 interface StatusUpdateData {
@@ -34,7 +34,7 @@ interface StatusUpdateData {
 
 const AdminVendorManagement = () => {
     const dispatch = useAppDispatch();
-    const { vendors, pagination, loading } = useAppSelector((state) => state.vendor);
+    const { vendors, pagination, loading,stats } = useAppSelector((state) => state.vendor);
 
     const [selectedVendor, setSelectedVendor] = useState<IVendor | null>(null);
     const [showStatusModal, setShowStatusModal] = useState(false);
@@ -63,6 +63,10 @@ const AdminVendorManagement = () => {
         };
         dispatch(fetchVendors(filters));
     }, [dispatch, currentPage, limit, searchTerm, statusFilter]);
+
+    useEffect(() => {
+        dispatch(fetchVendorStats());
+    }, []);
 
     const handleSearch = () => {
         setSearchTerm(localSearchTerm);
@@ -157,10 +161,10 @@ const AdminVendorManagement = () => {
 
     // Calculate stats from current vendors
     const totalVendors = pagination.total || 0;
-    const totalActive = vendors?.filter(v => v.isActive === true).length || 0;
-    const totalInactive = vendors?.filter(v => v.isActive === false).length || 0;
-    const totalVerified = vendors?.filter(v => v.isVerified === true).length || 0;
-    const totalRevenue = vendors?.reduce((sum, v) => sum + (parseFloat(v.totalSalesRevenue) || 0), 0) || 0;
+    // const totalActive = vendors?.filter(v => v.isActive === true).length || 0;
+    // const totalInactive = vendors?.filter(v => v.isActive === false).length || 0;
+    // const totalVerified = vendors?.filter(v => v.isVerified === true).length || 0;
+    // const totalRevenue = vendors?.reduce((sum, v) => sum + (parseFloat(v.totalSalesRevenue) || 0), 0) || 0;
 
     const hasActiveFilters = searchTerm !== "" || statusFilter !== "all";
 
@@ -174,12 +178,12 @@ const AdminVendorManagement = () => {
                 </div>
 
                 {/* Stats Cards */}
-                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                     <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm text-gray-600">Total Vendors</p>
-                                <p className="text-2xl font-bold text-gray-900">{totalVendors}</p>
+                                <p className="text-2xl font-bold text-gray-900">{stats?.totalVendors}</p>
                             </div>
                             <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
                                 <Store className="w-5 h-5 text-purple-600" />
@@ -191,7 +195,7 @@ const AdminVendorManagement = () => {
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm text-gray-600">Active</p>
-                                <p className="text-2xl font-bold text-green-600">{totalActive}</p>
+                                <p className="text-2xl font-bold text-green-600">{stats?.activerVendors}</p>
                             </div>
                             <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
                                 <CheckCircle className="w-5 h-5 text-green-600" />
@@ -203,7 +207,7 @@ const AdminVendorManagement = () => {
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm text-gray-600">Inactive</p>
-                                <p className="text-2xl font-bold text-red-600">{totalInactive}</p>
+                                <p className="text-2xl font-bold text-red-600">{stats?.inactiveVendors}</p>
                             </div>
                             <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
                                 <AlertCircle className="w-5 h-5 text-red-600" />
@@ -215,7 +219,7 @@ const AdminVendorManagement = () => {
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm text-gray-600">Verified</p>
-                                <p className="text-2xl font-bold text-blue-600">{totalVerified}</p>
+                                <p className="text-2xl font-bold text-blue-600">{stats?.verifiedVendors}</p>
                             </div>
                             <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
                                 <Shield className="w-5 h-5 text-blue-600" />
@@ -223,17 +227,6 @@ const AdminVendorManagement = () => {
                         </div>
                     </div>
 
-                    <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 sm:col-span-2 lg:col-span-1">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm text-gray-600">Total Revenue</p>
-                                <p className="text-2xl font-bold text-orange-600">{formatCurrency(totalRevenue)}</p>
-                            </div>
-                            <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                                <DollarSign className="w-5 h-5 text-orange-600" />
-                            </div>
-                        </div>
-                    </div>
                 </div>
 
                 {/* Search and Filter Bar */}
@@ -393,7 +386,7 @@ const AdminVendorManagement = () => {
                                                 <span className="text-gray-700">{vendor.totalOrders}</span>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <span className="font-medium text-gray-900">{formatCurrency(vendor.totalSalesRevenue)}</span>
+                                                <span className="font-medium text-gray-900">Rs. {vendor.totalSalesRevenue}</span>
                                             </td>
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-1.5 text-sm text-gray-500">
@@ -610,7 +603,7 @@ const AdminVendorManagement = () => {
                                         <div className="grid grid-cols-2 gap-3 pl-6">
                                             <div className="bg-gray-50 rounded-lg p-3">
                                                 <p className="text-xs text-gray-500">Total Revenue</p>
-                                                <p className="text-lg font-bold text-gray-900">{formatCurrency(selectedVendor.totalSalesRevenue)}</p>
+                                                <p className="text-lg font-bold text-gray-900">Rs. {selectedVendor.totalSalesRevenue}</p>
                                             </div>
                                             <div className="bg-gray-50 rounded-lg p-3">
                                                 <p className="text-xs text-gray-500">Total Products</p>

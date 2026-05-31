@@ -37,6 +37,20 @@ export const fetchProducts = createAsyncThunk(
     }
 );
 
+export const fetchProductStats = createAsyncThunk(
+    "products/fetchProductStats",
+    async (_, { rejectWithValue }) => {
+        try {
+            const { data } = await axiosInstance.get(`products/stats`);
+            return data;
+        } catch (error: any) {
+            return rejectWithValue(
+                error.response?.data || "Something went wrong"
+            );
+        }
+    }
+);
+
 export const fetchTopSellingProducts = createAsyncThunk(
     "products/getTopSellingProductsList",
     async (_, { rejectWithValue }) => {
@@ -50,7 +64,6 @@ export const fetchTopSellingProducts = createAsyncThunk(
         }
     }
 );
-
 
 export const fetchProductsForAdmin = createAsyncThunk(
     "products/getProductsList/my",
