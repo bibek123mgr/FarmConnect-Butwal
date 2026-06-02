@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { fetchProducts, fetchProductsForAdmin, fetchProductStats, fetchTopSellingProducts, getProductDetails, updateProduct } from "./productApi";
+import { fetchProductForCombobox, fetchProducts, fetchProductsForAdmin, fetchProductStats, fetchTopSellingProducts, getProductDetails, updateProduct } from "./productApi";
 
 
 export interface IProduct {
@@ -23,8 +23,14 @@ export interface IProductAdmin extends IProduct {
 export interface IProductStats {
     totalProducts: number;
     totalActiveProducts: number;
-    totakOutOfStockProduct: number;
+    totalOutOfStockProduct: number;
     totalLowStockProduct: number;
+}
+
+export interface IProductCombobox {
+    id: number;
+    name: string;
+    unit: string;
 }
 
 const initialValues = {
@@ -33,6 +39,7 @@ const initialValues = {
     productsAdmin: [] as IProductAdmin[],
     productDetails: {} as IProduct,
     productStats: {} as IProductStats,
+    productsForCombobox: [] as IProductCombobox[],
     loading: false,
     success: false,
     error: false,
@@ -105,6 +112,23 @@ const productSlice = createSlice({
                 state.pagination = action.payload.pagination;
             })
             .addCase(fetchProducts.rejected, (state, action) => {
+                state.loading = false;
+                state.error = true;
+                state.success = false;
+                state.message = action.error.message || "Something went wrong";
+            })
+            .addCase(fetchProductForCombobox.pending, (state) => {
+                state.loading = true;
+                state.error = false;
+                state.success = false;
+                state.message = "";
+            })
+            .addCase(fetchProductForCombobox.fulfilled, (state, action) => {
+                state.loading = false;
+                state.success = true;
+                state.productsForCombobox = action.payload.data;
+            })
+            .addCase(fetchProductForCombobox.rejected, (state, action) => {
                 state.loading = false;
                 state.error = true;
                 state.success = false;

@@ -8,6 +8,7 @@ import commentReducer from "./features/comment/CommentSlice";
 import userReducer from "./features/user/userSlice";
 import storeReducer from "./features/farm/farmSlice";
 import vendorReducer from "./features/vendor/vendorSlice";
+import productionReducer from "./features/production/productionSlice";
 
 export const store = configureStore({
     reducer: {
@@ -19,7 +20,8 @@ export const store = configureStore({
         comment:commentReducer,
         user:userReducer,
         store: storeReducer,
-        vendor: vendorReducer
+        vendor: vendorReducer,
+        production: productionReducer,
     }
 })
 

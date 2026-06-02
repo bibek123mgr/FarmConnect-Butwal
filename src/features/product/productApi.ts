@@ -51,6 +51,21 @@ export const fetchProductStats = createAsyncThunk(
     }
 );
 
+export const fetchProductForCombobox = createAsyncThunk(
+    "products/fetchProductForCombobox",
+    async (_, { rejectWithValue }) => {
+        try {
+            const { data } = await axiosInstance.get(`products/combobox`);
+            return data;
+        } catch (error: any) {
+            return rejectWithValue(
+                error.response?.data || "Something went wrong"
+            );
+        }
+    }
+);
+
+
 export const fetchTopSellingProducts = createAsyncThunk(
     "products/getTopSellingProductsList",
     async (_, { rejectWithValue }) => {

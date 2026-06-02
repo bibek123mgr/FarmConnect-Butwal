@@ -9,6 +9,10 @@ import AdminShipping from "./pages/AdminShipping";
 import AdminOrderManagement from "./pages/AdminOrderManagement";
 import AdminStoreSettings from "./pages/AdminStoreSetting";
 import AdminVendorManagement from "./AdminVendorManagement";
+import AdminPayoutsManagement from "./pages/AdminPayoutsManagement";
+import AdminSalesManagement from "./pages/AdminSalesManagement";
+import AdminProductionManagement from "./pages/AdminProductionManagement";
+import AdminPurchaseManagement from "./pages/AdminPurchaseManagement";
 // import AdminProducts from "./components/admin/Products";
 // import AdminOrders from "./components/admin/Orders";
 // import AdminUsers from "./components/admin/Users";
@@ -21,12 +25,16 @@ const AdminRoutes = () => {
         <Route path="/" element={<AdminLayout />}>
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="products" element={<AdminProductsPage />} />
-          <Route path="orders" element={<AdminOrderManagement/>} />
+          <Route path="orders" element={<AdminOrderManagement />} />
           <Route path="users" element={<AdminUsersPage />} />
-          <Route path="categories" element={<AdminCategoriesPage />} /> 
+          <Route path="categories" element={<AdminCategoriesPage />} />
           <Route path="shipping" element={<AdminShipping />} />
           <Route path="/settings" element={<AdminStoreSettings />} />
           <Route path="/vendors" element={<AdminVendorManagement />} />
+          <Route path="/payouts" element={<AdminPayoutsManagement />} />
+          {/* <Route path="/sales" element={<AdminSalesManagement />} /> */}
+          <Route path="/production" element={<AdminProductionManagement />} />
+          <Route path="/purchases" element={<AdminPurchaseManagement />} />
         </Route>
       </Route>
     </Routes>

@@ -3,7 +3,6 @@ import {
   LayoutDashboard,
   Package,
   ShoppingCart,
-  Users,
   Tags,
   Settings,
   LogOut,
@@ -19,10 +18,10 @@ import {
   FileText,
   Shield,
   Store,
-  UserPlus,
-  Clock,
-  ShoppingBag,
   Percent,
+  TrendingUp,
+  TrendingDown,
+  Factory,
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../hooks/hooks";
 import { LogoutUser } from "../../features/auth/AuthApi";
@@ -61,8 +60,9 @@ const AdminSidebar = ({ sidebarOpen, setSidebarOpen, isMobile }: AdminSidebarPro
         { path: "/admin/products", name: "All Products", icon: Package, roles: ["admin", "superadmin"] },
         { path: "/admin/orders", name: "All Orders", icon: ShoppingCart, roles: ["admin", "superadmin"] },
         { path: "/admin/categories", name: "Categories", icon: FolderTree, roles: ["admin", "superadmin"] },
-        { path: "/admin/brands", name: "Brands", icon: Tags, roles: ["admin", "superadmin"] },
-      ]
+        { path: "/admin/production", name: "Production Management", icon: Factory, roles: ["admin", "superadmin"] },
+        { path: "/admin/purchases", name: "Purchase Management", icon: TrendingUp, roles: ["admin", "superadmin"] },
+        { path: "/admin/sales", name: "Sales Management", icon: TrendingDown, roles: ["admin", "superadmin"] },]
     },
     {
       title: "Operations",
