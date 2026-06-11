@@ -10,7 +10,6 @@ import AdminOrderManagement from "./pages/AdminOrderManagement";
 import AdminStoreSettings from "./pages/AdminStoreSetting";
 import AdminVendorManagement from "./AdminVendorManagement";
 import AdminPayoutsManagement from "./pages/AdminPayoutsManagement";
-import AdminSalesManagement from "./pages/AdminSalesManagement";
 import AdminProductionManagement from "./pages/AdminProductionManagement";
 import AdminPurchaseManagement from "./pages/AdminPurchaseManagement";
 // import AdminProducts from "./components/admin/Products";

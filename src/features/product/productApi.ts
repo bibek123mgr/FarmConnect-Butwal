@@ -65,6 +65,20 @@ export const fetchProductForCombobox = createAsyncThunk(
     }
 );
 
+export const fetchProductWithBasketAlgo = createAsyncThunk(
+    "products/fetchProductWithBasketAlgo",
+    async (id: number, { rejectWithValue }) => {
+        try {
+            const { data } = await axiosInstance.get(`products/${id}/market-basket-analysis`);
+            return data;
+        } catch (error: any) {
+            return rejectWithValue(
+                error.response?.data || "Something went wrong"
+            );
+        }
+    }
+)
+
 
 export const fetchTopSellingProducts = createAsyncThunk(
     "products/getTopSellingProductsList",
@@ -103,7 +117,7 @@ export const createProduct = createAsyncThunk(
                     headers: {
                         "Content-Type": "multipart/form-data",
                     },
-            });
+                });
             return data;
         } catch (error: any) {
             return rejectWithValue(

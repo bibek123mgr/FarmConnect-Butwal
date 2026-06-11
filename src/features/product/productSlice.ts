@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { fetchProductForCombobox, fetchProducts, fetchProductsForAdmin, fetchProductStats, fetchTopSellingProducts, getProductDetails, updateProduct } from "./productApi";
+import { fetchProductForCombobox, fetchProducts, fetchProductsForAdmin, fetchProductStats, fetchProductWithBasketAlgo, fetchTopSellingProducts, getProductDetails, updateProduct } from "./productApi";
 
 
 export interface IProduct {
@@ -33,10 +33,24 @@ export interface IProductCombobox {
     unit: string;
 }
 
+export interface MarketBasketProduct {
+    id: number;
+    name: string;
+    unit: string;
+    description: string;
+    rate: number;
+    image: string;
+    rating: number;
+    stock: number;
+    quantity: number;
+}
+
+
 const initialValues = {
     products: [] as IProduct[],
     topSellingProducts: [] as IProduct[],
     productsAdmin: [] as IProductAdmin[],
+    marketBasketProducts: [] as MarketBasketProduct[],
     productDetails: {} as IProduct,
     productStats: {} as IProductStats,
     productsForCombobox: [] as IProductCombobox[],
@@ -112,6 +126,23 @@ const productSlice = createSlice({
                 state.pagination = action.payload.pagination;
             })
             .addCase(fetchProducts.rejected, (state, action) => {
+                state.loading = false;
+                state.error = true;
+                state.success = false;
+                state.message = action.error.message || "Something went wrong";
+            })
+             .addCase(fetchProductWithBasketAlgo.pending, (state) => {
+                state.loading = true;
+                state.error = false;
+                state.success = false;
+                state.message = "";
+            })
+            .addCase(fetchProductWithBasketAlgo.fulfilled, (state, action) => {
+                state.loading = false;
+                state.success = true;
+                state.marketBasketProducts = action.payload.data;
+            })
+            .addCase(fetchProductWithBasketAlgo.rejected, (state, action) => {
                 state.loading = false;
                 state.error = true;
                 state.success = false;

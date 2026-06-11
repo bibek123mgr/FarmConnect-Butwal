@@ -27,8 +27,7 @@ import { useParams } from "react-router-dom";
 import { clearMessage, deleteCommentFromState, updateCommentFromState, type IComment } from "../features/comment/CommentSlice";
 import { clearMessage as clearCartMessage } from "../features/cart/cartSlice";
 import toast from "react-hot-toast";
-import { getProductDetails } from "../features/product/productApi";
-import type { IProduct } from "../features/product/productSlice";
+import { fetchProductWithBasketAlgo, getProductDetails } from "../features/product/productApi";
 import { createCart, type IAddToCart } from "../features/cart/cartApi";
 
 // Static features for all products
@@ -41,41 +40,7 @@ const staticFeatures = [
     "Quality guaranteed",
 ];
 
-// Static related products
-const staticRelatedProducts = [
-    {
-        id: 1,
-        name: "Organic Fresh Apples",
-        price: 180,
-        originalPrice: 220,
-        image: "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=200",
-        rating: 4.5,
-    },
-    {
-        id: 2,
-        name: "Organic Red Apples",
-        price: 190,
-        originalPrice: 240,
-        image: "https://images.unsplash.com/photo-1570913149827-d2ac84ab3f9a?w=200",
-        rating: 4.3,
-    },
-    {
-        id: 3,
-        name: "Fresh Green Apples",
-        price: 170,
-        originalPrice: 210,
-        image: "https://images.unsplash.com/photo-1579613832111-ac7dfcc7723e?w=200",
-        rating: 4.6,
-    },
-    {
-        id: 4,
-        name: "Golden Delicious",
-        price: 200,
-        originalPrice: 250,
-        image: "https://images.unsplash.com/photo-1579613832111-ac7dfcc7723e?w=200",
-        rating: 4.4,
-    },
-];
+
 
 // Base64 placeholder image to avoid infinite loading
 const PLACEHOLDER_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='500' height='500' viewBox='0 0 24 24' fill='none' stroke='%23999999' stroke-width='1' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Ccircle cx='8.5' cy='8.5' r='1.5'%3E%3C/circle%3E%3Cpolyline points='21 15 16 10 5 21'%3E%3C/polyline%3E%3C/svg%3E";
@@ -161,20 +126,22 @@ const SingleProductPage = () => {
 
     const { comments, loading, error, success, message } = useAppSelector((state) => state.comment);
     const { user } = useAppSelector((state) => state.auth);
-    const { productDetails, loading: productLoading } = useAppSelector((store) => store.product);
+    const { productDetails, loading: productLoading, marketBasketProducts } = useAppSelector((store) => store.product);
 
     useEffect(() => {
         // Set loading state
         setIsProductLoading(true);
-        
+
         // Fetch product details and comments
         dispatch(getProductDetails(ProductId));
         dispatch(getAllComments(ProductId));
+        dispatch(fetchProductWithBasketAlgo(ProductId));
         setImageError(false);
-        
+
         // Scroll to top
         window.scrollTo(0, 0);
     }, [ProductId, dispatch]);
+
 
     // Update loading state when product data arrives
     useEffect(() => {
@@ -200,7 +167,7 @@ const SingleProductPage = () => {
     const { loading: cartLoading, success: cartSuccess, error: cartError, message: cartMessage } = useAppSelector(
         (state) => state.cart
     );
-    
+
     useEffect(() => {
         if (cartLoading) return;
 
@@ -307,7 +274,7 @@ const SingleProductPage = () => {
         dispatch(createComment(reviewData));
     };
 
-    const handleAddToCart = (product: IProduct) => {
+    const handleAddToCart = (product: any) => {
         const { id, rate } = product;
         const payload: IAddToCart = {
             productId: id,
@@ -460,7 +427,7 @@ const SingleProductPage = () => {
                                 </div>
                             </div>
                             <div className="flex gap-3 mb-6 flex-wrap">
-                                <button 
+                                <button
                                     className="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-3 rounded-lg transition flex items-center justify-center gap-2"
                                     onClick={() => handleAddToCart(product)}
                                 >
@@ -740,23 +707,28 @@ const SingleProductPage = () => {
                         <h3 className="text-xl font-semibold text-gray-800">You May Also Like</h3>
                         <Link to="/products" className="text-sm text-green-600 hover:underline">View All</Link>
                     </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                        {staticRelatedProducts.map((item) => (
-                            <Link key={item.id} to={`/product/${item.id}`} className="bg-white rounded-lg shadow-sm hover:shadow-md transition overflow-hidden group">
+                    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        {marketBasketProducts.map((item) => (
+                            <Link key={item.id} to={`/products/${item.id}`} className="bg-white rounded-lg shadow-sm hover:shadow-md transition overflow-hidden group">
                                 <div className="relative">
                                     <img
-                                        src={item.image}
+                                        src={item?.image || PLACEHOLDER_IMAGE}
                                         alt={item.name}
-                                        className="w-full h-40 object-cover group-hover:scale-105 transition duration-300"
+                                        className="w-full h-40 object-contain group-hover:scale-105 transition duration-300"
                                     />
-                                    <button className="absolute top-2 right-2 bg-white rounded-full p-1.5 shadow-sm hover:bg-green-600 hover:text-white transition">
+                                    <button className="absolute top-2 right-2 bg-white rounded-full p-1.5 shadow-sm hover:bg-green-600 hover:text-white transition"
+                                        onClick={(e) => {
+                                            e.preventDefault(); 
+                                            e.stopPropagation(); 
+                                            handleAddToCart(item);
+                                        }}
+                                    >
                                         <ShoppingCart className="w-3.5 h-3.5" />
                                     </button>
-                                    {item.originalPrice && (
-                                        <span className="absolute bottom-2 left-2 bg-red-500 text-white text-xs font-medium px-1.5 py-0.5 rounded">
-                                            {Math.round(((item.originalPrice - item.price) / item.originalPrice) * 100)}% OFF
-                                        </span>
-                                    )}
+                                    <span className="absolute bottom-2 left-2 bg-red-500 text-white text-xs font-medium px-1.5 py-0.5 rounded">
+                                        {item.rate}
+                                    </span>
+
                                 </div>
                                 <div className="p-3">
                                     <div className="flex items-center gap-1 mb-1">
@@ -765,8 +737,7 @@ const SingleProductPage = () => {
                                     </div>
                                     <h4 className="font-medium text-gray-800 text-sm truncate">{item.name}</h4>
                                     <div className="flex items-center gap-2 mt-1">
-                                        <span className="font-semibold text-gray-800 text-sm">Rs.{item.price}</span>
-                                        <span className="text-xs text-gray-400 line-through">Rs.{item.originalPrice}</span>
+                                        <span className="text-xs text-gray-400">Rs.{item.rate}</span>
                                     </div>
                                 </div>
                             </Link>

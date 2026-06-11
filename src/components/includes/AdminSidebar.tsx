@@ -40,7 +40,7 @@ const AdminSidebar = ({ sidebarOpen, setSidebarOpen, isMobile }: AdminSidebarPro
     {
       title: "Main",
       items: [
-        { path: "/admin", name: "Dashboard", icon: LayoutDashboard, roles: ["admin", "superadmin"] },
+        { path: "/admin/dashboard", name: "Dashboard", icon: LayoutDashboard, roles: ["admin", "superadmin"] },
         { path: "/admin/analytics", name: "Analytics", icon: BarChart3, roles: ["admin", "superadmin"] },
       ]
     },
@@ -61,17 +61,18 @@ const AdminSidebar = ({ sidebarOpen, setSidebarOpen, isMobile }: AdminSidebarPro
         { path: "/admin/orders", name: "All Orders", icon: ShoppingCart, roles: ["admin", "superadmin"] },
         { path: "/admin/categories", name: "Categories", icon: FolderTree, roles: ["admin", "superadmin"] },
         { path: "/admin/production", name: "Production Management", icon: Factory, roles: ["admin", "superadmin"] },
-        { path: "/admin/purchases", name: "Purchase Management", icon: TrendingUp, roles: ["admin", "superadmin"] },
-        { path: "/admin/sales", name: "Sales Management", icon: TrendingDown, roles: ["admin", "superadmin"] },]
-    },
-    {
-      title: "Operations",
-      items: [
-        { path: "/admin/reviews", name: "Reviews", icon: Star, roles: ["admin", "superadmin"] },
-        { path: "/admin/shipping", name: "Shipping", icon: Truck, roles: ["admin", "superadmin"] },
-        { path: "/admin/disputes", name: "Disputes", icon: Shield, roles: ["superadmin"] },
+        // { path: "/admin/purchases", name: "Purchase Management", icon: TrendingUp, roles: ["admin", "superadmin"] },
+        // { path: "/admin/sales", name: "Sales Management", icon: TrendingDown, roles: ["admin", "superadmin"] },
       ]
     },
+    // {
+    //   title: "Operations",
+    //   items: [
+    //     { path: "/admin/reviews", name: "Reviews", icon: Star, roles: ["admin", "superadmin"] },
+    //     { path: "/admin/shipping", name: "Shipping", icon: Truck, roles: ["admin", "superadmin"] },
+    //     { path: "/admin/disputes", name: "Disputes", icon: Shield, roles: ["superadmin"] },
+    //   ]
+    // },
     {
       title: "Financial",
       items: [
