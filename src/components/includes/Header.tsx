@@ -14,7 +14,8 @@ import {
   Settings,
   Heart,
   Package,
-  UserCircle
+  UserCircle,
+  Store
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../hooks/hooks";
 import { LogoutUser } from "../../features/auth/AuthApi";
@@ -128,13 +129,13 @@ const Header = () => {
               Products
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-green-600 group-hover:w-full transition-all duration-300"></span>
             </Link>
-            <Link
+            {/* <Link
               to="/categories"
               className="text-gray-600 hover:text-green-600 transition text-sm font-medium relative group"
             >
               Categories
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-green-600 group-hover:w-full transition-all duration-300"></span>
-            </Link>
+            </Link> */}
             <Link
               to="/about"
               className="text-gray-600 hover:text-green-600 transition text-sm font-medium relative group"
@@ -288,6 +289,14 @@ const Header = () => {
                         >
                           <Heart className="w-4 h-4" />
                           Wishlist
+                        </Link>
+                        <Link
+                          to="/register-seller"
+                          className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition"
+                          onClick={() => setIsProfileOpen(false)}
+                        >
+                          <Store className="w-4 h-4" />
+                          Become a Seller
                         </Link>
                         <Link
                           to="/settings"

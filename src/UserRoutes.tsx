@@ -10,6 +10,7 @@ import UserLayout from "./UserLayout";
 import Cart from "./pages/Cart";
 import SignUp from "./pages/SignUp";
 import PaymentSuccess from "./pages/PaymentSuccess";
+import BecomeSeller from "./pages/BecomeSeller";
 
 const UserRoutes = () => {
   return (
@@ -21,6 +22,7 @@ const UserRoutes = () => {
         <Route path="/products/:id" element={<SingleProduct />} />
         <Route path="/products" element={<ProductsPage />} />
         <Route element={<ProtectedRoute />}>
+          <Route path="/register-seller" element={<BecomeSeller />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/payment-success" element={<PaymentSuccess />} />

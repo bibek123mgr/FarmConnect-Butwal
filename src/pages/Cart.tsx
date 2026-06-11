@@ -186,29 +186,6 @@ const Cart = () => {
                 Order Summary
               </h3>
 
-              <div className="mb-4">
-                <label className="text-sm text-gray-600 mb-1 block">
-                  Promo Code
-                </label>
-                <div className="flex gap-2">
-                  <div className="flex-1 flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-2 focus-within:border-green-500 transition">
-                    <Tag className="w-4 h-4 text-gray-400" />
-                    <input
-                      type="text"
-                      placeholder="Enter code"
-                      defaultValue="FRESH10"
-                      className="w-full outline-none text-sm"
-                    />
-                  </div>
-                  <button className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition whitespace-nowrap">
-                    Apply
-                  </button>
-                </div>
-                <p className="text-xs text-green-600 mt-1">
-                  ✓ Promo code applied! 10% off
-                </p>
-              </div>
-
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Subtotal</span>
