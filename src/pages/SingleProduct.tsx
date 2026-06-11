@@ -702,48 +702,50 @@ const SingleProductPage = () => {
                 </div>
 
                 {/* Related Products Section - Static */}
-                <div className="mt-8">
-                    <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-xl font-semibold text-gray-800">You May Also Like</h3>
-                        <Link to="/products" className="text-sm text-green-600 hover:underline">View All</Link>
-                    </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                        {marketBasketProducts.map((item) => (
-                            <Link key={item.id} to={`/products/${item.id}`} className="bg-white rounded-lg shadow-sm hover:shadow-md transition overflow-hidden group">
-                                <div className="relative">
-                                    <img
-                                        src={item?.image || PLACEHOLDER_IMAGE}
-                                        alt={item.name}
-                                        className="w-full h-40 object-contain group-hover:scale-105 transition duration-300"
-                                    />
-                                    <button className="absolute top-2 right-2 bg-white rounded-full p-1.5 shadow-sm hover:bg-green-600 hover:text-white transition"
-                                        onClick={(e) => {
-                                            e.preventDefault(); 
-                                            e.stopPropagation(); 
-                                            handleAddToCart(item);
-                                        }}
-                                    >
-                                        <ShoppingCart className="w-3.5 h-3.5" />
-                                    </button>
-                                    <span className="absolute bottom-2 left-2 bg-red-500 text-white text-xs font-medium px-1.5 py-0.5 rounded">
-                                        {item.rate}
-                                    </span>
+                {marketBasketProducts && marketBasketProducts.length > 0 && (
+                    <div className="mt-8">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-xl font-semibold text-gray-800">You May Also Like</h3>
+                            <Link to="/products" className="text-sm text-green-600 hover:underline">View All</Link>
+                        </div>
+                        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                            {marketBasketProducts?.map((item) => (
+                                <Link key={item.id} to={`/products/${item.id}`} className="bg-white rounded-lg shadow-sm hover:shadow-md transition overflow-hidden group">
+                                    <div className="relative">
+                                        <img
+                                            src={item?.image || PLACEHOLDER_IMAGE}
+                                            alt={item.name}
+                                            className="w-full h-40 object-contain group-hover:scale-105 transition duration-300"
+                                        />
+                                        <button className="absolute top-2 right-2 bg-white rounded-full p-1.5 shadow-sm hover:bg-green-600 hover:text-white transition"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                handleAddToCart(item);
+                                            }}
+                                        >
+                                            <ShoppingCart className="w-3.5 h-3.5" />
+                                        </button>
+                                        <span className="absolute bottom-2 left-2 bg-red-500 text-white text-xs font-medium px-1.5 py-0.5 rounded">
+                                            {item.rate}
+                                        </span>
 
-                                </div>
-                                <div className="p-3">
-                                    <div className="flex items-center gap-1 mb-1">
-                                        <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
-                                        <span className="text-xs text-gray-600">{item.rating}</span>
                                     </div>
-                                    <h4 className="font-medium text-gray-800 text-sm truncate">{item.name}</h4>
-                                    <div className="flex items-center gap-2 mt-1">
-                                        <span className="text-xs text-gray-400">Rs.{item.rate}</span>
+                                    <div className="p-3">
+                                        <div className="flex items-center gap-1 mb-1">
+                                            <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                                            <span className="text-xs text-gray-600">{item.rating}</span>
+                                        </div>
+                                        <h4 className="font-medium text-gray-800 text-sm truncate">{item.name}</h4>
+                                        <div className="flex items-center gap-2 mt-1">
+                                            <span className="text-xs text-gray-400">Rs.{item.rate}</span>
+                                        </div>
                                     </div>
-                                </div>
-                            </Link>
-                        ))}
+                                </Link>
+                            ))}
+                        </div>
                     </div>
-                </div>
+                )}
             </div>
         </div>
     );

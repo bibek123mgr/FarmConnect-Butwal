@@ -16,7 +16,7 @@ const StoreCard = ({ store }: IStoreCardProps) => {
   const navigate = useNavigate();
 
   const handleNavigate = () => {
-    navigate(`/stores/${store.id}`);
+    navigate(`/products?page=1&limit=20&productname=all&category=all&pricerangeFrom=0&pricerangeTo=max&store=${store.id}`);
   };
 
   return (

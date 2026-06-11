@@ -77,7 +77,7 @@ const ProductSection = () => {
             ))}
       </div>
         <Link
-          to="/products?page=1&limit=20&productname=all&category=all&pricerangeFrom=0&pricerangeTo=max"
+          to="/products?page=1&limit=20&productname=all&category=all&pricerangeFrom=0&pricerangeTo=max&store=all"
           className="group relative overflow-hidden bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-8 py-3.5 rounded-md font-semibold transition-all duration-300 shadow-lg hover:shadow-2xl flex items-center gap-2 mt-4 max-w-fit mx-auto"
         >
           <span>See all products</span>

@@ -110,12 +110,14 @@ const orderSlice = createSlice({
                 state.message = action.payload.message;
                 if (action.payload.url) {
                     window.location.href = action.payload.url;
-                }
-                if (action.payload.esewaResponseForm) {
+                }else if (action.payload.esewaResponseForm) {
                     document.open();
                     document.write(action.payload.esewaResponseForm);
                     document.close();
+                }else{
+                    window.location.href = "/orders";
                 }
+                
             })
             .addCase(createOrder.rejected, (state, action) => {
                 state.loading = false;

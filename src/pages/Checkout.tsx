@@ -1,4 +1,4 @@
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowLeft,
@@ -23,7 +23,7 @@ import { useAppDispatch, useAppSelector } from "../hooks/hooks";
 import { createOrder, IPaymentMethod } from "../features/order/OrderApi";
 import toast from "react-hot-toast";
 import { clearMessage } from "../features/order/OrderSlice";
-import { getMyCart, removeAllCart } from "../features/cart/cartApi";
+import { getMyCart } from "../features/cart/cartApi";
 import { clearCart } from "../features/cart/cartSlice";
 
 const Checkout = () => {
@@ -34,18 +34,7 @@ const Checkout = () => {
   const { cart: cartItems } = useAppSelector((state) => state.cart);
 
 
-  // Form State with Butwal area addresses
-  const [formData, setFormData] = useState({
-    fullName: "",
-    email: "",
-    phone: "",
-    address: "",
-    area: "",
-    city: "Butwal",
-    postalCode: "32907",
-    landmark: "",
-    notes: "",
-  });
+
 
   // Butwal areas for dropdown
   const butwalAreas = [
@@ -73,6 +62,11 @@ const Checkout = () => {
   const total = subtotal + deliveryFee - discount;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+
+    if (name === "phone" && value.length > 10) {
+      return;
+    }
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
@@ -81,6 +75,20 @@ const Checkout = () => {
 
   const dispatch = useAppDispatch();
   const { message, loading, error, success } = useAppSelector((state) => state.order);
+  const { user } = useAppSelector((state) => state.auth);
+
+  // Form State with Butwal area addresses
+  const [formData, setFormData] = useState({
+    fullName: user?.name || "",
+    email: user?.email || "",
+    phone: "",
+    address: "",
+    area: "",
+    city: "Butwal",
+    postalCode: "32907",
+    landmark: "",
+    notes: "",
+  });
 
   useEffect(() => {
     if (loading) return;
@@ -215,6 +223,7 @@ const Checkout = () => {
                       name="fullName"
                       value={formData.fullName}
                       onChange={handleInputChange}
+                      disabled
                       placeholder="e.g., Ram Prasad Sharma"
                       className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-200 focus:border-green-400 transition"
                     />
@@ -230,6 +239,7 @@ const Checkout = () => {
                       type="email"
                       name="email"
                       value={formData.email}
+                      disabled
                       onChange={handleInputChange}
                       placeholder="ram@example.com"
                       className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-200 focus:border-green-400 transition"
@@ -243,7 +253,7 @@ const Checkout = () => {
                   <div className="relative">
                     <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <input
-                      type="tel"
+                      type="number"
                       name="phone"
                       value={formData.phone}
                       onChange={handleInputChange}
@@ -344,19 +354,6 @@ const Checkout = () => {
                     className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-200 focus:border-green-400 resize-none"
                   />
                 </div>
-              </div>
-
-              <div className="mt-4 flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="saveInfo"
-                  checked={saveInfo}
-                  onChange={(e) => setSaveInfo(e.target.checked)}
-                  className="w-4 h-4 text-green-600 rounded focus:ring-green-500"
-                />
-                <label htmlFor="saveInfo" className="text-sm text-gray-600">
-                  Save this information for next time
-                </label>
               </div>
             </div>
 

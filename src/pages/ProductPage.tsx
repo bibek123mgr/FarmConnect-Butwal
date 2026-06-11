@@ -36,6 +36,10 @@ const ProductsPage = () => {
     const category = searchParams.get("category");
     return category || "all";
   });
+  const [selectedStore, setSelectedStore] = useState<string | number>(() => {
+    const store = searchParams.get("store");
+    return store || "all";
+  });
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000]);
   const [selectedRating, setSelectedRating] = useState(0);
   const [sortBy, setSortBy] = useState("default");
@@ -45,7 +49,7 @@ const ProductsPage = () => {
     const page = searchParams.get("page");
     return page ? parseInt(page) : 1;
   });
-  
+
   const searchDebounceRef = useRef<number | null>(null);
 
   const updateURL = useCallback((updates: Record<string, any>) => {
@@ -68,9 +72,27 @@ const ProductsPage = () => {
     if (!newParams.has("page")) {
       newParams.set("page", "1");
     }
+    // Always set store to "all" if not present
+    if (!newParams.has("store")) {
+      newParams.set("store", "all");
+    }
+    if (!newParams.has("category")) {
+      newParams.set("category", "all");
+    }
 
     setSearchParams(newParams);
   }, [searchParams, setSearchParams]);
+
+  // Add this useEffect to sync store from URL to state
+  useEffect(() => {
+    const store = searchParams.get("store");
+    if (store) {
+      setSelectedStore(store);
+    } else if (!store && selectedStore !== "all") {
+      // If no store in URL but state isn't "all", sync state
+      setSelectedStore("all");
+    }
+  }, [searchParams]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -94,7 +116,7 @@ const ProductsPage = () => {
     if (searchDebounceRef.current) {
       clearTimeout(searchDebounceRef.current);
     }
-    
+
     const updates: any = {
       productname: searchTerm || "all",
       page: 1,
@@ -109,6 +131,7 @@ const ProductsPage = () => {
     const category = searchParams.get("category") || "all";
     const pricerangeFrom = searchParams.get("pricerangeFrom") || "0";
     const pricerangeTo = searchParams.get("pricerangeTo") || "max";
+    const store = searchParams.get("store") || "all";
 
     const filters = {
       page: parseInt(page),
@@ -117,11 +140,12 @@ const ProductsPage = () => {
       category: category,
       pricerangeFrom: parseInt(pricerangeFrom),
       pricerangeTo: pricerangeTo,
+      store: store
     };
 
     dispatch(fetchProducts({ ...filters }));
   }, [dispatch, searchParams]);
-
+  
   useEffect(() => {
     dispatch(fetchCategories());
   }, [dispatch]);
@@ -149,6 +173,7 @@ const ProductsPage = () => {
 
   const clearFilters = () => {
     setSearchTerm("");
+    setSelectedStore("all");
     setSelectedCategory("all");
     setPriceRange([0, 10000]);
     setSelectedRating(0);
@@ -161,6 +186,7 @@ const ProductsPage = () => {
       category: "all",
       pricerangeFrom: "0",
       pricerangeTo: "max",
+      store: "all"
     });
   };
 
@@ -414,35 +440,6 @@ const ProductsPage = () => {
                       />
                     </div>
                   </div>
-                </div>
-              </div>
-
-              <div className="mb-5">
-                <h4 className="font-medium text-gray-700 mb-2">Customer Rating</h4>
-                <div className="space-y-2">
-                  {[4, 3, 2, 1].map((rating) => (
-                    <label key={rating} className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="rating"
-                        checked={selectedRating === rating}
-                        onChange={() => {
-                          setSelectedRating(rating);
-                          setCurrentPage(1);
-                        }}
-                        className="w-4 h-4 text-green-600 focus:ring-green-500"
-                      />
-                      <div className="flex items-center gap-1">
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            className={`w-3.5 h-3.5 ${i < rating ? "text-yellow-400 fill-yellow-400" : "text-gray-300"}`}
-                          />
-                        ))}
-                        <span className="text-sm text-gray-600">& Up</span>
-                      </div>
-                    </label>
-                  ))}
                 </div>
               </div>
 
