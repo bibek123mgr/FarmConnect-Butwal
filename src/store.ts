@@ -9,6 +9,7 @@ import userReducer from "./features/user/userSlice";
 import storeReducer from "./features/farm/farmSlice";
 import vendorReducer from "./features/vendor/vendorSlice";
 import productionReducer from "./features/production/productionSlice";
+import DashboardReducer from "./features/dashboard/DashboardSlice";
 
 export const store = configureStore({
     reducer: {
@@ -22,6 +23,7 @@ export const store = configureStore({
         store: storeReducer,
         vendor: vendorReducer,
         production: productionReducer,
+        dashboard: DashboardReducer
     }
 })
 

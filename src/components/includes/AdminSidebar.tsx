@@ -3,12 +3,9 @@ import {
   LayoutDashboard,
   Package,
   ShoppingCart,
-  Tags,
   Settings,
   LogOut,
   BarChart3,
-  Star,
-  Truck,
   ChevronLeft,
   ChevronRight,
   X,
@@ -16,11 +13,8 @@ import {
   DollarSign,
   CreditCard,
   FileText,
-  Shield,
   Store,
   Percent,
-  TrendingUp,
-  TrendingDown,
   Factory,
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../hooks/hooks";
@@ -40,8 +34,7 @@ const AdminSidebar = ({ sidebarOpen, setSidebarOpen, isMobile }: AdminSidebarPro
     {
       title: "Main",
       items: [
-        { path: "/admin/dashboard", name: "Dashboard", icon: LayoutDashboard, roles: ["admin", "superadmin"] },
-        { path: "/admin/analytics", name: "Analytics", icon: BarChart3, roles: ["admin", "superadmin"] },
+        { path: "/admin/dashboard", name: "Dashboard", icon: LayoutDashboard, roles: ["admin", "superadmin"] }
       ]
     },
     {
