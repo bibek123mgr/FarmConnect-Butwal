@@ -1,12 +1,14 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import type { LoginPayload } from "../../pages/Login";
 import { axiosInstance } from "../../lib/axiosInstance";
+import type { SellerFormData } from "../../pages/BecomeSeller";
 
 export interface IRegisterPayload {
     name: string;
     email: string;
     password: string;
 }
+
 
 export const LoginUser = createAsyncThunk(
     "auth/login",
@@ -25,7 +27,7 @@ export const LoginUserWithGoogle = createAsyncThunk(
     "auth/login-with-google",
     async (credentials: string, { rejectWithValue }) => {
         try {
-            const { data } = await axiosInstance.post(`auth/login-with-google`, {credentials});
+            const { data } = await axiosInstance.post(`auth/login-with-google`, { credentials });
             return data;
         } catch (error: any) {
             return rejectWithValue(
@@ -79,6 +81,19 @@ export const getUserProfile = createAsyncThunk(
     async (_, { rejectWithValue }) => {
         try {
             const { data } = await axiosInstance.get(`auth/getme`);
+            return data;
+        } catch (error: any) {
+            return rejectWithValue(
+                error.response?.data || "Something went wrong"
+            );
+        }
+    });
+
+export const becomeVendor = createAsyncThunk(
+    "farmers/register",
+    async (payload: SellerFormData, { rejectWithValue }) => {
+        try {
+            const { data } = await axiosInstance.post(`farmers/register`, payload);
             return data;
         } catch (error: any) {
             return rejectWithValue(

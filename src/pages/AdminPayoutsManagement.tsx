@@ -448,14 +448,10 @@ const AdminPayoutsManagement = () => {
                         <h1 className="text-3xl font-bold text-gray-900">Payout Management</h1>
                         <p className="text-gray-600 mt-2">Manage vendor payouts and commission settlements</p>
                     </div>
-                    <button className="bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 px-5 rounded-lg transition flex items-center gap-2 shadow-sm">
-                        <Download className="w-4 h-4" />
-                        Export Report
-                    </button>
                 </div>
 
                 {/* Stats Cards */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                     <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
                         <div className="flex items-center justify-between">
                             <div>
@@ -505,29 +501,6 @@ const AdminPayoutsManagement = () => {
                         </div>
                     </div>
 
-                    <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm text-gray-600">Commission</p>
-                                <p className="text-2xl font-bold text-orange-600">{formatCurrency(stats.totalCommission)}</p>
-                            </div>
-                            <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                                <TrendingUp className="w-5 h-5 text-orange-600" />
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 sm:col-span-2 lg:col-span-1">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm text-gray-600">Net Payout</p>
-                                <p className="text-2xl font-bold text-blue-600">{formatCurrency(stats.totalNetAmount)}</p>
-                            </div>
-                            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                                <Wallet className="w-5 h-5 text-blue-600" />
-                            </div>
-                        </div>
-                    </div>
                 </div>
 
                 {/* Search and Filter Bar */}
@@ -629,8 +602,6 @@ const AdminPayoutsManagement = () => {
                                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Vendor</th>
                                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Period</th>
                                     <th className="text-right px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                                    <th className="text-right px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Commission</th>
-                                    <th className="text-right px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Net Payout</th>
                                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Method</th>
                                     <th className="text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -674,13 +645,7 @@ const AdminPayoutsManagement = () => {
                                             <td className="px-6 py-4 text-right">
                                                 <span className="font-medium text-gray-900">{formatCurrency(payout.amount)}</span>
                                             </td>
-                                            <td className="px-6 py-4 text-right">
-                                                <span className="text-orange-600">{formatCurrency(payout.commission)}</span>
-                                                <p className="text-xs text-gray-500">(10%)</p>
-                                            </td>
-                                            <td className="px-6 py-4 text-right">
-                                                <span className="font-bold text-green-600">{formatCurrency(payout.netAmount)}</span>
-                                            </td>
+                                          
                                             <td className="px-6 py-4">
                                                 <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(payout.status)}`}>
                                                     {getStatusIcon(payout.status)}
