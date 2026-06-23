@@ -337,7 +337,7 @@ const SignUp = () => {
 
                     <span className="block text-center text-sm text-gray-500 my-4">or</span>
 
-                    <button className="" id="googleSignInButton">
+                    <button className="w-full text-center"  id="googleSignInButton">
                         <BsGoogle className="w-4 h-4 inline-block mr-3" />
                         Sign Up with Google
                     </button>
