@@ -13,16 +13,15 @@ import {
     Filter,
     ChevronDown,
     RefreshCw,
-    Download,
     Send,
     FileText,
     Wallet,
-    TrendingUp,
     Users,
     Banknote,
     CreditCard,
     Loader2,
     MessageSquare,
+    Plus,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useAppDispatch } from "../hooks/hooks";
@@ -38,13 +37,15 @@ interface Payout {
     commission: number;
     netAmount: number;
     status: 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled';
-    paymentMethod: 'bank_transfer' | 'paypal' | 'stripe' | 'cash';
+    paymentMethod: 'bank_transfer' | 'paypal' | 'stripe' | 'cash' | 'khalti' | 'esewa';
     paymentDetails: {
         bankName?: string;
         accountNumber?: string;
         accountName?: string;
         paypalEmail?: string;
         transactionId?: string;
+        khaltiNumber?: string;
+        esewaNumber?: string;
     };
     period: {
         startDate: string;
@@ -78,6 +79,15 @@ interface PayoutFilters {
     endDate?: string;
 }
 
+// Static vendor data for dropdown
+const staticVendors = [
+    { id: 1, name: "John Farmer", farmName: "Green Valley Farms", email: "john@greenvalley.com" },
+    { id: 2, name: "Sarah Wilson", farmName: "Organic Fresh Market", email: "sarah@organicfresh.com" },
+    { id: 3, name: "Mike Johnson", farmName: "Dairy Fresh Products", email: "mike@dairyfresh.com" },
+    { id: 4, name: "Emily Chen", farmName: "Organic Tea Gardens", email: "emily@organictea.com" },
+    { id: 5, name: "David Rodriguez", farmName: "Tropical Fruit Paradise", email: "david@freshfruits.com" },
+];
+
 const AdminPayoutsManagement = () => {
     const dispatch = useAppDispatch();
     const [payouts, setPayouts] = useState<Payout[]>([]);
@@ -85,9 +95,24 @@ const AdminPayoutsManagement = () => {
     const [selectedPayout, setSelectedPayout] = useState<Payout | null>(null);
     const [showDetailsModal, setShowDetailsModal] = useState(false);
     const [showProcessModal, setShowProcessModal] = useState(false);
+    const [showAddPayoutModal, setShowAddPayoutModal] = useState(false);
     const [processRemark, setProcessRemark] = useState("");
     const [isProcessing, setIsProcessing] = useState(false);
-    
+    const [availableAmount, setAvailableAmount] = useState(0); // Example available amount
+
+    // Add Payout Form State
+    const [payoutForm, setPayoutForm] = useState({
+        vendorId: "",
+        amount: "",
+        paymentMethod: "cash",
+        reason: "",
+    });
+
+    const fetchAvaliableAmount = () => {
+        const amount = 100000; // Example available amount
+        setAvailableAmount(amount);
+    }
+
     // Filter states
     const [filters, setFilters] = useState<PayoutFilters>({
         page: 1,
@@ -96,14 +121,14 @@ const AdminPayoutsManagement = () => {
     const [localSearch, setLocalSearch] = useState("");
     const [localStatus, setLocalStatus] = useState("all");
     const [showFilters, setShowFilters] = useState(false);
-    
+
     const [pagination, setPagination] = useState({
         currentPage: 1,
         totalPages: 1,
         totalItems: 0,
         itemsPerPage: 10,
     });
-    
+
     const [stats, setStats] = useState<PayoutStats>({
         totalPending: 0,
         totalProcessing: 0,
@@ -245,27 +270,24 @@ const AdminPayoutsManagement = () => {
         // Simulate API call
         setTimeout(() => {
             let filtered = [...mockPayouts];
-            
-            // Apply search filter
+
             if (filters.search) {
                 const searchLower = filters.search.toLowerCase();
-                filtered = filtered.filter(p => 
+                filtered = filtered.filter(p =>
                     p.vendorName.toLowerCase().includes(searchLower) ||
                     p.farmName.toLowerCase().includes(searchLower) ||
                     p.vendorEmail.toLowerCase().includes(searchLower)
                 );
             }
-            
-            // Apply status filter
+
             if (filters.status && filters.status !== 'all') {
                 filtered = filtered.filter(p => p.status === filters.status);
             }
-            
-            // Calculate pagination
+
             const startIndex = ((filters.page || 1) - 1) * (filters.limit || 10);
             const endIndex = startIndex + (filters.limit || 10);
             const paginatedData = filtered.slice(startIndex, endIndex);
-            
+
             setPayouts(paginatedData);
             setPagination({
                 currentPage: filters.page || 1,
@@ -273,8 +295,7 @@ const AdminPayoutsManagement = () => {
                 totalItems: filtered.length,
                 itemsPerPage: filters.limit || 10,
             });
-            
-            // Calculate stats
+
             const statsData = {
                 totalPending: filtered.filter(p => p.status === 'pending').reduce((sum, p) => sum + p.netAmount, 0),
                 totalProcessing: filtered.filter(p => p.status === 'processing').reduce((sum, p) => sum + p.netAmount, 0),
@@ -321,14 +342,13 @@ const AdminPayoutsManagement = () => {
 
     const confirmProcessPayout = async () => {
         if (!selectedPayout) return;
-        
+
         setIsProcessing(true);
-        // Simulate API call
         setTimeout(() => {
-            const updatedPayouts = payouts.map(p => 
-                p.id === selectedPayout.id 
-                    ? { 
-                        ...p, 
+            const updatedPayouts = payouts.map(p =>
+                p.id === selectedPayout.id
+                    ? {
+                        ...p,
                         status: 'processing' as const,
                         processedBy: "Admin",
                         processedAt: new Date().toISOString(),
@@ -342,6 +362,52 @@ const AdminPayoutsManagement = () => {
             setIsProcessing(false);
             fetchPayouts();
         }, 1500);
+    };
+
+    const handleAddPayout = async () => {
+        if (!payoutForm.vendorId || !payoutForm.amount || !payoutForm.paymentMethod) {
+            toast.error("Please fill in all required fields");
+            return;
+        }
+
+        const selectedVendor = staticVendors.find(v => v.id === parseInt(payoutForm.vendorId));
+        if (!selectedVendor) {
+            toast.error("Please select a valid vendor");
+            return;
+        }
+
+        const amount = parseFloat(payoutForm.amount);
+        if (isNaN(amount) || amount <= 0) {
+            toast.error("Please enter a valid amount");
+            return;
+        }
+
+        const newPayout: Payout = {
+            id: payouts.length + 1,
+            vendorId: selectedVendor.id,
+            vendorName: selectedVendor.name,
+            vendorEmail: selectedVendor.email,
+            farmName: selectedVendor.farmName,
+            amount: amount,
+            commission: amount * 0.1,
+            netAmount: amount * 0.9,
+            status: 'pending',
+            paymentMethod: payoutForm.paymentMethod as any,
+            paymentDetails: {},
+            period: {
+                startDate: new Date().toISOString().split('T')[0],
+                endDate: new Date().toISOString().split('T')[0],
+            },
+            remarks: payoutForm.reason || undefined,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+        };
+
+        setPayouts([newPayout, ...payouts]);
+        toast.success(`Payout created for ${selectedVendor.farmName}`);
+        setShowAddPayoutModal(false);
+        setPayoutForm({ vendorId: "", amount: "", paymentMethod: "", reason: "" });
+        fetchPayouts();
     };
 
     const goToPage = (page: number) => {
@@ -432,8 +498,29 @@ const AdminPayoutsManagement = () => {
                 return <Banknote className="w-4 h-4" />;
             case 'paypal':
                 return <CreditCard className="w-4 h-4" />;
+            case 'khalti':
+                return <Wallet className="w-4 h-4" />;
+            case 'esewa':
+                return <Wallet className="w-4 h-4" />;
             default:
                 return <Wallet className="w-4 h-4" />;
+        }
+    };
+
+    const getPaymentMethodLabel = (method: string) => {
+        switch (method) {
+            case 'bank_transfer':
+                return 'Bank Transfer';
+            case 'paypal':
+                return 'PayPal';
+            case 'khalti':
+                return 'Khalti';
+            case 'esewa':
+                return 'eSewa';
+            case 'cash':
+                return 'Cash';
+            default:
+                return method;
         }
     };
 
@@ -448,6 +535,13 @@ const AdminPayoutsManagement = () => {
                         <h1 className="text-3xl font-bold text-gray-900">Payout Management</h1>
                         <p className="text-gray-600 mt-2">Manage vendor payouts and commission settlements</p>
                     </div>
+                    <button
+                        onClick={() => setShowAddPayoutModal(true)}
+                        className="px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg transition flex items-center gap-2 shadow-sm"
+                    >
+                        <Plus className="w-4 h-4" />
+                        Add Payout
+                    </button>
                 </div>
 
                 {/* Stats Cards */}
@@ -500,7 +594,6 @@ const AdminPayoutsManagement = () => {
                             </div>
                         </div>
                     </div>
-
                 </div>
 
                 {/* Search and Filter Bar */}
@@ -645,7 +738,7 @@ const AdminPayoutsManagement = () => {
                                             <td className="px-6 py-4 text-right">
                                                 <span className="font-medium text-gray-900">{formatCurrency(payout.amount)}</span>
                                             </td>
-                                          
+
                                             <td className="px-6 py-4">
                                                 <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(payout.status)}`}>
                                                     {getStatusIcon(payout.status)}
@@ -656,8 +749,7 @@ const AdminPayoutsManagement = () => {
                                                 <div className="flex items-center gap-1.5">
                                                     {getPaymentMethodIcon(payout.paymentMethod)}
                                                     <span className="text-sm text-gray-600">
-                                                        {payout.paymentMethod === 'bank_transfer' ? 'Bank Transfer' : 
-                                                         payout.paymentMethod === 'paypal' ? 'PayPal' : 'Stripe'}
+                                                        {getPaymentMethodLabel(payout.paymentMethod)}
                                                     </span>
                                                 </div>
                                             </td>
@@ -716,7 +808,7 @@ const AdminPayoutsManagement = () => {
                                     className={`px-3 py-1 rounded-lg border transition text-sm ${pagination.currentPage === 1
                                         ? "border-gray-200 text-gray-400 cursor-not-allowed"
                                         : "border-gray-300 text-gray-600 hover:bg-green-50 hover:border-green-500"
-                                    }`}
+                                        }`}
                                 >
                                     First
                                 </button>
@@ -726,7 +818,7 @@ const AdminPayoutsManagement = () => {
                                     className={`p-2 rounded-lg border transition ${pagination.currentPage === 1
                                         ? "border-gray-200 text-gray-400 cursor-not-allowed"
                                         : "border-gray-300 text-gray-600 hover:bg-green-50 hover:border-green-500"
-                                    }`}
+                                        }`}
                                 >
                                     <ChevronLeft className="w-4 h-4" />
                                 </button>
@@ -738,7 +830,7 @@ const AdminPayoutsManagement = () => {
                                         className={`px-3 py-1 rounded-lg transition text-sm ${pagination.currentPage === page
                                             ? "bg-green-600 text-white"
                                             : "text-gray-600 hover:bg-green-50"
-                                        }`}
+                                            }`}
                                     >
                                         {page}
                                     </button>
@@ -750,7 +842,7 @@ const AdminPayoutsManagement = () => {
                                     className={`p-2 rounded-lg border transition ${pagination.currentPage === pagination.totalPages
                                         ? "border-gray-200 text-gray-400 cursor-not-allowed"
                                         : "border-gray-300 text-gray-600 hover:bg-green-50 hover:border-green-500"
-                                    }`}
+                                        }`}
                                 >
                                     <ChevronRight className="w-4 h-4" />
                                 </button>
@@ -760,7 +852,7 @@ const AdminPayoutsManagement = () => {
                                     className={`px-3 py-1 rounded-lg border transition text-sm ${pagination.currentPage === pagination.totalPages
                                         ? "border-gray-200 text-gray-400 cursor-not-allowed"
                                         : "border-gray-300 text-gray-600 hover:bg-green-50 hover:border-green-500"
-                                    }`}
+                                        }`}
                                 >
                                     Last
                                 </button>
@@ -770,307 +862,148 @@ const AdminPayoutsManagement = () => {
                 </div>
             </div>
 
-            {/* Payout Details Modal */}
-            {showDetailsModal && selectedPayout && (
+            {/* Add Payout Modal */}
+            {showAddPayoutModal && (
                 <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
-                    <div className="bg-white rounded-2xl shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+                    <div className="bg-white rounded-2xl shadow-xl max-w-md w-full">
                         <div className="sticky top-0 bg-gradient-to-r from-green-600 to-green-500 px-6 py-4 flex justify-between items-center">
                             <div className="flex items-center gap-3">
-                                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                                    <DollarSign className="w-6 h-6 text-white" />
+                                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                                    <Plus className="w-5 h-5 text-white" />
                                 </div>
-                                <div>
-                                    <h2 className="text-xl font-bold text-white">Payout Details</h2>
-                                    <p className="text-green-100 text-sm">Payout ID: #{selectedPayout.id}</p>
-                                </div>
+                                <h2 className="text-xl font-bold text-white">Add New Payout</h2>
                             </div>
                             <button
-                                onClick={() => setShowDetailsModal(false)}
+                                onClick={() => {
+                                    setShowAddPayoutModal(false);
+                                    setPayoutForm({ vendorId: "", amount: "", paymentMethod: "", reason: "" });
+                                }}
                                 className="p-2 hover:bg-white/10 rounded-lg transition text-white"
                             >
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
 
-                        <div className="p-6">
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                {/* Vendor Information */}
-                                <div className="space-y-5">
-                                    <div>
-                                        <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                                            <Users className="w-4 h-4 text-green-600" />
-                                            Vendor Information
-                                        </h3>
-                                        <div className="space-y-2.5 pl-6">
-                                            <div>
-                                                <p className="text-xs text-gray-500">Farm Name</p>
-                                                <p className="text-sm text-gray-800 font-medium">{selectedPayout.farmName}</p>
-                                            </div>
-                                            <div>
-                                                <p className="text-xs text-gray-500">Vendor Name</p>
-                                                <p className="text-sm text-gray-800">{selectedPayout.vendorName}</p>
-                                            </div>
-                                            <div>
-                                                <p className="text-xs text-gray-500">Email</p>
-                                                <p className="text-sm text-gray-800">{selectedPayout.vendorEmail}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="pt-3 border-t border-gray-100">
-                                        <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                                            <Calendar className="w-4 h-4 text-green-600" />
-                                            Payout Period
-                                        </h3>
-                                        <div className="space-y-2.5 pl-6">
-                                            <div>
-                                                <p className="text-xs text-gray-500">Start Date</p>
-                                                <p className="text-sm text-gray-800">{formatDate(selectedPayout.period.startDate)}</p>
-                                            </div>
-                                            <div>
-                                                <p className="text-xs text-gray-500">End Date</p>
-                                                <p className="text-sm text-gray-800">{formatDate(selectedPayout.period.endDate)}</p>
-                                            </div>
-                                            <div>
-                                                <p className="text-xs text-gray-500">Request Date</p>
-                                                <p className="text-sm text-gray-800">{formatDateTime(selectedPayout.createdAt)}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Payment Details */}
-                                <div className="space-y-5">
-                                    <div>
-                                        <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                                            <Wallet className="w-4 h-4 text-green-600" />
-                                            Payment Details
-                                        </h3>
-                                        <div className="space-y-2.5 pl-6">
-                                            <div>
-                                                <p className="text-xs text-gray-500">Payment Method</p>
-                                                <div className="flex items-center gap-1.5 text-sm text-gray-800">
-                                                    {getPaymentMethodIcon(selectedPayout.paymentMethod)}
-                                                    {selectedPayout.paymentMethod === 'bank_transfer' ? 'Bank Transfer' : 
-                                                     selectedPayout.paymentMethod === 'paypal' ? 'PayPal' : 'Stripe'}
-                                                </div>
-                                            </div>
-                                            {selectedPayout.paymentDetails.bankName && (
-                                                <div>
-                                                    <p className="text-xs text-gray-500">Bank Name</p>
-                                                    <p className="text-sm text-gray-800">{selectedPayout.paymentDetails.bankName}</p>
-                                                </div>
-                                            )}
-                                            {selectedPayout.paymentDetails.accountNumber && (
-                                                <div>
-                                                    <p className="text-xs text-gray-500">Account Number</p>
-                                                    <p className="text-sm text-gray-800 font-mono">{selectedPayout.paymentDetails.accountNumber}</p>
-                                                </div>
-                                            )}
-                                            {selectedPayout.paymentDetails.accountName && (
-                                                <div>
-                                                    <p className="text-xs text-gray-500">Account Name</p>
-                                                    <p className="text-sm text-gray-800">{selectedPayout.paymentDetails.accountName}</p>
-                                                </div>
-                                            )}
-                                            {selectedPayout.paymentDetails.paypalEmail && (
-                                                <div>
-                                                    <p className="text-xs text-gray-500">PayPal Email</p>
-                                                    <p className="text-sm text-gray-800">{selectedPayout.paymentDetails.paypalEmail}</p>
-                                                </div>
-                                            )}
-                                            {selectedPayout.paymentDetails.transactionId && (
-                                                <div>
-                                                    <p className="text-xs text-gray-500">Transaction ID</p>
-                                                    <p className="text-sm text-gray-800 font-mono">{selectedPayout.paymentDetails.transactionId}</p>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    <div className="pt-3 border-t border-gray-100">
-                                        <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                                            <FileText className="w-4 h-4 text-green-600" />
-                                            Financial Breakdown
-                                        </h3>
-                                        <div className="space-y-2.5 pl-6">
-                                            <div className="flex justify-between">
-                                                <p className="text-xs text-gray-500">Total Sales</p>
-                                                <p className="text-sm font-medium text-gray-800">{formatCurrency(selectedPayout.amount)}</p>
-                                            </div>
-                                            <div className="flex justify-between">
-                                                <p className="text-xs text-gray-500">Commission (10%)</p>
-                                                <p className="text-sm text-orange-600">{formatCurrency(selectedPayout.commission)}</p>
-                                            </div>
-                                            <div className="flex justify-between pt-2 border-t border-gray-100">
-                                                <p className="text-sm font-semibold text-gray-700">Net Payout</p>
-                                                <p className="text-lg font-bold text-green-600">{formatCurrency(selectedPayout.netAmount)}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Status Timeline */}
-                            <div className="mt-6 pt-6 border-t border-gray-200">
-                                <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                                    <Clock className="w-4 h-4 text-green-600" />
-                                    Status Timeline
-                                </h3>
-                                <div className="space-y-3 pl-6">
-                                    <div className="flex items-center gap-3">
-                                        <div className={`w-2 h-2 rounded-full ${selectedPayout.status === 'pending' ? 'bg-yellow-500' : 'bg-green-500'}`}></div>
-                                        <div className="flex-1">
-                                            <p className="text-sm font-medium text-gray-700">Payout Request Created</p>
-                                            <p className="text-xs text-gray-500">{formatDateTime(selectedPayout.createdAt)}</p>
-                                        </div>
-                                        <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(selectedPayout.status)}`}>
-                                            {selectedPayout.status}
-                                        </span>
-                                    </div>
-                                    {selectedPayout.processedAt && (
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                                            <div className="flex-1">
-                                                <p className="text-sm font-medium text-gray-700">Payout Processed</p>
-                                                <p className="text-xs text-gray-500">{formatDateTime(selectedPayout.processedAt)}</p>
-                                                <p className="text-xs text-gray-500">By: {selectedPayout.processedBy}</p>
-                                            </div>
-                                        </div>
-                                    )}
-                                    {selectedPayout.remarks && (
-                                        <div className="mt-3 p-3 bg-gray-50 rounded-lg">
-                                            <div className="flex items-center gap-2 mb-1">
-                                                <MessageSquare className="w-4 h-4 text-gray-500" />
-                                                <p className="text-xs font-medium text-gray-700">Remarks</p>
-                                            </div>
-                                            <p className="text-sm text-gray-600">{selectedPayout.remarks}</p>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Action Buttons */}
-                            <div className="mt-6 pt-6 border-t border-gray-200 flex justify-end gap-3">
-                                {selectedPayout.status === 'pending' && (
-                                    <button
-                                        onClick={() => {
-                                            setShowDetailsModal(false);
-                                            handleProcessPayout(selectedPayout);
-                                        }}
-                                        className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition flex items-center gap-2"
-                                    >
-                                        <Send className="w-4 h-4" />
-                                        Process Payout
-                                    </button>
-                                )}
-                                <button
-                                    onClick={() => setShowDetailsModal(false)}
-                                    className="px-6 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg transition"
-                                >
-                                    Close
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Process Payout Modal */}
-            {showProcessModal && selectedPayout && (
-                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
-                        <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-                            <h3 className="text-lg font-semibold text-gray-900">Process Payout</h3>
-                            <button
-                                onClick={() => {
-                                    setShowProcessModal(false);
-                                    setProcessRemark("");
-                                }}
-                                className="p-1 hover:bg-gray-100 rounded-lg transition"
-                            >
-                                <X className="w-5 h-5 text-gray-500" />
-                            </button>
-                        </div>
-
                         <div className="p-6 space-y-4">
+                            {/* Vendor Dropdown */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Vendor
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Vendor <span className="text-red-500">*</span>
                                 </label>
-                                <p className="text-gray-900 font-medium">{selectedPayout.farmName}</p>
-                                <p className="text-sm text-gray-500">{selectedPayout.vendorName}</p>
-                            </div>
-
-                            <div className="bg-gray-50 rounded-lg p-3">
-                                <div className="flex justify-between mb-2">
-                                    <span className="text-sm text-gray-600">Amount</span>
-                                    <span className="font-semibold text-gray-900">{formatCurrency(selectedPayout.amount)}</span>
-                                </div>
-                                <div className="flex justify-between mb-2">
-                                    <span className="text-sm text-gray-600">Commission (10%)</span>
-                                    <span className="text-orange-600">{formatCurrency(selectedPayout.commission)}</span>
-                                </div>
-                                <div className="flex justify-between pt-2 border-t border-gray-200">
-                                    <span className="text-sm font-semibold text-gray-700">Net Payout</span>
-                                    <span className="text-lg font-bold text-green-600">{formatCurrency(selectedPayout.netAmount)}</span>
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Payment Method
-                                </label>
-                                <div className="flex items-center gap-2 p-2 border border-gray-200 rounded-lg">
-                                    {getPaymentMethodIcon(selectedPayout.paymentMethod)}
-                                    <span className="text-sm text-gray-700">
-                                        {selectedPayout.paymentMethod === 'bank_transfer' ? 'Bank Transfer' : 
-                                         selectedPayout.paymentMethod === 'paypal' ? 'PayPal' : 'Stripe'}
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Remarks (Optional)
-                                </label>
-                                <textarea
-                                    value={processRemark}
-                                    onChange={(e) => setProcessRemark(e.target.value)}
-                                    rows={3}
+                                <select
+                                    value={payoutForm.vendorId}
+                                    onChange={(e) => setPayoutForm({ ...payoutForm, vendorId: e.target.value })}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                                    placeholder="Add any remarks for this payout..."
+                                >
+                                    <option value="">Select Vendor</option>
+                                    {staticVendors.map((vendor) => (
+                                        <option key={vendor.id} value={vendor.id}>
+                                            {vendor.farmName} - {vendor.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Avaliable Amount (NPR) <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="number"
+                                    disabled
+                                    value={availableAmount}
+                                    onChange={fetchAvaliableAmount}
+                                    placeholder="Enter amount"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                                 />
                             </div>
-                        </div>
 
-                        <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
-                            <button
-                                onClick={() => {
-                                    setShowProcessModal(false);
-                                    setProcessRemark("");
-                                }}
-                                className="px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg transition"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={confirmProcessPayout}
-                                disabled={isProcessing}
-                                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition flex items-center gap-2 disabled:opacity-50"
-                            >
-                                {isProcessing ? (
-                                    <>
-                                        <Loader2 className="w-4 h-4 animate-spin" />
-                                        Processing...
-                                    </>
-                                ) : (
-                                    <>
-                                        <Send className="w-4 h-4" />
-                                        Confirm Payout
-                                    </>
-                                )}
-                            </button>
+
+                            {/* Amount */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Amount (NPR) <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="number"
+                                    value={payoutForm.amount}
+                                    onChange={(e) => setPayoutForm({ ...payoutForm, amount: e.target.value })}
+                                    placeholder="Enter amount"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                                />
+                            </div>
+
+                            {/* Payment Method - Radio Buttons */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Payment Method <span className="text-red-500">*</span>
+                                </label>
+                                <div className="space-y-2">
+                                    <label className="flex items-center gap-2 p-2 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                                        <input
+                                            type="radio"
+                                            name="paymentMethod"
+                                            value="cash"
+                                            checked={payoutForm.paymentMethod === 'cash'}
+                                            onChange={(e) => setPayoutForm({ ...payoutForm, paymentMethod: e.target.value })}
+                                            className="w-4 h-4 text-green-600"
+                                        />
+                                        <span className="text-sm">Cash</span>
+                                    </label>
+                                    <label className="flex items-center gap-2 p-2 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                                        <input
+                                            type="radio"
+                                            name="paymentMethod"
+                                            value="khalti"
+                                            checked={payoutForm.paymentMethod === 'khalti'}
+                                            onChange={(e) => setPayoutForm({ ...payoutForm, paymentMethod: e.target.value })}
+                                            className="w-4 h-4 text-green-600"
+                                        />
+                                        <span className="text-sm">Khalti</span>
+                                    </label>
+                                    <label className="flex items-center gap-2 p-2 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                                        <input
+                                            type="radio"
+                                            name="paymentMethod"
+                                            value="esewa"
+                                            checked={payoutForm.paymentMethod === 'esewa'}
+                                            onChange={(e) => setPayoutForm({ ...payoutForm, paymentMethod: e.target.value })}
+                                            className="w-4 h-4 text-green-600"
+                                        />
+                                        <span className="text-sm">eSewa</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            {/* Reason */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Reason</label>
+                                <textarea
+                                    value={payoutForm.reason}
+                                    onChange={(e) => setPayoutForm({ ...payoutForm, reason: e.target.value })}
+                                    rows={3}
+                                    placeholder="Enter reason for payout..."
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                                />
+                            </div>
+
+                            <div className="pt-4 border-t border-gray-200 flex justify-end gap-3">
+                                <button
+                                    onClick={() => {
+                                        setShowAddPayoutModal(false);
+                                        setPayoutForm({ vendorId: "", amount: "", paymentMethod: "", reason: "" });
+                                    }}
+                                    className="px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg transition"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleAddPayout}
+                                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition flex items-center gap-2"
+                                >
+                                    <Plus className="w-4 h-4" />
+                                    Create Payout
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
