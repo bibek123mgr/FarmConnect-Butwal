@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useAppDispatch } from "../hooks/hooks";
+import { createPayment } from "../features/payment/paymentApi";
 
 // Interfaces
 interface Payout {
@@ -370,44 +371,26 @@ const AdminPayoutsManagement = () => {
             return;
         }
 
-        const selectedVendor = staticVendors.find(v => v.id === parseInt(payoutForm.vendorId));
-        if (!selectedVendor) {
-            toast.error("Please select a valid vendor");
-            return;
-        }
-
         const amount = parseFloat(payoutForm.amount);
         if (isNaN(amount) || amount <= 0) {
             toast.error("Please enter a valid amount");
             return;
         }
 
-        const newPayout: Payout = {
-            id: payouts.length + 1,
-            vendorId: selectedVendor.id,
-            vendorName: selectedVendor.name,
-            vendorEmail: selectedVendor.email,
-            farmName: selectedVendor.farmName,
+        const newPayout: any = {
+            vendorId: payoutForm.vendorId ? parseInt(payoutForm.vendorId) : 0,
             amount: amount,
-            commission: amount * 0.1,
-            netAmount: amount * 0.9,
-            status: 'pending',
             paymentMethod: payoutForm.paymentMethod as any,
-            paymentDetails: {},
-            period: {
-                startDate: new Date().toISOString().split('T')[0],
-                endDate: new Date().toISOString().split('T')[0],
-            },
-            remarks: payoutForm.reason || undefined,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
+            remarks: payoutForm.reason || ""
         };
+        dispatch(createPayment(newPayout));
+        console.log(newPayout);
 
-        setPayouts([newPayout, ...payouts]);
-        toast.success(`Payout created for ${selectedVendor.farmName}`);
-        setShowAddPayoutModal(false);
-        setPayoutForm({ vendorId: "", amount: "", paymentMethod: "", reason: "" });
-        fetchPayouts();
+        // setPayouts([newPayout, ...payouts]);
+        // toast.success(`Payout created for ${selectedVendor.farmName}`);
+        // setShowAddPayoutModal(false);
+        // setPayoutForm({ vendorId: "", amount: "", paymentMethod: "", reason: "" });
+        // fetchPayouts();
     };
 
     const goToPage = (page: number) => {
