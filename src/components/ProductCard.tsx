@@ -35,7 +35,7 @@ const ProductCard = ({ product }: IProductProps) => {
             <div className="relative aspect-square bg-gray-50 p-4 overflow-hidden">
 
                 <img
-                    src="https://www.freepnglogos.com/uploads/vegetables-png/vegetables-download-vegetable-photos-png-image-pngimg-3.png"
+                    src={product.image ||"https://www.freepnglogos.com/uploads/vegetables-png/vegetables-download-vegetable-photos-png-image-pngimg-3.png"}
                     alt={product.name}
                     className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110"
                 />
