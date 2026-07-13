@@ -8,7 +8,6 @@ import {
   ShoppingCart,
   User,
   Search,
-  Bell,
   ChevronDown,
   LogOut,
   Settings,
@@ -63,6 +62,7 @@ const Header = () => {
   const searchRef = useRef<HTMLDivElement>(null);
 
   const cartCount = 0;
+  const wishlistCount = 0;
 
   const notifications = [
     { id: 1, title: "Order Delivered", message: "Your order #1234 has been delivered", time: "5 min ago", read: false },
@@ -413,67 +413,17 @@ const Header = () => {
               )}
             </Link>
 
-            {/* Notifications */}
-            <div className="relative">
-              <button
-                onClick={() => setIsNotificationOpen(!isNotificationOpen)}
-                className="relative p-2 hover:bg-gray-100 rounded-full transition group"
-              >
-                <Bell className="w-5 h-5 text-gray-600 group-hover:text-green-600 transition" />
-                {unreadCount > 0 && (
-                  <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse"></span>
-                )}
-              </button>
-
-              {isNotificationOpen && (
-                <>
-                  <div
-                    className="fixed inset-0 z-40"
-                    onClick={() => setIsNotificationOpen(false)}
-                  />
-                  <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-100 z-50 overflow-hidden">
-                    <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-                      <h3 className="font-semibold text-gray-800">Notifications</h3>
-                      <button className="text-xs text-green-600 hover:text-green-700">
-                        Mark all as read
-                      </button>
-                    </div>
-                    <div className="max-h-96 overflow-y-auto">
-                      {notifications.length === 0 ? (
-                        <div className="text-center py-8 text-gray-500">
-                          <Bell className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                          <p className="text-sm">No notifications</p>
-                        </div>
-                      ) : (
-                        notifications.map((notif) => (
-                          <div
-                            key={notif.id}
-                            className={`px-4 py-3 border-b border-gray-50 hover:bg-gray-50 cursor-pointer transition ${!notif.read ? "bg-green-50/30" : ""
-                              }`}
-                          >
-                            <div className="flex items-start gap-3">
-                              <div className={`w-2 h-2 rounded-full mt-1.5 ${!notif.read ? "bg-green-500" : "bg-gray-300"}`} />
-                              <div className="flex-1">
-                                <p className="text-sm font-medium text-gray-800">{notif.title}</p>
-                                <p className="text-xs text-gray-500 mt-0.5">{notif.message}</p>
-                                <p className="text-xs text-gray-400 mt-1">{notif.time}</p>
-                              </div>
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                    <Link
-                      to="/notifications"
-                      className="block text-center py-2 text-sm text-green-600 hover:bg-green-50 transition font-medium"
-                      onClick={() => setIsNotificationOpen(false)}
-                    >
-                      View all notifications
-                    </Link>
-                  </div>
-                </>
+              <Link
+              to="/wishlist"
+              className="relative p-2 hover:bg-gray-100 rounded-full transition group"
+            >
+              <Heart className="w-5 h-5 text-gray-600 group-hover:text-green-600 transition" />
+              {wishlistCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-gradient-to-r from-green-600 to-green-500 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 shadow-md">
+                  {wishlistCount}
+                </span>
               )}
-            </div>
+            </Link>
 
             {/* User Profile */}
             {user ? (

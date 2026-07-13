@@ -11,6 +11,8 @@ import Cart from "./pages/Cart";
 import SignUp from "./pages/SignUp";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import BecomeSeller from "./pages/BecomeSeller";
+import Wishlist from "./pages/Wishlist";
+import UserProfile from "./pages/UserProfile";
 
 const UserRoutes = () => {
   return (
@@ -21,6 +23,8 @@ const UserRoutes = () => {
         <Route path="/register" element={<SignUp />} />
         <Route path="/products/:id" element={<SingleProduct />} />
         <Route path="/products" element={<ProductsPage />} />
+        <Route path="/wishlist" element={<Wishlist />} />
+        <Route path="/profile" element={<UserProfile />} />
         <Route element={<ProtectedRoute />}>
           <Route path="/register-seller" element={<BecomeSeller />} />
           <Route path="/cart" element={<Cart />} />

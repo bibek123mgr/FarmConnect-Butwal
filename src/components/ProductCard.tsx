@@ -1,8 +1,11 @@
 import { Star, ShoppingCart, Share2, Eye, Heart } from "lucide-react";
 import type { IProduct } from "../features/product/productSlice";
-import { useAppDispatch } from "../hooks/hooks";
+import { useAppDispatch, useAppSelector } from "../hooks/hooks";
 import { createCart, type IAddToCart } from "../features/cart/cartApi";
 import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import toast from "react-hot-toast";
+
 interface IProductProps {
     product: IProduct;
 }
@@ -11,9 +14,26 @@ const ProductCard = ({ product }: IProductProps) => {
     const rating = 4.5;
     const reviewCount = 128;
     const dispatch = useAppDispatch();
-    const nagivate = useNavigate();
+    const navigate = useNavigate();
+    const [isInWishlist, setIsInWishlist] = useState(false);
+
+
+    const { user } = useAppSelector((state) => state.auth);
+    // Check if product is in wishlist on mount
+    useEffect(() => {
+        const storedWishlist = localStorage.getItem("wishlist");
+        if (storedWishlist) {
+            const wishlistItems = JSON.parse(storedWishlist);
+            const exists = wishlistItems.some((item: any) => item.id === product.id);
+            setIsInWishlist(exists);
+        }
+    }, [product.id]);
 
     const handleAddToCart = (product: IProduct) => {
+        if (!user) {
+            toast.error("Please log in to add items to the cart.");
+            return;
+        }
         const { id, rate } = product;
         const payload: IAddToCart = {
             productId: id,
@@ -23,19 +43,45 @@ const ProductCard = ({ product }: IProductProps) => {
         dispatch(createCart(payload));
     };
 
-    const handleNeviateToProductdetails = (productId: number) => {
-        nagivate(`/products/${productId}`);
+    const handleNavigateToProductdetails = (productId: number) => {
+        navigate(`/products/${productId}`);
     }
+
+    const handleToggleWishlist = (e: React.MouseEvent) => {
+        e.stopPropagation();
+
+        const storedWishlist = localStorage.getItem("wishlist");
+        let wishlistItems = storedWishlist ? JSON.parse(storedWishlist) : [];
+
+        if (isInWishlist) {
+            // Remove from wishlist
+            wishlistItems = wishlistItems.filter((item: any) => item.id !== product.id);
+            setIsInWishlist(false);
+        } else {
+            // Add to wishlist
+            const wishlistItem = {
+                id: product.id,
+                productName: product.name,
+                price: Number(product.rate),
+                image: product.image,
+                category: product?.categoryName || "Products",
+                inStock: product.quantity > 0,
+                quantity: product.quantity
+            };
+            wishlistItems.push(wishlistItem);
+            setIsInWishlist(true);
+        }
+
+        localStorage.setItem("wishlist", JSON.stringify(wishlistItems));
+    };
 
     return (
         <div className="group bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-300 cursor-pointer"
-         onClick={() => handleNeviateToProductdetails(product.id)}
+            onClick={() => handleNavigateToProductdetails(product.id)}
         >
-
             <div className="relative aspect-square bg-gray-50 p-4 overflow-hidden">
-
                 <img
-                    src={product.image ||"https://www.freepnglogos.com/uploads/vegetables-png/vegetables-download-vegetable-photos-png-image-pngimg-3.png"}
+                    src={product.image || "https://www.freepnglogos.com/uploads/vegetables-png/vegetables-download-vegetable-photos-png-image-pngimg-3.png"}
                     alt={product.name}
                     className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110"
                 />
@@ -48,29 +94,37 @@ const ProductCard = ({ product }: IProductProps) => {
 
                 <div className="absolute bottom-0 left-0 right-0 flex justify-center">
                     <div className="w-[70%] flex justify-center items-center gap-3 bg-white/80 backdrop-blur-md py-2 opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
-
-                        <button className="p-2 rounded-full hover:bg-gray-200 transition"
-                            onClick={() => handleNeviateToProductdetails(product.id)}
+                        <button
+                            className="p-2 rounded-full hover:bg-gray-200 transition"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleNavigateToProductdetails(product.id);
+                            }}
                         >
                             <Eye className="w-4 h-4 text-gray-700" />
                         </button>
 
-
-
-                        <button className="p-2 rounded-full hover:bg-red-100 transition">
-                            <Heart className="w-4 h-4 text-gray-700 hover:text-red-500" />
+                        <button
+                            className={`p-2 rounded-full transition ${isInWishlist ? 'bg-red-100' : 'hover:bg-red-100'}`}
+                            onClick={handleToggleWishlist}
+                        >
+                            <Heart className={`w-4 h-4 ${isInWishlist ? 'text-red-500 fill-current' : 'text-gray-700 hover:text-red-500'}`} />
                         </button>
 
-                        <button className="p-2 rounded-full hover:bg-green-100 transition"
+                        <button
+                            className="p-2 rounded-full hover:bg-green-100 transition"
                             onClick={(e) => {
                                 e.stopPropagation();
-                                handleAddToCart(product)
-                            }}>
+                                handleAddToCart(product);
+                            }}
+                        >
                             <ShoppingCart className="w-4 h-4 text-gray-700 hover:text-green-600" />
                         </button>
 
-
-                        <button className="p-2 rounded-full hover:bg-blue-100 transition">
+                        <button
+                            className="p-2 rounded-full hover:bg-blue-100 transition"
+                            onClick={(e) => e.stopPropagation()}
+                        >
                             <Share2 className="w-4 h-4 text-gray-700 hover:text-blue-600" />
                         </button>
                     </div>
@@ -111,7 +165,6 @@ const ProductCard = ({ product }: IProductProps) => {
                                 Rs.{(parseFloat(product.rate) * 1.1).toFixed(2)}
                             </span>
                             <span className="text-xs text-gray-500">{product.unit}</span>
-
                         </div>
                     </div>
                 </div>

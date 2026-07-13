@@ -454,7 +454,7 @@ const SingleProductPage = () => {
                                     <Clock className="w-4 h-4 text-green-600" />
                                     <div>
                                         <p className="text-xs font-medium text-gray-800">Same Day Delivery</p>
-                                        <p className="text-xs text-gray-500">Order before 2 PM</p>
+                                        {/* <p className="text-xs text-gray-500">Order before 2 PM</p> */}
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
@@ -468,7 +468,7 @@ const SingleProductPage = () => {
                                     <RefreshCw className="w-4 h-4 text-green-600" />
                                     <div>
                                         <p className="text-xs font-medium text-gray-800">Easy Returns</p>
-                                        <p className="text-xs text-gray-500">7 days return policy</p>
+                                        {/* <p className="text-xs text-gray-500">7 days return policy</p> */}
                                     </div>
                                 </div>
                             </div>

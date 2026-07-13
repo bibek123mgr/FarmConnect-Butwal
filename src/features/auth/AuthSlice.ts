@@ -6,9 +6,11 @@ export interface IUser {
     name: string;
     email: string;
     role: string;
+    address: string;
     farmId: number;
     farmName: string;
     createdAt: string;
+    phone: string;
 }
 
 interface IAuthState {
