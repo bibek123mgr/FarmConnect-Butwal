@@ -18,14 +18,17 @@ import {
     Loader2,
 } from "lucide-react";
 import toast from "react-hot-toast";
-import { useAppSelector } from "../hooks/hooks";
+import { useAppDispatch, useAppSelector } from "../hooks/hooks";
+import { updateUserPassword, updateUserProfile } from "../features/auth/AuthApi";
+import { updateUserProfileState } from "../features/auth/AuthSlice";
 
 const UserProfile = () => {
     const [activeTab, setActiveTab] = useState('profile'); // profile, password
-    
+    const dispatch = useAppDispatch();
+
     // Get user data directly from Redux
     const { user } = useAppSelector((state) => state.auth);
-    
+
     // Password form state
     const [passwordData, setPasswordData] = useState({
         currentPassword: "",
@@ -45,7 +48,7 @@ const UserProfile = () => {
         phone: "",
         address: "",
     });
-    
+
     // Edit form state - initialized with user data
     const [editForm, setEditForm] = useState({
         name: user?.name || "",
@@ -55,7 +58,7 @@ const UserProfile = () => {
     });
 
     // Format joined date
-    const joinedDate = user?.createdAt 
+    const joinedDate = user?.createdAt
         ? new Date(user.createdAt).toLocaleDateString("en-US", {
             year: "numeric",
             month: "long",
@@ -135,11 +138,20 @@ const UserProfile = () => {
         }
 
         setIsSaving(true);
-        // Simulate API call - replace with actual API
+        dispatch(updateUserProfile({
+            name: editForm.name,
+            phone: editForm.phone,
+            address: editForm.address,
+        }));
+        dispatch(updateUserProfileState({
+            name: editForm.name,
+            phone: editForm.phone,
+            address: editForm.address
+        }))
+
         setTimeout(() => {
             setIsEditing(false);
             setIsSaving(false);
-            toast.success("Profile updated successfully!");
         }, 1500);
     };
 
@@ -196,7 +208,11 @@ const UserProfile = () => {
         }
 
         setIsChangingPassword(true);
-        // Simulate API call - replace with actual API
+        dispatch(updateUserPassword({
+            currentPassword: passwordData.currentPassword,
+            newPassword: passwordData.newPassword,
+            confirmPassword: passwordData.confirmPassword
+        }));
         setTimeout(() => {
             setPasswordData({
                 currentPassword: "",
@@ -204,7 +220,6 @@ const UserProfile = () => {
                 confirmPassword: "",
             });
             setIsChangingPassword(false);
-            toast.success("Password changed successfully!");
         }, 1500);
     };
 
@@ -265,22 +280,20 @@ const UserProfile = () => {
                             <div className="space-y-1">
                                 <button
                                     onClick={() => setActiveTab('profile')}
-                                    className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition ${
-                                        activeTab === 'profile'
-                                            ? 'bg-green-50 text-green-700 font-medium'
-                                            : 'text-gray-700 hover:bg-gray-50'
-                                    }`}
+                                    className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition ${activeTab === 'profile'
+                                        ? 'bg-green-50 text-green-700 font-medium'
+                                        : 'text-gray-700 hover:bg-gray-50'
+                                        }`}
                                 >
                                     <User className="w-5 h-5" />
                                     Profile
                                 </button>
                                 <button
                                     onClick={() => setActiveTab('password')}
-                                    className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition ${
-                                        activeTab === 'password'
-                                            ? 'bg-green-50 text-green-700 font-medium'
-                                            : 'text-gray-700 hover:bg-gray-50'
-                                    }`}
+                                    className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition ${activeTab === 'password'
+                                        ? 'bg-green-50 text-green-700 font-medium'
+                                        : 'text-gray-700 hover:bg-gray-50'
+                                        }`}
                                 >
                                     <Lock className="w-5 h-5" />
                                     Security
@@ -330,9 +343,8 @@ const UserProfile = () => {
                                                             type="text"
                                                             value={editForm.name}
                                                             onChange={handleNameChange}
-                                                            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 ${
-                                                                errors.name ? 'border-red-500' : 'border-gray-300'
-                                                            }`}
+                                                            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 ${errors.name ? 'border-red-500' : 'border-gray-300'
+                                                                }`}
                                                             placeholder="Enter your full name"
                                                         />
                                                         {errors.name && (
@@ -360,9 +372,8 @@ const UserProfile = () => {
                                                             type="text"
                                                             value={editForm.phone}
                                                             onChange={handlePhoneChange}
-                                                            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 ${
-                                                                errors.phone ? 'border-red-500' : 'border-gray-300'
-                                                            }`}
+                                                            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 ${errors.phone ? 'border-red-500' : 'border-gray-300'
+                                                                }`}
                                                             placeholder="Enter phone number"
                                                             maxLength={10}
                                                         />
@@ -378,9 +389,8 @@ const UserProfile = () => {
                                                             type="text"
                                                             value={editForm.address}
                                                             onChange={handleAddressChange}
-                                                            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 ${
-                                                                errors.address ? 'border-red-500' : 'border-gray-300'
-                                                            }`}
+                                                            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 ${errors.address ? 'border-red-500' : 'border-gray-300'
+                                                                }`}
                                                             placeholder="Enter your address"
                                                         />
                                                         {errors.address && (

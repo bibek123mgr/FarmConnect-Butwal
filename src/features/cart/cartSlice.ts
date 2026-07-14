@@ -65,9 +65,7 @@ const cartSlice = createSlice({
                 state.success = true;
                 state.message = action.payload.message;
                 const newCart = action.payload.data;
-
                 const index = state.cart.findIndex(i => i.id === newCart.id);
-
                 if (index !== -1) {
                     state.cart[index] = newCart;
                 } else {

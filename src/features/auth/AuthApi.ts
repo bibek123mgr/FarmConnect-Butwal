@@ -9,6 +9,18 @@ export interface IRegisterPayload {
     password: string;
 }
 
+interface IUpdateProfilePayload {
+    name: string;
+    phone: string;
+    address: string;
+}
+
+interface IUpdatePasswordPayload {
+    currentPassword: string;
+    newPassword: string;
+    confirmPassword: string;
+}
+
 
 export const LoginUser = createAsyncThunk(
     "auth/login",
@@ -94,6 +106,33 @@ export const becomeVendor = createAsyncThunk(
     async (payload: SellerFormData, { rejectWithValue }) => {
         try {
             const { data } = await axiosInstance.post(`farmers/register`, payload);
+            return data;
+        } catch (error: any) {
+            return rejectWithValue(
+                error.response?.data || "Something went wrong"
+            );
+        }
+    });
+
+
+export const updateUserProfile = createAsyncThunk(
+    "auth/updateUserProfile",
+    async (payload: IUpdateProfilePayload, { rejectWithValue }) => {
+        try {
+            const { data } = await axiosInstance.put(`auth/update-profile`, payload);
+            return data;
+        } catch (error: any) {
+            return rejectWithValue(
+                error.response?.data || "Something went wrong"
+            );
+        }
+    });
+
+export const updateUserPassword = createAsyncThunk(
+    "auth/updateUserPassword",
+    async (payload: IUpdatePasswordPayload, { rejectWithValue }) => {
+        try {
+            const { data } = await axiosInstance.put(`auth/update-password`, payload);
             return data;
         } catch (error: any) {
             return rejectWithValue(

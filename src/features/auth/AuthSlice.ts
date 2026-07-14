@@ -1,5 +1,5 @@
-import { createSlice } from "@reduxjs/toolkit";
-import { becomeVendor, getUserProfile, LoginUser, LoginUserWithGoogle, LogoutUser, RegisterUser } from "./AuthApi";
+import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
+import { becomeVendor, getUserProfile, LoginUser, LoginUserWithGoogle, LogoutUser, RegisterUser, updateUserPassword, updateUserProfile } from "./AuthApi";
 
 export interface IUser {
     id: number;
@@ -11,6 +11,11 @@ export interface IUser {
     farmName: string;
     createdAt: string;
     phone: string;
+}
+interface IUpdateProfilePayload {
+    name: string;
+    phone: string;
+    address: string;
 }
 
 interface IAuthState {
@@ -54,6 +59,13 @@ const authSlice = createSlice({
             state.error = false;
             state.success = false;
         },
+        updateUserProfileState: (state, action: PayloadAction<IUpdateProfilePayload>) => {
+            if (state.user) {
+                state.user.name = action.payload.name;
+                state.user.phone = action.payload.phone;
+                state.user.address = action.payload.address;
+            }
+        }
     },
     extraReducers: (builder) => {
         builder
@@ -162,8 +174,51 @@ const authSlice = createSlice({
                     action.error.message ||
                     "Something went wrong";
             })
+            .addCase(updateUserProfile.pending, (state) => {
+                state.loading = true;
+                state.error = false;
+                state.success = false;
+                state.message = "";
+            })
+            .addCase(updateUserProfile.fulfilled, (state, action) => {
+                state.loading = false;
+                state.success = true;
+                // state.user = action.payload.user;
+                state.message = action.payload.message;
+            })
+            .addCase(updateUserProfile.rejected, (state, action) => {
+                state.loading = false;
+                state.error = true;
+                state.success = false;
+                state.message =
+                    (action.payload as any)?.message ||
+                    (action.payload as any)?.errors?.[0]?.toString() ||
+                    action.error.message ||
+                    "Something went wrong";
+            })
+            .addCase(updateUserPassword.pending, (state) => {
+                state.loading = true;
+                state.error = false;
+                state.success = false;
+                state.message = "";
+            })
+            .addCase(updateUserPassword.fulfilled, (state, action) => {
+                state.loading = false;
+                state.success = true;
+                state.message = action.payload.message;
+            })
+            .addCase(updateUserPassword.rejected, (state, action) => {
+                state.loading = false;
+                state.error = true;
+                state.success = false;
+                state.message =
+                    (action.payload as any)?.message ||
+                    (action.payload as any)?.errors?.[0]?.toString() ||
+                    action.error.message ||
+                    "Something went wrong";
+            });
     },
 });
 
-export const { clearMessage } = authSlice.actions;
+export const { clearMessage,updateUserProfileState } = authSlice.actions;
 export default authSlice.reducer;

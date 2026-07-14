@@ -24,8 +24,8 @@ const UserRoutes = () => {
         <Route path="/products/:id" element={<SingleProduct />} />
         <Route path="/products" element={<ProductsPage />} />
         <Route path="/wishlist" element={<Wishlist />} />
-        <Route path="/profile" element={<UserProfile />} />
         <Route element={<ProtectedRoute />}>
+          <Route path="/profile" element={<UserProfile />} />
           <Route path="/register-seller" element={<BecomeSeller />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<Checkout />} />

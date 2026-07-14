@@ -12,6 +12,7 @@ import { useState, useEffect } from "react";
 import { createCart, type IAddToCart } from "../features/cart/cartApi";
 import { useAppDispatch, useAppSelector } from "../hooks/hooks";
 import toast from "react-hot-toast";
+import { clearMessage } from "../features/cart/cartSlice";
 
 interface WishlistItem {
   id: number;
@@ -59,7 +60,12 @@ const Wishlist = () => {
       price: Number(rate)
     }
     dispatch(createCart(payload));
+    toast.success("Item moved to cart successfully!");
+    dispatch(clearMessage());
+    handleRemove(id);
   };
+
+
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
