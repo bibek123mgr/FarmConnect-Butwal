@@ -87,7 +87,7 @@ const Cart = () => {
                     <div className="flex flex-col md:grid md:grid-cols-12 md:gap-4 md:items-center">
                       <div className="flex gap-3 md:col-span-6 mb-3 md:mb-0">
                         <img
-                          src="https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=150"
+                          src={item.image || "https://www.freepnglogos.com/uploads/vegetables-png/vegetables-download-vegetable-photos-png-image-pngimg-3.png"}
                           alt={item.productName}
                           className="w-16 h-16 object-cover rounded-lg"
                         />
