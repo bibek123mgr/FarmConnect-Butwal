@@ -81,7 +81,7 @@ const Checkout = () => {
   const [formData, setFormData] = useState({
     fullName: user?.name || "",
     email: user?.email || "",
-    phone: "",
+    phone: user?.phone || "",
     address: "",
     area: "",
     city: "Butwal",
@@ -470,7 +470,8 @@ const Checkout = () => {
               <div className="space-y-3 max-h-80 overflow-y-auto mb-4 pr-2">
                 {cartItems.map((item) => (
                   <div key={item.id} className="flex gap-3 pb-3 border-b border-gray-100">
-                    <img src="https://images.unsplash.com/photo-1584270354949-c26b0d5b4a0c?w=100" alt={item.productName} className="w-14 h-14 object-cover rounded-lg" />
+                    <img 
+                    src={item.image || "https://www.freepnglogos.com/uploads/vegetables-png/vegetables-download-vegetable-photos-png-image-pngimg-3.png"} alt={item.productName} className="w-14 h-14 object-cover rounded-lg" />
                     <div className="flex-1">
                       <p className="text-sm font-medium text-gray-800">{item.productName}</p>
                       <p className="text-xs text-gray-500">Qty: {item.quantity}</p>

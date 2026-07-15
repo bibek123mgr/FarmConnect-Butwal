@@ -97,7 +97,7 @@ const Header = () => {
       if (response.data.success && response.data.data) {
         // Your API returns products directly in data array
         const products = response.data.data;
-        
+
         // Set suggestions
         setSearchSuggestions(products.map(p => ({
           id: p.id.toString(),
@@ -105,19 +105,19 @@ const Header = () => {
           image: p.image,
           distance: p.distance
         })));
-        
+
         // Add "Did you mean?" suggestions based on distance threshold
         const exactMatches = products.filter(p => p.distance === 0);
         if (exactMatches.length === 0 && products.length > 0) {
           // Suggest the closest match (lowest distance)
-          const closestMatch = products.reduce((prev, curr) => 
+          const closestMatch = products.reduce((prev, curr) =>
             prev.distance < curr.distance ? prev : curr
           );
           setDidYouMean([closestMatch.name]);
         } else {
           setDidYouMean([]);
         }
-        
+
         setIsSearchOpen(true);
       } else {
         setSearchSuggestions([]);
@@ -336,7 +336,7 @@ const Header = () => {
                           <div className="flex-1">
                             <div className="flex items-center justify-between">
                               <p className="text-sm text-gray-700 font-medium">{product.name}</p>
-                             
+
                             </div>
                             {product.category && (
                               <p className="text-xs text-gray-500">{product.category}</p>
@@ -413,7 +413,7 @@ const Header = () => {
               )}
             </Link>
 
-              <Link
+            <Link
               to="/wishlist"
               className="relative p-2 hover:bg-gray-100 rounded-full transition group"
             >
@@ -477,22 +477,25 @@ const Header = () => {
                           <Heart className="w-4 h-4" />
                           Wishlist
                         </Link>
-                        <Link
-                          to="/register-seller"
-                          className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition"
-                          onClick={() => setIsProfileOpen(false)}
-                        >
-                          <Store className="w-4 h-4" />
-                          Become a Seller
-                        </Link>
-                        <Link
+                        {
+                          user.role === "user" &&
+                          <Link
+                            to="/register-seller"
+                            className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition"
+                            onClick={() => setIsProfileOpen(false)}
+                          >
+                            <Store className="w-4 h-4" />
+                            Become a Seller
+                          </Link>
+                        }
+                        {/* <Link
                           to="/settings"
                           className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition"
                           onClick={() => setIsProfileOpen(false)}
                         >
                           <Settings className="w-4 h-4" />
                           Settings
-                        </Link>
+                        </Link> */}
                         <div className="border-t border-gray-100 my-1"></div>
                         <button
                           className="flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition w-full"

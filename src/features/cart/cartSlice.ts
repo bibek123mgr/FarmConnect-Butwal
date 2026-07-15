@@ -5,6 +5,7 @@ import currency from "currency.js";
 export interface ICart {
     id: number;
     productName: string;
+    image: string;
     price: number;
     total: number;
     productId: number;

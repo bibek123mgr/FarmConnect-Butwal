@@ -189,19 +189,35 @@ const AdminCategoriesPage = () => {
 
     setIsSubmitting(true);
 
-    const categoryData = {
-      name: formData.name,
-      description: formData.description,
-      image: previewImage || "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=500",
-    };
-
     try {
+      // Create FormData object
+      const formDataToSend = new FormData();
+      formDataToSend.append('name', formData.name);
+      formDataToSend.append('description', formData.description || '');
+
+      // Handle image - check if it's a File object or a URL
+      if (fileInputRef.current?.files?.[0]) {
+        // If a new file was selected, append the file
+        formDataToSend.append('image', fileInputRef.current.files[0]);
+      } else if (editingCategory && editingCategory.image) {
+        // If editing and no new file selected, keep the existing image URL
+        // You might want to send the existing image URL as a string
+        formDataToSend.append('existingImage', editingCategory.image);
+      } else {
+        // If no image, send a default placeholder
+        // You can either send a default image or skip this
+        // The backend should handle this case
+      }
+
       if (editingCategory) {
-        await dispatch(updateCategory({ id: editingCategory.id, ...categoryData }));
+        await dispatch(updateCategory({
+          id: editingCategory.id,
+          formData: formDataToSend
+        }));
         toast.success("Category updated successfully");
         handleCancelEdit();
       } else {
-        await dispatch(createCategory(categoryData));
+        await dispatch(createCategory(formDataToSend));
         toast.success("Category created successfully");
         handleCancelEdit();
       }

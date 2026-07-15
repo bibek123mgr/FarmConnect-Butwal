@@ -35,7 +35,11 @@ export const createCategory = createAsyncThunk(
     "categories/createCategory",
     async (payload: any, { rejectWithValue }) => {
         try {
-            const { data } = await axiosInstanceNoCredentials.post(`categories`, payload);
+            const { data } = await axiosInstance.post(`categories`, payload, {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
+            });
             return data;
         } catch (error: any) {
             return rejectWithValue(
@@ -49,7 +53,7 @@ export const updateCategory = createAsyncThunk(
     "categories/updateCategory",
     async (payload: any, { rejectWithValue }) => {
         try {
-            const { data } = await axiosInstanceNoCredentials.patch(`categories/${payload.id}`, payload);
+            const { data } = await axiosInstance.patch(`categories/${payload.id}`, payload);
             return data;
         } catch (error: any) {
             return rejectWithValue(
@@ -63,7 +67,7 @@ export const deleteCategory = createAsyncThunk(
     "categories/deleteCategory",
     async (id: number, { rejectWithValue }) => {
         try {
-            const { data } = await axiosInstanceNoCredentials.delete(`categories/${id}`);
+            const { data } = await axiosInstance.delete(`categories/${id}`);
             return data;
         } catch (error: any) {
             return rejectWithValue(

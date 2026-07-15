@@ -44,7 +44,7 @@ const AdminSidebar = ({ sidebarOpen, setSidebarOpen, isMobile }: AdminSidebarPro
         // { path: "/admin/vendor-requests", name: "Vendor Requests", icon: UserPlus, roles: ["superadmin"] },
         // { path: "/admin/vendor-approvals", name: "Pending Approvals", icon: Clock, roles: ["superadmin"] },
         // { path: "/admin/vendor-stores", name: "Store Settings", icon: ShoppingBag, roles: ["superadmin"] },
-        { path: "/admin/commissions", name: "Commission Rates", icon: Percent, roles: ["superadmin"] },
+        // { path: "/admin/commissions", name: "Commission Rates", icon: Percent, roles: ["superadmin"] },
       ]
     },
     {
