@@ -75,6 +75,18 @@ const ProductCard = ({ product }: IProductProps) => {
         localStorage.setItem("wishlist", JSON.stringify(wishlistItems));
     };
 
+    const handleShare = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        const productUrl = `${window.location.origin}/products/${product.id}`;
+        navigator.clipboard.writeText(productUrl)
+            .then(() => {
+                toast.success("Product link copied to clipboard!");
+            })
+            .catch(() => {
+                toast.error("Failed to copy product link.");
+            });
+    };
+
     return (
         <div className="group bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-300 cursor-pointer"
             onClick={() => handleNavigateToProductdetails(product.id)}
@@ -123,7 +135,10 @@ const ProductCard = ({ product }: IProductProps) => {
 
                         <button
                             className="p-2 rounded-full hover:bg-blue-100 transition"
-                            onClick={(e) => e.stopPropagation()}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleShare(e);
+                            }}
                         >
                             <Share2 className="w-4 h-4 text-gray-700 hover:text-blue-600" />
                         </button>

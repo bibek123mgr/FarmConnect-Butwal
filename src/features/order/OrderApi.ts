@@ -100,7 +100,7 @@ export const getVendorOrderDetails = createAsyncThunk(
 
 export const cancelMyOrder = createAsyncThunk(
     "order/cancelMyOrder",
-    async (id, { rejectWithValue }) => {
+    async (id: number, { rejectWithValue }) => {
         try {
             const { data } = await axiosInstance.delete(`orders/${id}`);
             return data;
@@ -125,3 +125,4 @@ export const verifyOnlinePaymentStatus = createAsyncThunk(
         }
     }
 )
+

@@ -363,7 +363,7 @@ const SingleProductPage = () => {
                     <div className="lg:w-1/2">
                         <div className="bg-white rounded-lg shadow-sm overflow-hidden mb-4 h-[610px] flex items-center justify-center">
                             <img
-                                src={getImageUrl()}
+                                src={product.image || "https://www.freepnglogos.com/uploads/vegetables-png/vegetables-download-vegetable-photos-png-image-pngimg-3.png"}
                                 alt={product.name}
                                 className="max-w-full max-h-full object-contain cursor-pointer"
                                 onError={handleImageError}
@@ -713,7 +713,7 @@ const SingleProductPage = () => {
                                 <Link key={item.id} to={`/products/${item.id}`} className="bg-white rounded-lg shadow-sm hover:shadow-md transition overflow-hidden group">
                                     <div className="relative">
                                         <img
-                                            src={item?.image || PLACEHOLDER_IMAGE}
+                                            src={item?.image || "https://www.freepnglogos.com/uploads/vegetables-png/vegetables-download-vegetable-photos-png-image-pngimg-3.png"}
                                             alt={item.name}
                                             className="w-full h-40 object-contain group-hover:scale-105 transition duration-300"
                                         />
