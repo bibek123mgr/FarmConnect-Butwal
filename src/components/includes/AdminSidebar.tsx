@@ -38,7 +38,7 @@ const AdminSidebar = ({ sidebarOpen, setSidebarOpen, isMobile }: AdminSidebarPro
     {
       title: "Vendor Management",
       items: [
-        { path: "/admin/vendors", name: "All Vendors", icon: Store, roles: ["farmer"] },
+        { path: "/admin/vendors", name: "All Vendors", icon: Store, roles: ["superadmin"] },
         // { path: "/admin/vendor-requests", name: "Vendor Requests", icon: UserPlus, roles: ["superadmin"] },
         // { path: "/admin/vendor-approvals", name: "Pending Approvals", icon: Clock, roles: ["superadmin"] },
         // { path: "/admin/vendor-stores", name: "Store Settings", icon: ShoppingBag, roles: ["superadmin"] },
