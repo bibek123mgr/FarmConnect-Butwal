@@ -176,9 +176,9 @@ const ProductCard = ({ product }: IProductProps) => {
                             <span className="text-lg font-bold text-gray-900">
                                 Rs.{parseFloat(product.rate).toFixed(2)}
                             </span>
-                            <span className="text-sm text-gray-400 line-through">
+                            {/* <span className="text-sm text-gray-400 line-through">
                                 Rs.{(parseFloat(product.rate) * 1.1).toFixed(2)}
-                            </span>
+                            </span> */}
                             <span className="text-xs text-gray-500">{product.unit}</span>
                         </div>
                     </div>

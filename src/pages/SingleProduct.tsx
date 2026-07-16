@@ -447,7 +447,7 @@ const SingleProductPage = () => {
                                     <Truck className="w-4 h-4 text-green-600" />
                                     <div>
                                         <p className="text-xs font-medium text-gray-800">Free Delivery</p>
-                                        <p className="text-xs text-gray-500">On orders Rs.1000+</p>
+                                        {/* <p className="text-xs text-gray-500">On orders Rs.1000+</p> */}
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">

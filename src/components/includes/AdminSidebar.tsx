@@ -5,7 +5,6 @@ import {
   ShoppingCart,
   Settings,
   LogOut,
-  BarChart3,
   ChevronLeft,
   ChevronRight,
   X,
@@ -14,7 +13,6 @@ import {
   CreditCard,
   FileText,
   Store,
-  Percent,
   Factory,
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../hooks/hooks";
@@ -34,13 +32,13 @@ const AdminSidebar = ({ sidebarOpen, setSidebarOpen, isMobile }: AdminSidebarPro
     {
       title: "Main",
       items: [
-        { path: "/admin/dashboard", name: "Dashboard", icon: LayoutDashboard, roles: ["admin", "superadmin"] }
+        { path: "/admin/dashboard", name: "Dashboard", icon: LayoutDashboard, roles: ["farmer", "superadmin"] }
       ]
     },
     {
       title: "Vendor Management",
       items: [
-        { path: "/admin/vendors", name: "All Vendors", icon: Store, roles: ["superadmin"] },
+        { path: "/admin/vendors", name: "All Vendors", icon: Store, roles: ["farmer"] },
         // { path: "/admin/vendor-requests", name: "Vendor Requests", icon: UserPlus, roles: ["superadmin"] },
         // { path: "/admin/vendor-approvals", name: "Pending Approvals", icon: Clock, roles: ["superadmin"] },
         // { path: "/admin/vendor-stores", name: "Store Settings", icon: ShoppingBag, roles: ["superadmin"] },
@@ -50,10 +48,10 @@ const AdminSidebar = ({ sidebarOpen, setSidebarOpen, isMobile }: AdminSidebarPro
     {
       title: "Store Management",
       items: [
-        { path: "/admin/products", name: "All Products", icon: Package, roles: ["admin", "superadmin"] },
-        { path: "/admin/orders", name: "All Orders", icon: ShoppingCart, roles: ["admin", "superadmin"] },
-        { path: "/admin/categories", name: "Categories", icon: FolderTree, roles: ["admin", "superadmin"] },
-        { path: "/admin/production", name: "Production Management", icon: Factory, roles: ["admin", "superadmin"] },
+        { path: "/admin/products", name: "All Products", icon: Package, roles: ["farmer", "superadmin"] },
+        { path: "/admin/orders", name: "All Orders", icon: ShoppingCart, roles: ["farmer", "superadmin"] },
+        { path: "/admin/categories", name: "Categories", icon: FolderTree, roles: ["superadmin"] },
+        { path: "/admin/production", name: "Inventory Management", icon: Factory, roles: ["farmer", "superadmin"] },
         // { path: "/admin/purchases", name: "Purchase Management", icon: TrendingUp, roles: ["admin", "superadmin"] },
         // { path: "/admin/sales", name: "Sales Management", icon: TrendingDown, roles: ["admin", "superadmin"] },
       ]

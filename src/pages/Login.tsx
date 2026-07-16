@@ -44,10 +44,9 @@ const Login = () => {
             dispatch(getUserProfile())
                 .unwrap()
                 .then((res) => {
-                    console.log(res.user.role);
                     const user = res.user;
-
-                    if (user.role === "superadmin") {
+                    const userRole = user.role.trim();
+                    if (userRole === "superadmin" || userRole === "farmer") {
                         navigate("/admin/dashboard");
                         return;
                     }

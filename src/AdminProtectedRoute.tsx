@@ -20,7 +20,7 @@ const AdminProtectedRoute = () => {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (user.role !== "admin" && user.role !== "superadmin") {
+  if (user.role !== "farmer" && user.role !== "superadmin") {
     return <Navigate to="/" replace />;
   }
 
