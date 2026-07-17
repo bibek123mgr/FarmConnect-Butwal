@@ -12,6 +12,7 @@ import AdminVendorManagement from "./AdminVendorManagement";
 import AdminPayoutsManagement from "./pages/AdminPayoutsManagement";
 import AdminProductionManagement from "./pages/AdminProductionManagement";
 import AdminPurchaseManagement from "./pages/AdminPurchaseManagement";
+import AdminDamageManagement from "./pages/AdminDamageManagement";
 // import AdminProducts from "./components/admin/Products";
 // import AdminOrders from "./components/admin/Orders";
 // import AdminUsers from "./components/admin/Users";
@@ -31,7 +32,7 @@ const AdminRoutes = () => {
           <Route path="/settings" element={<AdminStoreSettings />} />
           <Route path="/vendors" element={<AdminVendorManagement />} />
           <Route path="/payouts" element={<AdminPayoutsManagement />} />
-          {/* <Route path="/sales" element={<AdminSalesManagement />} /> */}
+          <Route path="/damage" element={<AdminDamageManagement />} />
           <Route path="/production" element={<AdminProductionManagement />} />
           <Route path="/purchases" element={<AdminPurchaseManagement />} />
         </Route>

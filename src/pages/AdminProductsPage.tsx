@@ -37,7 +37,7 @@ interface ProductFormData {
 
 const AdminProductsPage = () => {
   const dispatch = useAppDispatch();
-  const { productsAdmin: products, loading, adminProductPagination: pagination, productStats } = useAppSelector((state) => state.product);
+  const { productsAdmin: products, loading, adminProductPagination: pagination, productStats, message, error, success } = useAppSelector((state) => state.product);
   const { categories } = useAppSelector((state) => state.category);
   const { user } = useAppSelector((state) => state.auth);
 
@@ -243,20 +243,31 @@ const AdminProductsPage = () => {
     }
 
     try {
-      if (editingProduct && editingProduct.id) {
-        await dispatch(updateProduct({ payload: formDataToSend, id: editingProduct.id }));
-        toast.success("Product updated successfully");
-        handleCancelEdit();
+      let res;
+
+      if (editingProduct?.id) {
+        res = await dispatch(
+          updateProduct({
+            payload: formDataToSend,
+            id: editingProduct.id,
+          })
+        ).unwrap();
       } else {
-        await dispatch(createProduct(formDataToSend));
-        toast.success("Product created successfully");
-        handleCancelEdit();
+        res = await dispatch(createProduct(formDataToSend)).unwrap();
       }
 
+      toast.success(res.message);
+      handleCancelEdit();
       fetchProductsForAdminWithFilters();
-    } catch (error) {
-      toast.error("Something went wrong. Please try again.");
+    } catch (error: any) {
       console.error("Error submitting product:", error);
+
+      toast.error(
+        error?.message ||
+        error?.error ||
+        error?.data?.message ||
+        "Something went wrong"
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -547,7 +558,7 @@ const AdminProductsPage = () => {
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
                             <img
-                              src={`http://localhost:3000/image/${product.image}`}
+                              src={product.image || "https://www.freepnglogos.com/uploads/vegetables-png/vegetables-download-vegetable-photos-png-image-pngimg-3.png"}
                               alt={product.name}
                               className="w-10 h-10 rounded-lg object-cover"
                               onError={(e) => {
@@ -585,7 +596,7 @@ const AdminProductsPage = () => {
                             {formatDate(product.cre)}
                           </div>
                         </td> */}
-                    {user?.role === "farmer" &&
+                        {user?.role === "farmer" &&
                           <td className="px-6 py-4">
                             <div className="flex items-center justify-center gap-2">
                               <button

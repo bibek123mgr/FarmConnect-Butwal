@@ -10,10 +10,9 @@ import {
   X,
   FolderTree,
   DollarSign,
-  CreditCard,
-  FileText,
   Store,
   Factory,
+  Bandage
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../hooks/hooks";
 import { LogoutUser } from "../../features/auth/AuthApi";
@@ -52,6 +51,7 @@ const AdminSidebar = ({ sidebarOpen, setSidebarOpen, isMobile }: AdminSidebarPro
         { path: "/admin/orders", name: "All Orders", icon: ShoppingCart, roles: ["farmer", "superadmin"] },
         { path: "/admin/categories", name: "Categories", icon: FolderTree, roles: ["superadmin"] },
         { path: "/admin/production", name: "Inventory Management", icon: Factory, roles: ["farmer", "superadmin"] },
+        { path: "/admin/damage", name: "Damage Management", icon: Bandage, roles: ["farmer", "superadmin"] },
         // { path: "/admin/purchases", name: "Purchase Management", icon: TrendingUp, roles: ["admin", "superadmin"] },
         // { path: "/admin/sales", name: "Sales Management", icon: TrendingDown, roles: ["admin", "superadmin"] },
       ]
@@ -75,7 +75,7 @@ const AdminSidebar = ({ sidebarOpen, setSidebarOpen, isMobile }: AdminSidebarPro
     {
       title: "System",
       items: [
-        { path: "/admin/settings", name: "Settings", icon: Settings, roles: ["admin", "superadmin"] },
+        { path: "/admin/settings", name: "Settings", icon: Settings, roles: ["farmer"] },
       ]
     }
   ];
@@ -120,9 +120,9 @@ const AdminSidebar = ({ sidebarOpen, setSidebarOpen, isMobile }: AdminSidebarPro
       >
         {/* Header Section with User Info */}
         <div className={`flex flex-col border-b ${!isMobile && !sidebarOpen ? "items-center" : ""}`}>
-          <div className={`flex items-center justify-between p-4 w-full ${!isMobile && !sidebarOpen ? "justify-center" : ""}`}>
+          <div className={`flex items-center justify-between p-2 w-full ${!isMobile && !sidebarOpen ? "justify-center" : ""}`}>
             {(!isMobile && sidebarOpen) || (isMobile && sidebarOpen) ? (
-              <div className="pb-4 pt-2">
+              <div className="p-2">
                 <div className="flex items-center gap-3 p-2 rounded-lg bg-gray-50">
                   <div className="w-10 h-10 rounded-full bg-gradient-to-r from-green-500 to-green-600 flex items-center justify-center shadow-md">
                     <span className="text-white font-semibold text-sm">

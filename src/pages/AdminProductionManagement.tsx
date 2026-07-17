@@ -15,7 +15,6 @@ import {
     Loader2,
     Factory,
     ClipboardList,
-    TrendingUp,
     Printer,
     Edit,
     Trash2,

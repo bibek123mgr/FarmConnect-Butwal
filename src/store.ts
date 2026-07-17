@@ -11,6 +11,7 @@ import vendorReducer from "./features/vendor/vendorSlice";
 import productionReducer from "./features/production/productionSlice";
 import DashboardReducer from "./features/dashboard/DashboardSlice";
 import PaymentReducer from "./features/payment/paymentSlice";
+import DamageReducer from "./features/damage/DamageSlice";
 
 export const store = configureStore({
     reducer: {
@@ -25,7 +26,8 @@ export const store = configureStore({
         vendor: vendorReducer,
         production: productionReducer,
         dashboard: DashboardReducer,
-        payment: PaymentReducer
+        payment: PaymentReducer,
+        damage:DamageReducer
     }
 })
 
