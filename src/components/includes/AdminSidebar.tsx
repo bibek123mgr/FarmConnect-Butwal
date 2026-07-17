@@ -68,8 +68,8 @@ const AdminSidebar = ({ sidebarOpen, setSidebarOpen, isMobile }: AdminSidebarPro
       title: "Financial",
       items: [
         { path: "/admin/payouts", name: "Vendor Payouts", icon: DollarSign, roles: ["superadmin"] },
-        { path: "/admin/transactions", name: "Transactions", icon: CreditCard, roles: ["superadmin"] },
-        { path: "/admin/reports", name: "Financial Reports", icon: FileText, roles: ["superadmin"] },
+        // { path: "/admin/transactions", name: "Transactions", icon: CreditCard, roles: ["superadmin"] },
+        // { path: "/admin/reports", name: "Financial Reports", icon: FileText, roles: ["superadmin"] },
       ]
     },
     {

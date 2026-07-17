@@ -10,7 +10,6 @@ import {
   CheckCircle,
   Loader2,
   Package,
-  DollarSign,
   TrendingUp,
   TrendingDown,
   AlertTriangle,
@@ -40,6 +39,7 @@ const AdminProductsPage = () => {
   const dispatch = useAppDispatch();
   const { productsAdmin: products, loading, adminProductPagination: pagination, productStats } = useAppSelector((state) => state.product);
   const { categories } = useAppSelector((state) => state.category);
+  const { user } = useAppSelector((state) => state.auth);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -329,13 +329,15 @@ const AdminProductsPage = () => {
             <h1 className="text-3xl font-bold text-gray-900">Product Management</h1>
             <p className="text-gray-600 mt-2">Manage your store products inventory</p>
           </div>
-          <button
-            onClick={handleAddNew}
-            className="bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 px-5 rounded-lg transition flex items-center gap-2 shadow-sm"
-          >
-            <Plus className="w-4 h-4" />
-            Add New Product
-          </button>
+
+          {user?.role === "farmer" &&
+            <button
+              onClick={handleAddNew}
+              className="bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 px-5 rounded-lg transition flex items-center gap-2 shadow-sm"
+            >
+              <Plus className="w-4 h-4" />
+              Add New Product
+            </button>}
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -512,7 +514,9 @@ const AdminProductsPage = () => {
                   <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
                   <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
                   <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  {user?.role === "farmer" &&
+                    <th className="text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  }
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -581,24 +585,26 @@ const AdminProductsPage = () => {
                             {formatDate(product.cre)}
                           </div>
                         </td> */}
-                        <td className="px-6 py-4">
-                          <div className="flex items-center justify-center gap-2">
-                            <button
-                              onClick={() => handleEdit(product)}
-                              className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
-                              title="Edit Product"
-                            >
-                              <Edit2 className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => handleDelete(product.id)}
-                              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
-                              title="Delete Product"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </td>
+                    {user?.role === "farmer" &&
+                          <td className="px-6 py-4">
+                            <div className="flex items-center justify-center gap-2">
+                              <button
+                                onClick={() => handleEdit(product)}
+                                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                                title="Edit Product"
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(product.id)}
+                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
+                                title="Delete Product"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </td>
+                        }
                       </tr>
                     );
                   })

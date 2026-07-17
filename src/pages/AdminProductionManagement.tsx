@@ -48,6 +48,7 @@ const AdminProductionManagement = () => {
     const dispatch = useAppDispatch();
     const { productsForCombobox: products } = useAppSelector((state) => state.product);
     const { productions, pagination: productionPagination, loading: productionLoading, productionStats } = useAppSelector((state) => state.production);
+    const { user } = useAppSelector((state) => state.auth);
 
     const [selectedRecord, setSelectedRecord] = useState<ProductionRecord | null>(null);
     const [showDetailsModal, setShowDetailsModal] = useState(false);
@@ -288,15 +289,17 @@ const AdminProductionManagement = () => {
                         <h1 className="text-3xl font-bold text-gray-900">Production Management</h1>
                         <p className="text-gray-600 mt-2">Manage production records and track inventory</p>
                     </div>
-                    <div className="flex gap-3">
-                        <button
-                            onClick={handleAdd}
-                            className="bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 px-5 rounded-lg transition flex items-center gap-2 shadow-sm"
-                        >
-                            <Plus className="w-4 h-4" />
-                            Add Production
-                        </button>
-                    </div>
+                    {user?.role === "farmer" &&
+                        <div className="flex gap-3">
+                            <button
+                                onClick={handleAdd}
+                                className="bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 px-5 rounded-lg transition flex items-center gap-2 shadow-sm"
+                            >
+                                <Plus className="w-4 h-4" />
+                                Add Production
+                            </button>
+                        </div>
+                    }
                 </div>
 
                 {/* Stats Cards */}
@@ -394,7 +397,9 @@ const AdminProductionManagement = () => {
                                     <th className="text-right px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Total Amount</th>
                                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Remarks</th>
                                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                                    <th className="text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                    {user?.role === "farmer" &&
+                                        <th className="text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                    }
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200">
@@ -449,31 +454,33 @@ const AdminProductionManagement = () => {
                                                     {formatDate(record.createdAt)}
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4">
-                                                <div className="flex items-center justify-center gap-2">
-                                                    <button
-                                                        onClick={() => handleViewDetails(record)}
-                                                        className="p-2 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition"
-                                                        title="View Details"
-                                                    >
-                                                        <Eye className="w-4 h-4" />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleEdit(record)}
-                                                        className="p-2 rounded-lg text-gray-400 hover:text-yellow-600 hover:bg-yellow-50 transition"
-                                                        title="Edit"
-                                                    >
-                                                        <Edit className="w-4 h-4" />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleDeleteClick(record)}
-                                                        className="p-2 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition"
-                                                        title="Delete"
-                                                    >
-                                                        <Trash2 className="w-4 h-4" />
-                                                    </button>
-                                                </div>
-                                            </td>
+                                            {user?.role === "farmer" &&
+                                                <td className="px-6 py-4">
+                                                    <div className="flex items-center justify-center gap-2">
+                                                        <button
+                                                            onClick={() => handleViewDetails(record)}
+                                                            className="p-2 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition"
+                                                            title="View Details"
+                                                        >
+                                                            <Eye className="w-4 h-4" />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleEdit(record)}
+                                                            className="p-2 rounded-lg text-gray-400 hover:text-yellow-600 hover:bg-yellow-50 transition"
+                                                            title="Edit"
+                                                        >
+                                                            <Edit className="w-4 h-4" />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDeleteClick(record)}
+                                                            className="p-2 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition"
+                                                            title="Delete"
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            }
                                         </tr>
                                     ))
                                 )}

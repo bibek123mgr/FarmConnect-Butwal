@@ -37,6 +37,7 @@ const AdminOrderManagement = () => {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [imageErrors, setImageErrors] = useState<{ [key: string]: boolean }>({});
+  const { user } = useAppSelector(state => state.auth);
 
   const dispatch = useAppDispatch();
   const { storeOrders, loading, success, error, message, storeOrderDetails } = useAppSelector(state => state.order);
@@ -372,12 +373,14 @@ const AdminOrderManagement = () => {
                   <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  {/* <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Delivery
-                  </th>
-                  <th className="text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
+                  </th> */}
+                  {user?.role === "farmer" &&
+                    <th className="text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  }
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -439,7 +442,7 @@ const AdminOrderManagement = () => {
                           <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-3 h-3 pointer-events-none" />
                         </div>
                       </td>
-                      <td className="px-6 py-4">
+                      {/* <td className="px-6 py-4">
                         {orderDeliveryPerson[order.id] ? (
                           <div className="flex items-center gap-2">
                             <UserCheck className="w-4 h-4 text-green-600" />
@@ -456,18 +459,20 @@ const AdminOrderManagement = () => {
                             Assign Delivery
                           </button>
                         )}
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center justify-center gap-2">
-                          <button
-                            onClick={() => getOrderDetails(order.id)}
-                            className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition"
-                            title="View Details"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
+                      </td> */}
+                      {user?.role === "farmer" &&
+                        <td className="px-6 py-4">
+                          <div className="flex items-center justify-center gap-2">
+                            <button
+                              onClick={() => getOrderDetails(order.id)}
+                              className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition"
+                              title="View Details"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      }
                     </tr>
                   ))
                 )}
@@ -668,7 +673,7 @@ const AdminOrderManagement = () => {
                             onError={() => handleImageError(product.productId)}
                           />
                         </div>
-                        
+
                         {/* Product Details */}
                         <div className="flex-1">
                           <p className="font-medium text-gray-900">{product.productName}</p>
@@ -679,7 +684,7 @@ const AdminOrderManagement = () => {
                             Product ID: {product.productId}
                           </p>
                         </div>
-                        
+
                         {/* Subtotal */}
                         <div className="text-right">
                           <p className="font-semibold text-gray-900">
@@ -720,20 +725,20 @@ const AdminOrderManagement = () => {
 
               {/* Action Buttons */}
               <div className="flex gap-3 mt-6">
-                {!orderDeliveryPerson[storeOrderDetails.id] && 
-                 storeOrderDetails.status !== 'DELIVERED' && 
-                 storeOrderDetails.status !== 'CANCELLED' && (
-                  <button
-                    onClick={() => {
-                      setIsDetailsModalOpen(false);
-                      setSelectedOrder(storeOrderDetails);
-                      setShowDeliveryModal(true);
-                    }}
-                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-                  >
-                    Assign Delivery
-                  </button>
-                )}
+                {!orderDeliveryPerson[storeOrderDetails.id] &&
+                  storeOrderDetails.status !== 'DELIVERED' &&
+                  storeOrderDetails.status !== 'CANCELLED' && (
+                    <button
+                      onClick={() => {
+                        setIsDetailsModalOpen(false);
+                        setSelectedOrder(storeOrderDetails);
+                        setShowDeliveryModal(true);
+                      }}
+                      className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                    >
+                      Assign Delivery
+                    </button>
+                  )}
                 <button
                   onClick={() => setIsDetailsModalOpen(false)}
                   className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"

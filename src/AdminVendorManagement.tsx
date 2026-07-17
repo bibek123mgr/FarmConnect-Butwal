@@ -11,7 +11,6 @@ import {
     MapPin,
     Shield,
     CheckCircle,
-    DollarSign,
     AlertCircle,
     Edit2,
     Clock as ClockIcon,
@@ -19,8 +18,6 @@ import {
     Users,
     Building2,
     Save,
-    Filter,
-    ChevronDown,
     RefreshCw,
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "./hooks/hooks";
@@ -311,7 +308,7 @@ const AdminVendorManagement = () => {
                                 <tr>
                                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Farm / Owner</th>
                                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Verification</th>
+                                    {/* <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Verification</th> */}
                                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Products</th>
                                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Orders</th>
                                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Revenue</th>
@@ -374,11 +371,11 @@ const AdminVendorManagement = () => {
                                                     {getStatusText(vendor.isActive)}
                                                 </span>
                                             </td>
-                                            <td className="px-6 py-4">
+                                            {/* <td className="px-6 py-4">
                                                 <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${getVerificationColor(vendor.isVerified)}`}>
                                                     {getVerificationText(vendor.isVerified)}
                                                 </span>
-                                            </td>
+                                            </td> */}
                                             <td className="px-6 py-4">
                                                 <span className="text-gray-700">{vendor.totalProducts}</span>
                                             </td>
@@ -586,12 +583,12 @@ const AdminVendorManagement = () => {
                                                 <p className="text-xs text-gray-500">VAT Number</p>
                                                 <p className="text-sm text-gray-800 font-mono">{selectedVendor.vatNo || "N/A"}</p>
                                             </div>
-                                            <div>
+                                            {/* <div>
                                                 <p className="text-xs text-gray-500">Verification Status</p>
                                                 <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium mt-1 ${getVerificationColor(selectedVendor.isVerified)}`}>
                                                     {getVerificationText(selectedVendor.isVerified)}
                                                 </span>
-                                            </div>
+                                            </div> */}
                                         </div>
                                     </div>
 
@@ -642,10 +639,10 @@ const AdminVendorManagement = () => {
                             </div>
 
                             <div className="mt-6 pt-6 border-t border-gray-200 flex justify-end gap-3">
-                                <button onClick={() => setShowStatusModal(true)} className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition flex items-center gap-2">
+                                {/* <button onClick={() => setShowStatusModal(true)} className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition flex items-center gap-2">
                                     <Edit2 className="w-4 h-4" />
                                     Update Status
-                                </button>
+                                </button> */}
                                 <button onClick={() => setSelectedVendor(null)} className="px-6 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg transition">
                                     Close
                                 </button>

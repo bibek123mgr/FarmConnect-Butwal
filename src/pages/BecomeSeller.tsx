@@ -25,7 +25,7 @@ export interface SellerFormData {
   vatNo: string;
 }
 
-const provinces = [
+export const provinces = [
   "Province No. 1",
   "Madhesh Province",
   "Bagmati",
@@ -35,7 +35,7 @@ const provinces = [
   "Sudurpashchim"
 ];
 
-const districtsByProvince: Record<string, string[]> = {
+export const districtsByProvince: Record<string, string[]> = {
   "Province No. 1": ["Bhojpur", "Dhankuta", "Ilam", "Jhapa", "Khotang", "Morang", "Okhaldhunga", "Panchthar", "Sankhuwasabha", "Solukhumbu", "Sunsari", "Taplejung", "Tehrathum", "Udayapur"],
   "Madhesh Province": ["Bara", "Dhanusha", "Mahottari", "Parsa", "Rautahat", "Saptari", "Sarlahi", "Siraha"],
   "Bagmati": ["Bhaktapur", "Chitwan", "Dhading", "Dolakha", "Kathmandu", "Kavrepalanchok", "Lalitpur", "Makwanpur", "Nuwakot", "Ramechhap", "Rasuwa", "Sindhuli", "Sindhupalchok"],
