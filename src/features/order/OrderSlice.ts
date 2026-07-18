@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { createOrder, getAllMyOrders, getAllOrders, getOrderDetails, getVendorOrderDetails, verifyOnlinePaymentStatus } from "./OrderApi";
+import { adminUpdateOrderStatus, createOrder, getAllMyOrders, getAllOrders, getOrderDetails, getVendorOrderDetails, verifyOnlinePaymentStatus } from "./OrderApi";
 
 interface IOrder {
     id: number,
@@ -205,6 +205,23 @@ const orderSlice = createSlice({
                 state.message = action.payload.message;
             })
             .addCase(verifyOnlinePaymentStatus.rejected, (state, action) => {
+                state.loading = false;
+                state.error = true;
+                state.success = false;
+                state.message = action.error.message || "Something went wrong";
+            })
+            .addCase(adminUpdateOrderStatus.pending, (state) => {
+                state.loading = true;
+                state.error = false;
+                state.success = false;
+                state.message = "";
+            })
+            .addCase(adminUpdateOrderStatus.fulfilled, (state, action) => {
+                state.loading = false;
+                state.success = true;
+                state.message = action.payload.message;
+            })
+            .addCase(adminUpdateOrderStatus.rejected, (state, action) => {
                 state.loading = false;
                 state.error = true;
                 state.success = false;

@@ -11,11 +11,10 @@ import {
   Search,
   ChevronDown,
   RefreshCw,
-  UserCheck,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAppDispatch, useAppSelector } from '../hooks/hooks';
-import { getAllOrders, getVendorOrderDetails } from '../features/order/OrderApi';
+import { adminUpdateOrderPaymentStatus, adminUpdateOrderStatus, getAllOrders, getVendorOrderDetails } from '../features/order/OrderApi';
 
 interface DeliveryPerson {
   id: number;
@@ -66,8 +65,17 @@ const AdminOrderManagement = () => {
   };
 
   const updateOrderStatus = (orderId: number, newStatus: string) => {
+    dispatch(adminUpdateOrderStatus({ id: orderId, status: newStatus.toLowerCase() }));
+    dispatch(getAllOrders());
+
     toast.success(`Order status updated to ${newStatus}`);
   };
+
+  const updateOrderPaymentStatus = (orderId: number, newStatus: string) => {
+    dispatch(adminUpdateOrderPaymentStatus({ id: orderId, status: newStatus.toLowerCase() }));
+    dispatch(getAllOrders());
+    toast.success(`Order payment status updated to ${newStatus}`);
+  }
 
   const assignDeliveryPerson = (orderId: number, deliveryPersonId: number) => {
     const deliveryPerson = deliveryPersons.find(dp => dp.id === deliveryPersonId);
@@ -89,6 +97,7 @@ const AdminOrderManagement = () => {
       default: return 'bg-gray-100 text-gray-800';
     }
   };
+
 
   const getStatusOptions = (currentStatus: string) => {
     const options = [
@@ -376,11 +385,10 @@ const AdminOrderManagement = () => {
                   {/* <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Delivery
                   </th> */}
-                  {user?.role === "farmer" &&
-                    <th className="text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  }
+                  <th className="text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -394,6 +402,7 @@ const AdminOrderManagement = () => {
                   </tr>
                 ) : (
                   currentOrders.map((order: any) => (
+
                     <tr key={order.id} className="hover:bg-gray-50 transition">
                       <td className="px-6 py-4">
                         <span className="font-medium text-gray-900">#{order.id}</span>
@@ -422,22 +431,36 @@ const AdminOrderManagement = () => {
                           <span className="text-sm text-gray-700">{getPaymentMethodLabel(order.paymentMethod)}</span>
                           <br />
                           <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${getPaymentStatusColor(order.paymentStatus)}`}>
-                            {order.paymentStatus}
+                            <select
+                              name="paymentstatus"
+                              disabled={user?.role === "superadmin"}
+                              value={order.paymentStatus}
+                              onChange={(e) => updateOrderPaymentStatus(order.id, e.target.value)}
+                            >
+                              <option value="pending">Pending</option>
+                              <option value="paid">Paid</option>
+                              <option value="failed">Failed</option>
+                              <option value="refunded">Refunded</option>
+                            </select>
                           </span>
                         </div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="relative">
                           <select
-                            value={order.status}
+                            disabled={user?.role === "superadmin"}
+
+                            value={order.status.toUpperCase()}
                             onChange={(e) => updateOrderStatus(order.id, e.target.value)}
                             className={`appearance-none px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)} focus:outline-none focus:ring-2 focus:ring-green-500 cursor-pointer pr-7`}
                           >
                             {getStatusOptions(order.status).map(option => (
-                              <option key={option.value} value={option.value}>
+                              <option
+                                key={option.value} value={option.value}>
                                 {option.label}
                               </option>
                             ))}
+
                           </select>
                           <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-3 h-3 pointer-events-none" />
                         </div>
@@ -460,19 +483,18 @@ const AdminOrderManagement = () => {
                           </button>
                         )}
                       </td> */}
-                      {user?.role === "farmer" &&
-                        <td className="px-6 py-4">
-                          <div className="flex items-center justify-center gap-2">
-                            <button
-                              onClick={() => getOrderDetails(order.id)}
-                              className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition"
-                              title="View Details"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </td>
-                      }
+                      <td className="px-6 py-4">
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            onClick={() => getOrderDetails(order.id)}
+                            className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition"
+                            title="View Details"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+
                     </tr>
                   ))
                 )}
@@ -621,8 +643,10 @@ const AdminOrderManagement = () => {
       {isDetailsModalOpen && storeOrderDetails && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center p-6 border-b border-gray-200 sticky top-0 bg-white">
-              <h2 className="text-xl font-semibold text-gray-900">Order Details #{storeOrderDetails.id}</h2>
+            <div className="flex justify-between items-center p-6 border-b border-gray-200 sticky top-0 bg-white z-10">
+              <h2 className="text-xl font-semibold text-gray-900">
+                {user?.role === 'superadmin' ? 'Order Details' : `Order Details #${storeOrderDetails.id}`}
+              </h2>
               <button
                 onClick={() => setIsDetailsModalOpen(false)}
                 className="text-gray-400 hover:text-gray-600"
@@ -632,100 +656,229 @@ const AdminOrderManagement = () => {
             </div>
 
             <div className="p-6">
-              {/* Order Information */}
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-2">Order Information</h3>
-                  <p className="font-medium text-gray-900">Order ID: #{storeOrderDetails.id}</p>
-                  <p className="text-sm text-gray-600 mt-1">
-                    Date: {new Date(storeOrderDetails.createdAt).toLocaleString()}
-                  </p>
-                </div>
+              {/* Farmer View */}
+              {user?.role === 'farmer' && (
+                <>
+                  {/* Order Information */}
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500 mb-2">Order Information</h3>
+                      <p className="font-medium text-gray-900">Order ID: #{storeOrderDetails.id}</p>
+                      <p className="text-sm text-gray-600 mt-1">
+                        Date: {new Date(storeOrderDetails.createdAt).toLocaleString()}
+                      </p>
+                    </div>
 
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-2">Delivery Information</h3>
-                  <p className="text-sm text-gray-800 flex items-start gap-1">
-                    <MapPin className="w-3 h-3 mt-0.5 flex-shrink-0" />
-                    {storeOrderDetails.address}
-                  </p>
-                  {orderDeliveryPerson[storeOrderDetails.id] && (
-                    <p className="text-sm text-gray-600 flex items-center gap-1 mt-2">
-                      <Truck className="w-3 h-3" />
-                      Delivery by: {orderDeliveryPerson[storeOrderDetails.id]?.name}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* Order Products */}
-              {storeOrderDetails.products && storeOrderDetails.products.length > 0 && (
-                <div className="mb-6">
-                  <h3 className="text-sm font-medium text-gray-500 mb-3">Order Items</h3>
-                  <div className="space-y-3">
-                    {storeOrderDetails.products.map((product: any, index: number) => (
-                      <div key={index} className="flex items-center gap-4 py-3 border-b border-gray-100">
-                        {/* Product Image */}
-                        <div className="w-16 h-16 flex-shrink-0">
-                          <img
-                            src={getImageUrl(product.productImage, product.productId)}
-                            alt={product.productName}
-                            className="w-full h-full object-cover rounded-lg"
-                            onError={() => handleImageError(product.productId)}
-                          />
-                        </div>
-
-                        {/* Product Details */}
-                        <div className="flex-1">
-                          <p className="font-medium text-gray-900">{product.productName}</p>
-                          <p className="text-sm text-gray-500">
-                            Quantity: {product.quantity} × Rs. {product.price}
-                          </p>
-                          <p className="text-xs text-gray-400">
-                            Product ID: {product.productId}
-                          </p>
-                        </div>
-
-                        {/* Subtotal */}
-                        <div className="text-right">
-                          <p className="font-semibold text-gray-900">
-                            Rs. {product.subtotal.toLocaleString()}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500 mb-2">Delivery Information</h3>
+                      <p className="text-sm text-gray-800 flex items-start gap-1">
+                        <MapPin className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                        {storeOrderDetails.address}
+                      </p>
+                      {orderDeliveryPerson[storeOrderDetails.id] && (
+                        <p className="text-sm text-gray-600 flex items-center gap-1 mt-2">
+                          <Truck className="w-3 h-3" />
+                          Delivery by: {orderDeliveryPerson[storeOrderDetails.id]?.name}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                </div>
+
+                  {/* Order Products */}
+                  {storeOrderDetails.products && storeOrderDetails.products.length > 0 && (
+                    <div className="mb-6">
+                      <h3 className="text-sm font-medium text-gray-500 mb-3">Order Items</h3>
+                      <div className="space-y-3">
+                        {storeOrderDetails.products.map((product: any, index: number) => (
+                          <div key={index} className="flex items-center gap-4 py-3 border-b border-gray-100">
+                            <div className="w-16 h-16 flex-shrink-0">
+                              <img
+                                src={getImageUrl(product.productImage, product.productId)}
+                                alt={product.productName}
+                                className="w-full h-full object-cover rounded-lg"
+                                onError={() => handleImageError(product.productId)}
+                              />
+                            </div>
+                            <div className="flex-1">
+                              <p className="font-medium text-gray-900">{product.productName}</p>
+                              <p className="text-sm text-gray-500">
+                                Quantity: {product.quantity} × Rs. {product.price}
+                              </p>
+                              <p className="text-xs text-gray-400">
+                                Product ID: {product.productId}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-semibold text-gray-900">
+                                Rs. {product.subtotal.toLocaleString()}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Order Summary */}
+                  <div className="border-t border-gray-200 pt-4">
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium text-gray-900">Total Amount</span>
+                      <span className="text-xl font-bold text-green-600">
+                        Rs. {storeOrderDetails.totalAmount?.toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center mt-2 text-sm text-gray-500">
+                      <span>Payment Method</span>
+                      <span>{getPaymentMethodLabel(storeOrderDetails.paymentMethod)}</span>
+                    </div>
+                    <div className="flex justify-between items-center mt-1 text-sm text-gray-500">
+                      <span>Payment Status</span>
+                      <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${getPaymentStatusColor(storeOrderDetails.paymentStatus)}`}>
+                        {storeOrderDetails.paymentStatus}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center mt-1 text-sm text-gray-500">
+                      <span>Order Status</span>
+                      <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(storeOrderDetails.status)}`}>
+                        {storeOrderDetails.status}
+                      </span>
+                    </div>
+                  </div>
+                </>
               )}
 
-              {/* Order Summary */}
-              <div className="border-t border-gray-200 pt-4">
-                <div className="flex justify-between items-center">
-                  <span className="font-medium text-gray-900">Total Amount</span>
-                  <span className="text-xl font-bold text-green-600">
-                    Rs. {storeOrderDetails.totalAmount?.toLocaleString()}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center mt-2 text-sm text-gray-500">
-                  <span>Payment Method</span>
-                  <span>{getPaymentMethodLabel(storeOrderDetails.paymentMethod)}</span>
-                </div>
-                <div className="flex justify-between items-center mt-1 text-sm text-gray-500">
-                  <span>Payment Status</span>
-                  <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${getPaymentStatusColor(storeOrderDetails.paymentStatus)}`}>
-                    {storeOrderDetails.paymentStatus}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center mt-1 text-sm text-gray-500">
-                  <span>Order Status</span>
-                  <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(storeOrderDetails.status)}`}>
-                    {storeOrderDetails.status}
-                  </span>
-                </div>
-              </div>
+              {/* Super Admin View */}
+              {user?.role === 'superadmin' && (
+                <>
+                  {/* Main Order Info */}
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500 mb-2">Order Information</h3>
+                      <p className="font-medium text-gray-900">Order ID: #{storeOrderDetails.id}</p>
+                      <p className="text-sm text-gray-600 mt-1">
+                        Date: {new Date(storeOrderDetails.createdAt).toLocaleString()}
+                      </p>
+                      <div className="mt-2">
+                        <span className="text-sm text-gray-500">Payment Method: </span>
+                        <span className="text-sm font-medium text-gray-800">
+                          {getPaymentMethodLabel(storeOrderDetails.paymentMethod)}
+                        </span>
+                      </div>
+                      <div className="mt-1">
+                        <span className="text-sm text-gray-500">Payment Status: </span>
+                        <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${getPaymentStatusColor(storeOrderDetails.paymentStatus)}`}>
+                          {storeOrderDetails.paymentStatus}
+                        </span>
+                      </div>
+                      <div className="mt-1">
+                        <span className="text-sm text-gray-500">Overall Status: </span>
+                        <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(storeOrderDetails.status)}`}>
+                          {storeOrderDetails.status}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500 mb-2">Delivery Address</h3>
+                      <p className="text-sm text-gray-800 flex items-start gap-1">
+                        <MapPin className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                        {storeOrderDetails.address}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Vendors Section */}
+                  <div className="mb-6">
+                    <h3 className="text-sm font-medium text-gray-500 mb-3">Vendor Orders</h3>
+                    <div className="space-y-4">
+                      {storeOrderDetails.vendors?.map((vendor: any, vendorIndex: number) => (
+                        <div key={vendorIndex} className="border border-gray-200 rounded-lg p-4">
+                          <div className="flex justify-between items-start mb-3">
+                            <div>
+                              <h4 className="font-medium text-gray-900">{vendor.farmName}</h4>
+                              <p className="text-xs text-gray-500">Vendor Order ID: #{vendor.vendorOrderId}</p>
+                              <p className="text-xs text-gray-400">
+                                Date: {new Date(vendor.createdAt).toLocaleString()}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-sm font-semibold text-gray-900">
+                                Rs. {vendor.totalAmount?.toLocaleString()}
+                              </p>
+                              <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(vendor.status)}`}>
+                                {vendor.status}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Vendor Products */}
+                          {vendor.products && vendor.products.length > 0 && (
+                            <div className="mt-3">
+                              <h5 className="text-xs font-medium text-gray-500 mb-2">Products</h5>
+                              <div className="space-y-2">
+                                {vendor.products.map((product: any, productIndex: number) => (
+                                  <div key={productIndex} className="flex items-center gap-3 py-2 border-b border-gray-50">
+                                    <div className="w-12 h-12 flex-shrink-0">
+                                      <img
+                                        src={getImageUrl(product.productImage, product.productId)}
+                                        alt={product.productName}
+                                        className="w-full h-full object-cover rounded-lg"
+                                        onError={() => handleImageError(product.productId)}
+                                      />
+                                    </div>
+                                    <div className="flex-1">
+                                      <p className="text-sm font-medium text-gray-900">{product.productName}</p>
+                                      <p className="text-xs text-gray-500">
+                                        Qty: {product.quantity} × Rs. {product.price}
+                                      </p>
+                                    </div>
+                                    <div className="text-right">
+                                      <p className="text-sm font-semibold text-gray-900">
+                                        Rs. {product.subtotal.toLocaleString()}
+                                      </p>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Vendor Statuses */}
+                          <div className="mt-3 flex flex-wrap gap-3 text-xs">
+                            <div className="flex items-center gap-1">
+                              <span className="text-gray-500">Payment:</span>
+                              <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${getPaymentStatusColor(vendor.paymentStatus)}`}>
+                                {vendor.paymentStatus}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <span className="text-gray-500">Status:</span>
+                              <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(vendor.status)}`}>
+                                {vendor.status}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Overall Total */}
+                  <div className="border-t border-gray-200 pt-4">
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium text-gray-900">Total Amount</span>
+                      <span className="text-xl font-bold text-green-600">
+                        Rs. {storeOrderDetails.totalAmount?.toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                </>
+              )}
 
               {/* Action Buttons */}
-              <div className="flex gap-3 mt-6">
-                {!orderDeliveryPerson[storeOrderDetails.id] &&
+              <div className="flex gap-3 mt-6 border-t border-gray-200 pt-6">
+                {user?.role === 'farmer' &&
+                  !orderDeliveryPerson[storeOrderDetails.id] &&
                   storeOrderDetails.status !== 'DELIVERED' &&
                   storeOrderDetails.status !== 'CANCELLED' && (
                     <button
@@ -739,9 +892,14 @@ const AdminOrderManagement = () => {
                       Assign Delivery
                     </button>
                   )}
+
                 <button
                   onClick={() => setIsDetailsModalOpen(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
+                  className={`${user?.role === 'farmer' &&
+                    !orderDeliveryPerson[storeOrderDetails.id] &&
+                    storeOrderDetails.status !== 'DELIVERED' &&
+                    storeOrderDetails.status !== 'CANCELLED' ? 'flex-1' : 'w-full'} 
+              px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition`}
                 >
                   Close
                 </button>

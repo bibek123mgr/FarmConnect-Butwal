@@ -40,6 +40,34 @@ export const createOrder = createAsyncThunk(
     }
 )
 
+export const adminUpdateOrderStatus=createAsyncThunk(
+    "order/adminUpdateOrderStatus",
+    async ({id,status}:{id:number,status:string}, { rejectWithValue }) => {
+        try {
+            const { data } = await axiosInstance.patch(`orders/status/${id}`,{status});
+            return data;
+        } catch (error: any) {
+            return rejectWithValue(
+                error.response?.data || "Something went wrong"
+            );
+        }
+    }
+)
+
+export const adminUpdateOrderPaymentStatus=createAsyncThunk(
+    "order/adminUpdateOrderStatus",
+    async ({id,status}:{id:number,status:string}, { rejectWithValue }) => {
+        try {
+            const { data } = await axiosInstance.patch(`orders/payment-status/${id}`,{status});
+            return data;
+        } catch (error: any) {
+            return rejectWithValue(
+                error.response?.data || "Something went wrong"
+            );
+        }
+    }
+)
+
 export const getAllOrders = createAsyncThunk(
     "order/getAllOrders",
     async (_, { rejectWithValue }) => {
