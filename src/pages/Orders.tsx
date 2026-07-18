@@ -707,7 +707,7 @@ const OrderDetails = ({
               Cancel Order
             </button>
           )}
-          {(order.status === "processing" || order.status === "shipped") && (
+          {/* {(order.status === "processing" || order.status === "shipped") && (
             <button
               onClick={() => onTrack(order.id)}
               className="flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white rounded-lg text-xs font-medium hover:bg-green-700 transition"
@@ -722,7 +722,7 @@ const OrderDetails = ({
           >
             <Download className="w-3 h-3" />
             Download Invoice
-          </button>
+          </button> */}
         </div>
       </div>
     </div>

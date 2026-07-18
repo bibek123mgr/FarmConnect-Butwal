@@ -20,7 +20,7 @@ export interface SellerFormData {
   province: string;
   district: string;
   address: string;
-  logo: string;
+  image: File | null; // Changed to File type
   panNo: string;
   vatNo: string;
 }
@@ -47,8 +47,6 @@ export const districtsByProvince: Record<string, string[]> = {
 
 const BecomeSeller = () => {
   const navigate = useNavigate();
-
-
   const dispatch = useAppDispatch();
 
   const [formData, setFormData] = useState<SellerFormData>({
@@ -57,14 +55,14 @@ const BecomeSeller = () => {
     province: "",
     district: "",
     address: "",
-    logo: "",
+    image: null,
     panNo: "",
     vatNo: ""
   });
 
   const [errors, setErrors] = useState<Partial<SellerFormData>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [logoPreview, setLogoPreview] = useState<string>("");
+  const [imagePreview, setimagePreview] = useState<string>("");
   const [uploadProgress, setUploadProgress] = useState(0);
 
   const validateForm = (): boolean => {
@@ -108,9 +106,13 @@ const BecomeSeller = () => {
       return;
     }
 
+    // Store the actual file object
+    setFormData(prev => ({ ...prev, image: file }));
+
+    // Create preview
     const reader = new FileReader();
     reader.onloadend = () => {
-      setLogoPreview(reader.result as string);
+      setimagePreview(reader.result as string);
     };
     reader.readAsDataURL(file);
 
@@ -126,12 +128,10 @@ const BecomeSeller = () => {
     }, 200);
 
     setTimeout(() => {
-      const fakeUrl = URL.createObjectURL(file);
-      setFormData(prev => ({ ...prev, logo: fakeUrl }));
       clearInterval(interval);
       setUploadProgress(100);
       setTimeout(() => setUploadProgress(0), 1000);
-      toast.success("Logo uploaded successfully!");
+      toast.success("image uploaded successfully!");
     }, 2000);
   };
 
@@ -146,10 +146,25 @@ const BecomeSeller = () => {
     setIsSubmitting(true);
 
     try {
-      // Here you would dispatch your API action
-      await dispatch(becomeVendor(formData)).unwrap();
+      // Create FormData
+      const formDataToSend = new FormData();
 
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Append all fields to FormData
+      formDataToSend.append("farmName", formData.farmName);
+      formDataToSend.append("description", formData.description);
+      formDataToSend.append("province", formData.province);
+      formDataToSend.append("district", formData.district);
+      formDataToSend.append("address", formData.address);
+      formDataToSend.append("panNo", formData.panNo);
+      formDataToSend.append("vatNo", formData.vatNo);
+
+      // Append file as 'storeImage' (this is what your backend expects)
+      if (formData.image) {
+        formDataToSend.append("image", formData.image);
+      }
+
+      // Dispatch with FormData
+      await dispatch(becomeVendor(formDataToSend)).unwrap();
 
       toast.success("Application submitted successfully!");
       navigate("/admin/dashboard");
@@ -165,6 +180,11 @@ const BecomeSeller = () => {
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: undefined }));
     }
+  };
+
+  const removeimage = () => {
+    setimagePreview("");
+    setFormData(prev => ({ ...prev, image: null }));
   };
 
   return (
@@ -238,22 +258,19 @@ const BecomeSeller = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Logo
+                    Store Image
                   </label>
                   <div className="flex items-center gap-4">
-                    {logoPreview ? (
+                    {imagePreview ? (
                       <div className="relative">
                         <img
-                          src={logoPreview}
-                          alt="Farm logo"
+                          src={imagePreview}
+                          alt="Store image"
                           className="w-20 h-20 object-cover rounded-lg border border-gray-200"
                         />
                         <button
                           type="button"
-                          onClick={() => {
-                            setLogoPreview("");
-                            setFormData(prev => ({ ...prev, logo: "" }));
-                          }}
+                          onClick={removeimage}
                           className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
                         >
                           <AlertCircle className="w-3 h-3" />
@@ -299,7 +316,8 @@ const BecomeSeller = () => {
                     Province <span className="text-red-500">*</span>
                   </label>
                   <select
-                    value={formData.province}
+                    value={"Lumbini"}
+                    disabled
                     onChange={(e) => {
                       handleChange("province", e.target.value);
                       handleChange("district", "");
@@ -307,10 +325,7 @@ const BecomeSeller = () => {
                     className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${errors.province ? "border-red-500" : "border-gray-200"
                       }`}
                   >
-                    <option value="">Select Province</option>
-                    {provinces.map(province => (
-                      <option key={province} value={province}>{province}</option>
-                    ))}
+                    <option value="Lumbini">Lumbini</option>
                   </select>
                   {errors.province && (
                     <p className="text-red-500 text-xs mt-1">{errors.province}</p>
@@ -322,16 +337,14 @@ const BecomeSeller = () => {
                     District <span className="text-red-500">*</span>
                   </label>
                   <select
-                    value={formData.district}
+                    disabled
+                    value={"Rupandehi"}
                     onChange={(e) => handleChange("district", e.target.value)}
-                    disabled={!formData.province}
                     className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${errors.district ? "border-red-500" : "border-gray-200"
                       } ${!formData.province ? "bg-gray-50 cursor-not-allowed" : ""}`}
                   >
-                    <option value="">Select District</option>
-                    {formData.province && districtsByProvince[formData.province]?.map(district => (
-                      <option key={district} value={district}>{district}</option>
-                    ))}
+
+                    <option value="Rupandehi">Rupandehi</option>
                   </select>
                   {errors.district && (
                     <p className="text-red-500 text-xs mt-1">{errors.district}</p>

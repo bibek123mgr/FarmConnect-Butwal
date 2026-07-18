@@ -95,6 +95,7 @@ const ProductCard = ({ product }: IProductProps) => {
                 <img
                     src={product.image || "https://www.freepnglogos.com/uploads/vegetables-png/vegetables-download-vegetable-photos-png-image-pngimg-3.png"}
                     alt={product.name}
+                    loading="lazy"
                     className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110"
                 />
 

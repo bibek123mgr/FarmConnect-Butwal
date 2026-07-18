@@ -103,16 +103,21 @@ export const getUserProfile = createAsyncThunk(
 
 export const becomeVendor = createAsyncThunk(
     "farmers/register",
-    async (payload: SellerFormData, { rejectWithValue }) => {
+    async (payload: FormData, { rejectWithValue }) => {
         try {
-            const { data } = await axiosInstance.post(`farmers/register`, payload);
+            const { data } = await axiosInstance.post(`farmers/register`, payload, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
             return data;
         } catch (error: any) {
             return rejectWithValue(
                 error.response?.data || "Something went wrong"
             );
         }
-    });
+    }
+);
 
 
 export const updateUserProfile = createAsyncThunk(

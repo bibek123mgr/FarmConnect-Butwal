@@ -715,6 +715,7 @@ const SingleProductPage = () => {
                                         <img
                                             src={item?.image || "https://www.freepnglogos.com/uploads/vegetables-png/vegetables-download-vegetable-photos-png-image-pngimg-3.png"}
                                             alt={item.name}
+                                            loading="lazy"
                                             className="w-full h-40 object-contain group-hover:scale-105 transition duration-300"
                                         />
                                         <button className="absolute top-2 right-2 bg-white rounded-full p-1.5 shadow-sm hover:bg-green-600 hover:text-white transition"
@@ -732,10 +733,7 @@ const SingleProductPage = () => {
 
                                     </div>
                                     <div className="p-3">
-                                        <div className="flex items-center gap-1 mb-1">
-                                            <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
-                                            <span className="text-xs text-gray-600">{item.rating}</span>
-                                        </div>
+                                        
                                         <h4 className="font-medium text-gray-800 text-sm truncate">{item.name}</h4>
                                         <div className="flex items-center gap-2 mt-1">
                                             <span className="text-xs text-gray-400">Rs.{item.rate}</span>

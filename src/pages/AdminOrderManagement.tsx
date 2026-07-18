@@ -861,7 +861,7 @@ const AdminOrderManagement = () => {
 
               {/* Action Buttons */}
               <div className="flex gap-3 mt-6 border-t border-gray-200 pt-6">
-                {user?.role === 'farmer' &&
+                {/* {user?.role === 'farmer' &&
                   !orderDeliveryPerson[storeOrderDetails.id] &&
                   storeOrderDetails.status !== 'DELIVERED' &&
                   storeOrderDetails.status !== 'CANCELLED' && (
@@ -875,7 +875,7 @@ const AdminOrderManagement = () => {
                     >
                       Assign Delivery
                     </button>
-                  )}
+                  )} */}
 
                 <button
                   onClick={() => setIsDetailsModalOpen(false)}
