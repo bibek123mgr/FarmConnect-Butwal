@@ -66,6 +66,8 @@ export interface IOrderDetailsForUserResponse {
     }[];
 }
 interface IinitialState {
+    orderStats:any,
+    orderPagination:any,
     orders: IOrder[],
     orderDetails: IOrderDetailsForUserResponse,
     storeOrders:IAdminFarmOrder[],
@@ -76,6 +78,8 @@ interface IinitialState {
     message: string
 }
 const initialState: IinitialState = {
+    orderStats:{},
+    orderPagination:{},
     orders: [] as IOrder[],
     orderDetails: {} as IOrderDetailsForUserResponse,
     storeOrders: [] as IAdminFarmOrder[],
@@ -186,6 +190,8 @@ const orderSlice = createSlice({
                 state.loading = false;
                 state.success = true;
                 state.storeOrders = action.payload.data;
+                state.orderPagination = action.payload.pagination;
+                state.orderStats = action.payload.stats;
             })
             .addCase(getAllOrders.rejected, (state, action) => {
                 state.loading = false;

@@ -70,9 +70,9 @@ export const adminUpdateOrderPaymentStatus=createAsyncThunk(
 
 export const getAllOrders = createAsyncThunk(
     "order/getAllOrders",
-    async (_, { rejectWithValue }) => {
+    async (params, { rejectWithValue }) => {
         try {
-            const { data } = await axiosInstance.get(`orders`);
+            const { data } = await axiosInstance.get(`orders`, { params });
             return data;
         } catch (error: any) {
             return rejectWithValue(
