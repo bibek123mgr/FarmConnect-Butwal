@@ -850,14 +850,10 @@ const AdminProductionManagement = () => {
                                         setShowDetailsModal(false);
                                         handleEdit(selectedRecord);
                                     }}
-                                    className="px-6 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg transition flex items-center gap-2"
+                                    className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition flex items-center gap-2"
                                 >
                                     <Edit className="w-4 h-4" />
                                     Edit Record
-                                </button>
-                                <button className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition flex items-center gap-2">
-                                    <Printer className="w-4 h-4" />
-                                    Print Details
                                 </button>
                             </div>
                         </div>
