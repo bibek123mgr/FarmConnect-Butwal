@@ -3,6 +3,9 @@ import {
   BarChart3,
   PieChart as PieChartIcon,
   Star,
+  Package,
+  Calendar,
+  TrendingUp,
 } from "lucide-react";
 import {
   Chart as ChartJS,
@@ -19,7 +22,7 @@ import {
 } from 'chart.js';
 import { Line, Bar, Pie } from 'react-chartjs-2';
 import { useAppDispatch, useAppSelector } from "../hooks/hooks";
-import { getDashBoardData } from "../features/dashboard/DashbaordApi";
+import { getDashBoardData, getDemandForcast } from "../features/dashboard/DashbaordApi";
 
 ChartJS.register(
   CategoryScale,
@@ -34,17 +37,28 @@ ChartJS.register(
   Filler
 );
 
+interface ForecastProduct {
+  productId: number;
+  productName: string;
+  image: string;
+  currentStock: number;
+  tomorrow: number;
+  nextWeek: number;
+  nextMonth: number;
+}
+
 const Dashboard = () => {
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
 
   const dispatch = useAppDispatch();
   useEffect(() => {
     dispatch(getDashBoardData());
+    dispatch(getDemandForcast());
   }, [dispatch]);
 
-  const { dashboardStatic } = useAppSelector((state) => state.dashboard);
+  const { dashboardStatic, forcastProductList } = useAppSelector((state) => state.dashboard);
 
-   const formatCurrency = (amount: number | string) => {
+  const formatCurrency = (amount: number | string) => {
     const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
     return new Intl.NumberFormat('ne-NP', {
       style: 'currency',
@@ -227,11 +241,14 @@ const Dashboard = () => {
     name: product.product?.name || product.productName || `Product ${index + 1}`,
     sales: parseFloat(product.totalSold) || 0,
     revenue: parseFloat(product.totalRevenue) || 0,
-    growth: Math.floor(Math.random() * 50) + 10, // Random growth for demo (you can modify this logic)
+    growth: Math.floor(Math.random() * 50) + 10,
   })) || [];
 
   // Calculate max sales for progress bar width
   const maxSales = Math.max(...topProducts.map((p: any) => p.sales), 1);
+
+  // Get forecast products from store
+  const forecastProducts: ForecastProduct[] = forcastProductList || [];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -361,6 +378,123 @@ const Dashboard = () => {
             </div>
           </div>
         </div>
+
+        {/* Demand Forecast Section */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900">Demand Forecast</h3>
+              <p className="text-sm text-gray-500 mt-0.5">Product demand prediction for upcoming periods</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-emerald-500" />
+            </div>
+          </div>
+
+          {/* Forecast Table */}
+          <div className="overflow-x-auto">
+            {forecastProducts.length > 0 ? (
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Product
+                    </th>
+                    <th className="text-right px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Current Stock
+                    </th>
+                    <th className="text-right px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Tomorrow
+                    </th>
+                    <th className="text-right px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Next Week
+                    </th>
+                    <th className="text-right px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Next Month
+                    </th>
+                    <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {forecastProducts.map((product) => {
+                    // Determine status based on current stock vs forecast
+                    const isLowStock = product.currentStock < 10;
+                    const isMediumStock = product.currentStock >= 10 && product.currentStock < 30;
+                    const isHighStock = product.currentStock >= 30;
+
+                    return (
+                      <tr key={product.productId} className="hover:bg-gray-50 transition">
+                        <td className="px-4 py-4">
+                          <div className="flex items-center gap-3">
+                            {product.image && (
+                              <img 
+                                src={product.image} 
+                                alt={product.productName}
+                                className="w-10 h-10 rounded-lg object-cover border border-gray-200"
+                              />
+                            )}
+                            <div>
+                              <p className="font-medium text-gray-900">{product.productName}</p>
+                              <p className="text-xs text-gray-500">ID: #{product.productId}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 text-right">
+                          <span className={`font-semibold ${
+                            isLowStock ? 'text-red-600' : 
+                            isMediumStock ? 'text-yellow-600' : 
+                            'text-green-600'
+                          }`}>
+                            {product.currentStock}
+                          </span>
+                        </td>
+                        <td className="px-4 py-4 text-right">
+                          <span className="text-gray-900 font-medium">{product.tomorrow}</span>
+                          <span className="text-xs text-gray-400 ml-1">
+                            ({product.tomorrow > product.currentStock ? '▲' : product.tomorrow < product.currentStock ? '▼' : '→'})
+                          </span>
+                        </td>
+                        <td className="px-4 py-4 text-right">
+                          <span className="text-gray-900 font-medium">{product.nextWeek}</span>
+                          <span className="text-xs text-gray-400 ml-1">
+                            ({product.nextWeek > product.currentStock ? '▲' : product.nextWeek < product.currentStock ? '▼' : '→'})
+                          </span>
+                        </td>
+                        <td className="px-4 py-4 text-right">
+                          <span className="text-gray-900 font-medium">{product.nextMonth}</span>
+                          <span className="text-xs text-gray-400 ml-1">
+                            ({product.nextMonth > product.currentStock ? '▲' : product.nextMonth < product.currentStock ? '▼' : '→'})
+                          </span>
+                        </td>
+                        <td className="px-4 py-4 text-center">
+                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
+                            isLowStock 
+                              ? 'bg-red-100 text-red-700' 
+                              : isMediumStock 
+                                ? 'bg-yellow-100 text-yellow-700' 
+                                : 'bg-green-100 text-green-700'
+                          }`}>
+                            {isLowStock ? 'Low Stock' : isMediumStock ? 'Medium Stock' : 'In Stock'}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            ) : (
+              <div className="text-center py-12">
+                <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900">No forecast data available</h3>
+                <p className="text-gray-500 mt-1">Demand forecast data will appear here</p>
+              </div>
+            )}
+          </div>
+
+        </div>
+
       </div>
     </div>
   );

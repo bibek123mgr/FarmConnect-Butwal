@@ -14,3 +14,17 @@ export const getDashBoardData = createAsyncThunk(
         }
     }
 )
+
+export const getDemandForcast = createAsyncThunk(
+    "dashboard/getDemandForcast",
+    async (_, { rejectWithValue }) => {
+        try {
+            const { data } = await axiosInstance.get(`products/demand-forecasting`);
+            return data;
+        } catch (error: any) {
+            return rejectWithValue(
+                error.response?.data || "Something went wrong"
+            );
+        }
+    }
+)
