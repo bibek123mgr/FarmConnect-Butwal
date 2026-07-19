@@ -4,8 +4,10 @@ import {
   PieChart as PieChartIcon,
   Star,
   Package,
-  Calendar,
   TrendingUp,
+  ShoppingBag,
+  Box,
+  CreditCard,
 } from "lucide-react";
 import {
   Chart as ChartJS,
@@ -59,16 +61,9 @@ const Dashboard = () => {
   const { dashboardStatic, forcastProductList } = useAppSelector((state) => state.dashboard);
 
   const formatCurrency = (amount: number | string) => {
-    const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
-    return new Intl.NumberFormat('ne-NP', {
-      style: 'currency',
-      currency: 'NPR',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(numAmount || 0);
+    return 'Rs. ' + amount.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,');
   };
 
-  // Stats data from dynamic data
   const stats = [
     {
       id: 1,
@@ -78,6 +73,8 @@ const Dashboard = () => {
       color: "bg-emerald-500",
       bgLight: "bg-emerald-50",
       textColor: "text-emerald-600",
+      icon: <span className="font-bold text-emerald-600">Rs.</span>,
+
     },
     {
       id: 2,
@@ -87,6 +84,7 @@ const Dashboard = () => {
       color: "bg-blue-500",
       bgLight: "bg-blue-50",
       textColor: "text-blue-600",
+      icon: <ShoppingBag className="w-5 h-5 text-blue-600" />,
     },
     {
       id: 3,
@@ -96,6 +94,7 @@ const Dashboard = () => {
       color: "bg-purple-500",
       bgLight: "bg-purple-50",
       textColor: "text-purple-600",
+      icon: <Box className="w-5 h-5 text-purple-600" />,
     },
     {
       id: 4,
@@ -105,18 +104,19 @@ const Dashboard = () => {
       color: "bg-orange-500",
       bgLight: "bg-orange-50",
       textColor: "text-orange-600",
+      icon: <CreditCard className="w-5 h-5 text-orange-600" />,
     },
   ];
 
   // Revenue Chart (Monthly Sales) - using dynamic data
   const revenueChartData = {
-    labels: dashboardStatic?.monthlySales?.map((item: any) => item.month) || 
-            ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+    labels: dashboardStatic?.monthlySales?.map((item: any) => item.month) ||
+      ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
     datasets: [
       {
         label: 'Revenue',
-        data: dashboardStatic?.monthlySales?.map((item: any) => item.sales) || 
-               [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        data: dashboardStatic?.monthlySales?.map((item: any) => item.sales) ||
+          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         borderColor: '#10b981',
         backgroundColor: (context: any) => {
           const ctx = context.chart.ctx;
@@ -155,9 +155,9 @@ const Dashboard = () => {
     scales: {
       y: {
         grid: { color: '#e5e7eb', drawBorder: false },
-        ticks: { 
-          callback: (val: any) => `Rs.${val / 1000}k`, 
-          color: '#6b7280' 
+        ticks: {
+          callback: (val: any) => `Rs.${val / 1000}k`,
+          color: '#6b7280'
         },
       },
       x: {
@@ -170,13 +170,13 @@ const Dashboard = () => {
 
   // Weekly Sales Chart (Daily Sales) - using dynamic data
   const weeklyData = {
-    labels: dashboardStatic?.dailySales?.map((item: any) => item.day) || 
-            ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+    labels: dashboardStatic?.dailySales?.map((item: any) => item.day) ||
+      ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
     datasets: [
       {
         label: 'Sales',
-        data: dashboardStatic?.dailySales?.map((item: any) => item.sales) || 
-               [0, 0, 0, 0, 0, 0, 0],
+        data: dashboardStatic?.dailySales?.map((item: any) => item.sales) ||
+          [0, 0, 0, 0, 0, 0, 0],
         backgroundColor: '#10b981',
         borderRadius: 8,
         barPercentage: 0.65,
@@ -200,9 +200,9 @@ const Dashboard = () => {
     scales: {
       y: {
         grid: { color: '#e5e7eb' },
-        ticks: { 
-          callback: (val: any) => `Rs.${val / 1000}k`, 
-          color: '#6b7280' 
+        ticks: {
+          callback: (val: any) => `Rs.${val / 1000}k`,
+          color: '#6b7280'
         },
       },
       x: { ticks: { color: '#6b7280' } },
@@ -224,14 +224,14 @@ const Dashboard = () => {
     maintainAspectRatio: false,
     plugins: {
       legend: { position: 'bottom' as const, labels: { padding: 15, usePointStyle: true } },
-      tooltip: { 
-        callbacks: { 
+      tooltip: {
+        callbacks: {
           label: (ctx: any) => {
             const total = ctx.dataset.data.reduce((a: number, b: number) => a + b, 0);
             const percentage = ((ctx.parsed / total) * 100).toFixed(1);
             return `${ctx.label}: ${ctx.parsed} units (${percentage}%)`;
           }
-        } 
+        }
       },
     },
   };
@@ -266,17 +266,22 @@ const Dashboard = () => {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
           {stats.map((stat, idx) => (
             <div
               key={stat.id}
               onMouseEnter={() => setHoveredCard(idx)}
               onMouseLeave={() => setHoveredCard(null)}
-              className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 transition-all duration-300 hover:shadow-lg hover:scale-[1.02]"
+              className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 transition-all duration-300 hover:shadow-lg hover:scale-[1.02]"
             >
-              <div className="mt-4">
-                <p className="text-gray-500 text-sm font-medium">{stat.title}</p>
-                <p className="text-2xl font-bold text-gray-900 mt-1">{stat.value}</p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">{stat.title}</p>
+                  <p className={`text-2xl font-bold mt-1 ${stat.textColor}`}>{stat.value}</p>
+                </div>
+                <div className={`w-10 h-10 ${stat.bgLight} rounded-lg flex items-center justify-center`}>
+                  {stat.icon}
+                </div>
               </div>
             </div>
           ))}
@@ -429,8 +434,8 @@ const Dashboard = () => {
                         <td className="px-4 py-4">
                           <div className="flex items-center gap-3">
                             {product.image && (
-                              <img 
-                                src={product.image} 
+                              <img
+                                src={product.image}
                                 alt={product.productName}
                                 className="w-10 h-10 rounded-lg object-cover border border-gray-200"
                               />
@@ -442,11 +447,10 @@ const Dashboard = () => {
                           </div>
                         </td>
                         <td className="px-4 py-4 text-right">
-                          <span className={`font-semibold ${
-                            isLowStock ? 'text-red-600' : 
-                            isMediumStock ? 'text-yellow-600' : 
-                            'text-green-600'
-                          }`}>
+                          <span className={`font-semibold ${isLowStock ? 'text-red-600' :
+                            isMediumStock ? 'text-yellow-600' :
+                              'text-green-600'
+                            }`}>
                             {product.currentStock}
                           </span>
                         </td>
@@ -469,13 +473,12 @@ const Dashboard = () => {
                           </span>
                         </td>
                         <td className="px-4 py-4 text-center">
-                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
-                            isLowStock 
-                              ? 'bg-red-100 text-red-700' 
-                              : isMediumStock 
-                                ? 'bg-yellow-100 text-yellow-700' 
-                                : 'bg-green-100 text-green-700'
-                          }`}>
+                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${isLowStock
+                            ? 'bg-red-100 text-red-700'
+                            : isMediumStock
+                              ? 'bg-yellow-100 text-yellow-700'
+                              : 'bg-green-100 text-green-700'
+                            }`}>
                             {isLowStock ? 'Low Stock' : isMediumStock ? 'Medium Stock' : 'In Stock'}
                           </span>
                         </td>

@@ -255,11 +255,11 @@ const AdminDamageManagement = () => {
                 </div>
 
                 {/* Stats Cards */}
-                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2 mb-8">
                     <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-sm text-gray-600">Total Damaged Items</p>
+                                <p className="text-sm text-gray-600">Total Items</p>
                                 <p className="text-2xl font-bold text-green-600">{damageStats?.totalQuantity || 0} units</p>
                             </div>
                             <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
@@ -271,7 +271,7 @@ const AdminDamageManagement = () => {
                     <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-sm text-gray-600">Total Loss Value</p>
+                                <p className="text-sm text-gray-600">Total Value</p>
                                 <p className="text-2xl font-bold text-green-600">Rs. {damageStats?.totalLossAmount || 0}</p>
                             </div>
                             <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">

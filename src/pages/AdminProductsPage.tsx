@@ -351,7 +351,7 @@ const AdminProductsPage = () => {
             </button>}
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 mb-8">
           {[
             { label: "Total Products", value: productStats?.totalProducts, color: "purple", icon: Package },
             { label: "Total Active Products", value: productStats?.totalActiveProducts, color: "green", icon: TrendingUp },

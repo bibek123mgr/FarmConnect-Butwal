@@ -19,7 +19,7 @@ export interface ProductForecast {
 }
 
 const initialState = {
-    dashboardStatic: {},
+    dashboardStatic: {} as any,
     forcastProductList: [] as ProductForecast[],
     loading: false,
     success: false,
