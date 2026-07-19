@@ -13,7 +13,10 @@ import {
   Heart,
   Package,
   UserCircle,
-  Store
+  Store,
+  Grid3x3,
+  Store as StoreIcon,
+  ChevronRight,
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../hooks/hooks";
 import { LogoutUser } from "../../features/auth/AuthApi";
@@ -21,6 +24,7 @@ import toast from "react-hot-toast";
 import { clearMessage } from "../../features/auth/AuthSlice";
 import axios from "axios";
 import { baseUrl } from "../../config/config";
+import { fetchAllFarm } from "../../features/farm/farmApi";
 
 // Define types
 interface SearchSuggestion {
@@ -50,7 +54,11 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
+  const [isShopsOpen, setIsShopsOpen] = useState(false);
+  const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
   const { user, isInitialized, message, error, success, loading } = useAppSelector((state) => state.auth);
+  const { categories } = useAppSelector((state) => state.category);
+  const { allFarmsForHeader } = useAppSelector((state) => state.store);
 
   // Search states
   const [searchQuery, setSearchQuery] = useState("");
@@ -61,6 +69,8 @@ const Header = () => {
   const searchDebounceRef = useRef<number | null>(null);
   const searchRef = useRef<HTMLDivElement>(null);
   const mobileSearchRef = useRef<HTMLDivElement>(null);
+  const shopsRef = useRef<HTMLDivElement>(null);
+  const categoriesRef = useRef<HTMLDivElement>(null);
 
   const cartCount = 0;
   const wishlistCount = 0;
@@ -70,6 +80,10 @@ const Header = () => {
     setIsProfileOpen(false);
     toast.success("Logged out successfully");
   };
+
+  useEffect(() => {
+    dispatch(fetchAllFarm());
+  }, [dispatch]);
 
   // Search autocomplete function
   const fetchSearchSuggestions = useCallback(async (query: string) => {
@@ -172,6 +186,12 @@ const Header = () => {
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
         setIsSearchOpen(false);
       }
+      if (shopsRef.current && !shopsRef.current.contains(event.target as Node)) {
+        setIsShopsOpen(false);
+      }
+      if (categoriesRef.current && !categoriesRef.current.contains(event.target as Node)) {
+        setIsCategoriesOpen(false);
+      }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
@@ -235,14 +255,107 @@ const Header = () => {
     return <HeaderSkeleton />;
   }
 
+  // Common component for rendering shops list
+  const renderShopsList = () => {
+    if (!allFarmsForHeader || allFarmsForHeader.length === 0) {
+      return (
+        <div className="col-span-full text-center py-4 text-gray-500 text-sm">
+          No shops available
+        </div>
+      );
+    }
+
+    return allFarmsForHeader.map((shop) => (
+      <Link
+        key={shop.id}
+        to={`/products?page=1&limit=20&productname=all&category=all&pricerangeFrom=0&pricerangeTo=max&store=${shop.id}`}
+        className="flex items-center gap-2 p-2 rounded-lg hover:bg-green-50 transition group border border-gray-100 hover:border-green-200"
+        onClick={() => {
+          setIsShopsOpen(false);
+          setIsMenuOpen(false);
+        }}
+      >
+        {shop.logo ? (
+          <img
+            src={shop.logo}
+            alt={shop.farmName}
+            className="w-10 h-10 rounded-lg object-cover flex-shrink-0 border border-gray-100"
+          />
+        ) : (
+          <div className="w-10 h-10 bg-gradient-to-br from-green-100 to-emerald-100 rounded-lg flex items-center justify-center text-xl flex-shrink-0">
+            🌿
+          </div>
+        )}
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-medium text-gray-700 group-hover:text-green-600 truncate">{shop.farmName}</p>
+          <p className="text-[10px] text-gray-400">{shop.productCount || 0} products</p>
+        </div>
+      </Link>
+    ));
+  };
+
+  // Common component for rendering categories list
+  const renderCategoriesList = () => {
+    if (!categories || categories.length === 0) {
+      return (
+        <div className="col-span-full text-center py-4 text-gray-500 text-sm">
+          No categories available
+        </div>
+      );
+    }
+
+    return categories.map((category) => (
+      <Link
+        key={category.id}
+        to={`/products?page=1&limit=20&productname=all&category=${category.id}&pricerangeFrom=0&pricerangeTo=max&store=all`}
+        className="flex items-center gap-2 p-2 rounded-lg hover:bg-green-50 transition group border border-gray-100 hover:border-green-200"
+        onClick={() => {
+          setIsCategoriesOpen(false);
+          setIsMenuOpen(false);
+        }}
+      >
+        {category.image ? (
+          <img
+            src={category.image}
+            alt={category.name}
+            className="w-10 h-10 rounded-lg object-cover flex-shrink-0 border border-gray-100"
+          />
+        ) : (
+          <div className="w-10 h-10 bg-gradient-to-br from-green-100 to-emerald-100 rounded-lg flex items-center justify-center text-xl flex-shrink-0">
+            📦
+          </div>
+        )}
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-medium text-gray-700 group-hover:text-green-600 truncate">{category.name}</p>
+          <p className="text-[10px] text-gray-400">{category.productCount || 0} products</p>
+        </div>
+      </Link>
+    ));
+  };
+
+  // Common "View All" button component
+  const ViewAllButton = ({ to, text }: { to: string; text: string }) => (
+    <Link
+      to={to}
+      className="text-xs text-green-600 hover:text-green-700 font-medium flex items-center gap-1 hover:gap-2 transition-all duration-200"
+      onClick={() => {
+        setIsShopsOpen(false);
+        setIsCategoriesOpen(false);
+        setIsMenuOpen(false);
+      }}
+    >
+      {text} <ChevronRight className="w-3 h-3" />
+    </Link>
+  );
+
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
       <div className="container mx-auto px-4 py-3">
         {/* Main Header Row */}
         <div className="flex items-center justify-between gap-3">
-          {/* Logo - Hidden on mobile when search is open */}
-          <Link 
-            to="/" 
+          {/* Logo */}
+          <Link
+            to="/"
             className={`flex items-center gap-2 group flex-shrink-0 ${isMobileSearchOpen ? 'hidden md:flex' : 'flex'}`}
           >
             <div className="w-9 h-9 bg-gradient-to-br from-green-600 to-green-500 rounded-full flex items-center justify-center shadow-md group-hover:scale-105 transition-transform duration-300">
@@ -258,7 +371,7 @@ const Header = () => {
             </div>
           </Link>
 
-          {/* Desktop Navigation */}
+          {/* Desktop Navigation with Mega Menus */}
           <nav className="hidden md:flex items-center gap-6">
             <Link
               to="/"
@@ -274,20 +387,62 @@ const Header = () => {
               Products
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-green-600 group-hover:w-full transition-all duration-300"></span>
             </Link>
-            <Link
-              to="/about"
-              className="text-gray-600 hover:text-green-600 transition text-sm font-medium relative group"
+
+            {/* Shops Mega Menu */}
+            <div
+              className="relative"
+              ref={shopsRef}
+              onMouseEnter={() => setIsShopsOpen(true)}
+              onMouseLeave={() => setIsShopsOpen(false)}
             >
-              About
-              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-green-600 group-hover:w-full transition-all duration-300"></span>
-            </Link>
-            <Link
-              to="/contact"
-              className="text-gray-600 hover:text-green-600 transition text-sm font-medium relative group"
+              <button className="flex items-center gap-1 text-gray-600 hover:text-green-600 transition text-sm font-medium relative group py-2">
+                Shops
+                <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${isShopsOpen ? 'rotate-180' : ''}`} />
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-green-600 group-hover:w-full transition-all duration-300"></span>
+              </button>
+
+              {isShopsOpen && (
+                <div className="absolute top-full left-0 mt-1 w-[500px] bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden">
+                  <div className="p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-sm font-semibold text-gray-700">Shops</h3>
+                      <ViewAllButton to="/shops" text="View All Shops" />
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                      {renderShopsList()}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Categories Mega Menu */}
+            <div
+              className="relative"
+              ref={categoriesRef}
+              onMouseEnter={() => setIsCategoriesOpen(true)}
+              onMouseLeave={() => setIsCategoriesOpen(false)}
             >
-              Contact
-              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-green-600 group-hover:w-full transition-all duration-300"></span>
-            </Link>
+              <button className="flex items-center gap-1 text-gray-600 hover:text-green-600 transition text-sm font-medium relative group py-2">
+                Categories
+                <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${isCategoriesOpen ? 'rotate-180' : ''}`} />
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-green-600 group-hover:w-full transition-all duration-300"></span>
+              </button>
+
+              {isCategoriesOpen && (
+                <div className="absolute top-full left-0 mt-1 w-[500px] bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden">
+                  <div className="p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-sm font-semibold text-gray-700">Categories</h3>
+                      <ViewAllButton to="/products" text="View All Categories" />
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                      {renderCategoriesList()}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </nav>
 
           {/* Desktop Search */}
@@ -391,9 +546,9 @@ const Header = () => {
 
           {/* Right Icons */}
           <div className="flex items-center gap-2">
-            {/* Mobile Search Toggle Button - Hidden when search is open */}
+            {/* Mobile Search Toggle Button */}
             {!isMobileSearchOpen && (
-              <button 
+              <button
                 className="md:hidden p-2 hover:bg-gray-100 rounded-full transition"
                 onClick={() => setIsMobileSearchOpen(true)}
                 aria-label="Open search"
@@ -402,9 +557,9 @@ const Header = () => {
               </button>
             )}
 
-            {/* Close Search Button - Shown when search is open */}
+            {/* Close Search Button */}
             {isMobileSearchOpen && (
-              <button 
+              <button
                 className="md:hidden p-2 hover:bg-gray-100 rounded-full transition"
                 onClick={() => {
                   setIsMobileSearchOpen(false);
@@ -419,7 +574,7 @@ const Header = () => {
               </button>
             )}
 
-            {/* Cart - Hidden on mobile when search is open */}
+            {/* Cart */}
             <Link
               to="/cart"
               className={`relative p-2 hover:bg-gray-100 rounded-full transition group ${isMobileSearchOpen ? 'hidden sm:flex' : 'flex'}`}
@@ -432,7 +587,7 @@ const Header = () => {
               )}
             </Link>
 
-            {/* Wishlist - Hidden on mobile when search is open */}
+            {/* Wishlist */}
             <Link
               to="/wishlist"
               className={`relative p-2 hover:bg-gray-100 rounded-full transition group ${isMobileSearchOpen ? 'hidden sm:flex' : 'flex'}`}
@@ -445,7 +600,7 @@ const Header = () => {
               )}
             </Link>
 
-            {/* User Profile - Hidden on mobile when search is open */}
+            {/* User Profile */}
             <div className={`${isMobileSearchOpen ? 'hidden sm:block' : 'block'}`}>
               {user ? (
                 <div className="relative">
@@ -546,7 +701,7 @@ const Header = () => {
               )}
             </div>
 
-            {/* Mobile Menu Button - Hidden when search is open */}
+            {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className={`md:hidden p-2 hover:bg-gray-100 rounded-full transition ${isMobileSearchOpen ? 'hidden' : 'flex'}`}
@@ -560,12 +715,12 @@ const Header = () => {
           </div>
         </div>
 
-        {/* Mobile Search Bar - Shows when search is opened */}
+        {/* Mobile Search Bar */}
         {isMobileSearchOpen && (
           <div className="md:hidden mt-3 pt-3 border-t border-gray-100 animate-slide-down">
             <div className="relative" ref={mobileSearchRef}>
               <form onSubmit={handleSearchSubmit} className="w-full">
-                <div className={`bg-gray-50 rounded-full px-4 py-3 border border-gray-200 focus-within:border-green-500 focus-within:shadow-md transition-all duration-300 flex items-center`}>
+                <div className="bg-gray-50 rounded-full px-4 py-3 border border-gray-200 focus-within:border-green-500 focus-within:shadow-md transition-all duration-300 flex items-center">
                   <Search className="w-5 h-5 text-gray-400 flex-shrink-0" />
                   <input
                     type="text"
@@ -690,20 +845,32 @@ const Header = () => {
               >
                 Products
               </Link>
-              <Link
-                to="/about"
-                className="text-gray-600 hover:text-green-600 hover:bg-green-50 transition text-sm font-medium py-2 px-3 rounded-lg"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                About
-              </Link>
-              <Link
-                to="/contact"
-                className="text-gray-600 hover:text-green-600 hover:bg-green-50 transition text-sm font-medium py-2 px-3 rounded-lg"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Contact
-              </Link>
+
+              {/* Shops - Mobile (Same design as desktop) */}
+              <div className="py-2 px-3">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                    Shops
+                  </p>
+                  <ViewAllButton to="/shops" text="View All Shops" />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {renderShopsList()}
+                </div>
+              </div>
+
+              {/* Categories - Mobile (Same design as desktop) */}
+              <div className="py-2 px-3 border-t border-gray-100">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                    Categories
+                  </p>
+                  <ViewAllButton to="/products" text="View All Categories" />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {renderCategoriesList()}
+                </div>
+              </div>
             </nav>
 
             {!user && (

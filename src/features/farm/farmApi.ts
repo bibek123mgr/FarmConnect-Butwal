@@ -15,6 +15,20 @@ export const fetchFarms = createAsyncThunk(
     }
 )
 
+export const fetchAllFarm = createAsyncThunk(
+    "farm/fetchAllFarm",
+    async (_, { rejectWithValue }) => {
+        try {
+            const { data } = await axiosInstanceNoCredentials.get(`farmers/farms`);
+            return data;
+        } catch (error: any) {
+            return rejectWithValue(
+                error.response?.data || "Something went wrong"
+            );
+        }
+    }
+)
+
 export const getMyFarmDetails=createAsyncThunk(
     "farm/getMyFarmDetails",
     async (_, { rejectWithValue }) => {

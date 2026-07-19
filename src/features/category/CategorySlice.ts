@@ -6,6 +6,7 @@ export interface ICategory {
     id: number
     name: string,
     image: string,
+    productCount: number,
     description: string
 }
 export interface StatsResponse {
