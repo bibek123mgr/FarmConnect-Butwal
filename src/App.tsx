@@ -4,6 +4,7 @@ import { useEffect } from "react"
 import { useAppDispatch } from "./hooks/hooks"
 import UserRoutes from "./UserRoutes"
 import AdminRoutes from "./AdminRoutes"
+import ScrollToTop from "./components/ScrollToTop"
 function App() {
 
   const dispatch = useAppDispatch();
@@ -13,6 +14,7 @@ function App() {
 
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Routes>
         <Route path="/*" element={<UserRoutes />} />
         <Route path="/admin/*" element={<AdminRoutes />} />

@@ -199,6 +199,7 @@ const ProductsPage = () => {
     }
   }, [products, pagination]);
 
+  
   // Update hasMore when pagination changes
   useEffect(() => {
     if (pagination) {
