@@ -72,7 +72,7 @@ const ProductSection = () => {
               <ProductCardSkeleton key={index} />
             ))
             :
-            ProductList?.map((product) => (
+            ProductList?.slice(0, 10).map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
       </div>
