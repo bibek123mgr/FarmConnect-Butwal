@@ -148,15 +148,15 @@ const ProductCard = ({ product }: IProductProps) => {
             </div>
 
             <div className="p-4">
-                <h3 className="text-sm font-medium text-gray-800 mb-1 line-clamp-2 min-h-[2.5rem]">
+                <h3 className="text-sm font-medium text-gray-800 mb-1 line-clamp-2 min-h-[1.5rem]">
                     {product.name}
                 </h3>
 
-                <p className="text-xs text-green-600 font-medium mb-2">
-                    Available Qty: {product.quantity}
+                <p className="text-xs text-green-600 font-medium">
+                    Stock : {product.quantity}
                 </p>
 
-                <div className="flex items-center gap-1 mb-3">
+                {/* <div className="flex items-center gap-1 mb-3">
                     <div className="flex items-center">
                         {[...Array(5)].map((_, index) => (
                             <Star
@@ -169,7 +169,7 @@ const ProductCard = ({ product }: IProductProps) => {
                         ))}
                     </div>
                     <span className="text-xs text-gray-500">({reviewCount})</span>
-                </div>
+                </div> */}
 
                 <div className="flex items-center justify-between">
                     <div className="flex flex-col">

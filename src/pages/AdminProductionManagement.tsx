@@ -356,14 +356,6 @@ const AdminProductionManagement = () => {
                                 />
                             </div>
                             <button
-                                onClick={() => setShowFilters(!showFilters)}
-                                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 transition flex items-center gap-2"
-                            >
-                                <Filter className="w-4 h-4" />
-                                Filters
-                                <ChevronDown className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
-                            </button>
-                            <button
                                 onClick={handleSearch}
                                 className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition flex items-center gap-2"
                             >
