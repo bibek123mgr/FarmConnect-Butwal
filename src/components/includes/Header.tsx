@@ -10,7 +10,6 @@ import {
   Search,
   ChevronDown,
   LogOut,
-  Settings,
   Heart,
   Package,
   UserCircle,
@@ -21,8 +20,9 @@ import { LogoutUser } from "../../features/auth/AuthApi";
 import toast from "react-hot-toast";
 import { clearMessage } from "../../features/auth/AuthSlice";
 import axios from "axios";
+import { baseUrl } from "../../config/config";
 
-// Define types - CORRECTED for your API response
+// Define types
 interface SearchSuggestion {
   id?: string;
   name: string;
@@ -49,7 +49,7 @@ const Header = () => {
   const dispatch = useAppDispatch();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const { user, isInitialized, message, error, success, loading } = useAppSelector((state) => state.auth);
 
   // Search states
@@ -60,17 +60,10 @@ const Header = () => {
   const [isSearching, setIsSearching] = useState(false);
   const searchDebounceRef = useRef<number | null>(null);
   const searchRef = useRef<HTMLDivElement>(null);
+  const mobileSearchRef = useRef<HTMLDivElement>(null);
 
   const cartCount = 0;
   const wishlistCount = 0;
-
-  const notifications = [
-    { id: 1, title: "Order Delivered", message: "Your order #1234 has been delivered", time: "5 min ago", read: false },
-    { id: 2, title: "Special Offer", message: "20% off on fresh vegetables", time: "1 hour ago", read: false },
-    { id: 3, title: "New Product Added", message: "Fresh organic apples in stock", time: "2 hours ago", read: true },
-  ];
-
-  const unreadCount = notifications.filter(n => !n.read).length;
 
   const handleLogout = () => {
     dispatch(LogoutUser());
@@ -78,7 +71,7 @@ const Header = () => {
     toast.success("Logged out successfully");
   };
 
-  // Search autocomplete function - CORRECTED
+  // Search autocomplete function
   const fetchSearchSuggestions = useCallback(async (query: string) => {
     if (!query.trim()) {
       setSearchSuggestions([]);
@@ -89,16 +82,14 @@ const Header = () => {
 
     setIsSearching(true);
     try {
-      const API_URL = 'http://localhost:3000';
-      const response = await axios.get<SearchResponse>(`${API_URL}/api/products/autocorrect-search`, {
+      const API_URL = baseUrl;
+      const response = await axios.get<SearchResponse>(`${API_URL}/products/autocorrect-search`, {
         params: { keyword: query }
       });
 
       if (response.data.success && response.data.data) {
-        // Your API returns products directly in data array
         const products = response.data.data;
 
-        // Set suggestions
         setSearchSuggestions(products.map(p => ({
           id: p.id.toString(),
           name: p.name,
@@ -106,10 +97,8 @@ const Header = () => {
           distance: p.distance
         })));
 
-        // Add "Did you mean?" suggestions based on distance threshold
         const exactMatches = products.filter(p => p.distance === 0);
         if (exactMatches.length === 0 && products.length > 0) {
-          // Suggest the closest match (lowest distance)
           const closestMatch = products.reduce((prev, curr) =>
             prev.distance < curr.distance ? prev : curr
           );
@@ -137,12 +126,10 @@ const Header = () => {
     const value = e.target.value;
     setSearchQuery(value);
 
-    // Clear previous timeout
     if (searchDebounceRef.current) {
       clearTimeout(searchDebounceRef.current);
     }
 
-    // Set new timeout for debouncing
     searchDebounceRef.current = setTimeout(() => {
       fetchSearchSuggestions(value);
     }, 300);
@@ -154,6 +141,7 @@ const Header = () => {
     if (searchQuery.trim()) {
       navigate(`/products?search=${encodeURIComponent(searchQuery)}`);
       setIsSearchOpen(false);
+      setIsMobileSearchOpen(false);
       setSearchSuggestions([]);
       setDidYouMean([]);
     }
@@ -167,12 +155,13 @@ const Header = () => {
     } else {
       setSearchQuery(suggestion.name);
       if (suggestion.id) {
-        navigate(`/product/${suggestion.id}`);
+        navigate(`/products/${suggestion.id}`);
       } else {
         navigate(`/products?search=${encodeURIComponent(suggestion.name)}`);
       }
     }
     setIsSearchOpen(false);
+    setIsMobileSearchOpen(false);
     setSearchSuggestions([]);
     setDidYouMean([]);
   };
@@ -249,9 +238,13 @@ const Header = () => {
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
       <div className="container mx-auto px-4 py-3">
-        <div className="flex items-center justify-between gap-4">
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 group flex-shrink-0">
+        {/* Main Header Row */}
+        <div className="flex items-center justify-between gap-3">
+          {/* Logo - Hidden on mobile when search is open */}
+          <Link 
+            to="/" 
+            className={`flex items-center gap-2 group flex-shrink-0 ${isMobileSearchOpen ? 'hidden md:flex' : 'flex'}`}
+          >
             <div className="w-9 h-9 bg-gradient-to-br from-green-600 to-green-500 rounded-full flex items-center justify-center shadow-md group-hover:scale-105 transition-transform duration-300">
               <Leaf className="w-4 h-4 text-white" />
             </div>
@@ -297,7 +290,7 @@ const Header = () => {
             </Link>
           </nav>
 
-          {/* Desktop Search with Autocomplete */}
+          {/* Desktop Search */}
           <div className="hidden md:flex items-center flex-1 max-w-md relative" ref={searchRef}>
             <form onSubmit={handleSearchSubmit} className="w-full">
               <div className="bg-gray-50 rounded-full px-4 py-2 border border-gray-200 focus-within:border-green-500 focus-within:shadow-md transition-all duration-300 flex items-center">
@@ -306,7 +299,11 @@ const Header = () => {
                   type="text"
                   value={searchQuery}
                   onChange={handleSearchInput}
-                  onFocus={() => (searchQuery.trim() && (searchSuggestions.length > 0 || didYouMean.length > 0)) && setIsSearchOpen(true)}
+                  onFocus={() => {
+                    if (searchQuery.trim() && (searchSuggestions.length > 0 || didYouMean.length > 0)) {
+                      setIsSearchOpen(true);
+                    }
+                  }}
                   placeholder="Search fresh products..."
                   className="bg-transparent outline-none text-sm ml-2 w-full"
                   autoComplete="off"
@@ -317,93 +314,115 @@ const Header = () => {
               </div>
             </form>
 
-            {/* Search Suggestions Dropdown */}
-            {isSearchOpen && (searchSuggestions.length > 0 || didYouMean.length > 0) && (
-              <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-100 z-50 overflow-hidden max-h-96 overflow-y-auto">
-                <div className="py-2">
-                  {/* Suggested Products Section */}
-                  {searchSuggestions.length > 0 && (
-                    <>
-                      <div className="px-4 py-2 bg-gray-50">
-                        <p className="text-xs font-semibold text-gray-500 uppercase">Suggested Products</p>
-                      </div>
-                      {searchSuggestions.map((product, index) => (
-                        <button
-                          key={product.id || index}
-                          onClick={() => handleSuggestionClick(product)}
-                          className="w-full text-left px-4 py-2 hover:bg-green-50 transition flex items-center gap-3"
-                        >
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between">
-                              <p className="text-sm text-gray-700 font-medium">{product.name}</p>
-
-                            </div>
-                            {product.category && (
-                              <p className="text-xs text-gray-500">{product.category}</p>
-                            )}
+            {/* Search Suggestions Dropdown - Desktop */}
+            {isSearchOpen && searchQuery.trim() && (
+              <>
+                {searchSuggestions.length > 0 || didYouMean.length > 0 ? (
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-100 z-50 overflow-hidden max-h-96 overflow-y-auto">
+                    <div className="py-2">
+                      {searchSuggestions.length > 0 && (
+                        <>
+                          <div className="px-4 py-2 bg-gray-50">
+                            <p className="text-xs font-semibold text-gray-500 uppercase">Suggested Products</p>
                           </div>
-                        </button>
-                      ))}
-                    </>
-                  )}
+                          {searchSuggestions.map((product, index) => (
+                            <button
+                              key={product.id || index}
+                              onClick={() => handleSuggestionClick(product)}
+                              className="w-full text-left px-4 py-2 hover:bg-green-50 transition flex items-center gap-3"
+                            >
+                              <div className="flex-1">
+                                <p className="text-sm text-gray-700 font-medium">{product.name}</p>
+                                {product.category && (
+                                  <p className="text-xs text-gray-500">{product.category}</p>
+                                )}
+                              </div>
+                            </button>
+                          ))}
+                        </>
+                      )}
 
-                  {/* Did You Mean Section */}
-                  {didYouMean.length > 0 && (
-                    <>
-                      {searchSuggestions.length > 0 && <div className="border-t border-gray-100 mt-2"></div>}
-                      <div className="px-4 py-2 bg-gray-50">
-                        <p className="text-xs font-semibold text-gray-500 uppercase">Did you mean?</p>
-                      </div>
-                      {didYouMean.map((suggestion, index) => (
+                      {didYouMean.length > 0 && (
+                        <>
+                          {searchSuggestions.length > 0 && <div className="border-t border-gray-100 mt-2"></div>}
+                          <div className="px-4 py-2 bg-gray-50">
+                            <p className="text-xs font-semibold text-gray-500 uppercase">Did you mean?</p>
+                          </div>
+                          {didYouMean.map((suggestion, index) => (
+                            <button
+                              key={index}
+                              onClick={() => handleSuggestionClick(suggestion)}
+                              className="w-full text-left px-4 py-2 hover:bg-green-50 transition flex items-center gap-3"
+                            >
+                              <Search className="w-4 h-4 text-green-600" />
+                              <span className="text-sm text-green-700 font-medium">{suggestion}</span>
+                            </button>
+                          ))}
+                        </>
+                      )}
+
+                      <div className="border-t border-gray-100 mt-2">
                         <button
-                          key={index}
-                          onClick={() => handleSuggestionClick(suggestion)}
-                          className="w-full text-left px-4 py-2 hover:bg-green-50 transition flex items-center gap-3"
+                          onClick={() => {
+                            navigate(`/products?search=${encodeURIComponent(searchQuery)}`);
+                            setIsSearchOpen(false);
+                          }}
+                          className="w-full text-center px-4 py-2 text-sm text-green-600 hover:bg-green-50 transition font-medium"
                         >
-                          <Search className="w-4 h-4 text-green-600" />
-                          <span className="text-sm text-green-700 font-medium">{suggestion}</span>
+                          View all results for "{searchQuery}"
                         </button>
-                      ))}
-                    </>
-                  )}
-
-                  {/* View All Results Button */}
-                  <div className="border-t border-gray-100 mt-2">
-                    <button
-                      onClick={() => {
-                        navigate(`/products?search=${encodeURIComponent(searchQuery)}`);
-                        setIsSearchOpen(false);
-                      }}
-                      className="w-full text-center px-4 py-2 text-sm text-green-600 hover:bg-green-50 transition font-medium"
-                    >
-                      View all results for "{searchQuery}"
-                    </button>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-            )}
-
-            {/* No Results Found */}
-            {isSearchOpen && searchQuery.trim() && searchSuggestions.length === 0 && didYouMean.length === 0 && !isSearching && (
-              <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-100 z-50 overflow-hidden">
-                <div className="text-center py-8">
-                  <Search className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500">No products found for "{searchQuery}"</p>
-                  <p className="text-xs text-gray-400 mt-1">Try searching with different keywords</p>
-                </div>
-              </div>
+                ) : (
+                  !isSearching && (
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-100 z-50 overflow-hidden">
+                      <div className="text-center py-8">
+                        <Search className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                        <p className="text-gray-500">No products found for "{searchQuery}"</p>
+                        <p className="text-xs text-gray-400 mt-1">Try searching with different keywords</p>
+                      </div>
+                    </div>
+                  )
+                )}
+              </>
             )}
           </div>
 
           {/* Right Icons */}
           <div className="flex items-center gap-2">
-            <button className="md:hidden p-2 hover:bg-gray-100 rounded-full transition">
-              <Search className="w-5 h-5 text-gray-600" />
-            </button>
+            {/* Mobile Search Toggle Button - Hidden when search is open */}
+            {!isMobileSearchOpen && (
+              <button 
+                className="md:hidden p-2 hover:bg-gray-100 rounded-full transition"
+                onClick={() => setIsMobileSearchOpen(true)}
+                aria-label="Open search"
+              >
+                <Search className="w-5 h-5 text-gray-600" />
+              </button>
+            )}
 
+            {/* Close Search Button - Shown when search is open */}
+            {isMobileSearchOpen && (
+              <button 
+                className="md:hidden p-2 hover:bg-gray-100 rounded-full transition"
+                onClick={() => {
+                  setIsMobileSearchOpen(false);
+                  setSearchQuery('');
+                  setSearchSuggestions([]);
+                  setDidYouMean([]);
+                  setIsSearchOpen(false);
+                }}
+                aria-label="Close search"
+              >
+                <X className="w-5 h-5 text-gray-600" />
+              </button>
+            )}
+
+            {/* Cart - Hidden on mobile when search is open */}
             <Link
               to="/cart"
-              className="relative p-2 hover:bg-gray-100 rounded-full transition group"
+              className={`relative p-2 hover:bg-gray-100 rounded-full transition group ${isMobileSearchOpen ? 'hidden sm:flex' : 'flex'}`}
             >
               <ShoppingCart className="w-5 h-5 text-gray-600 group-hover:text-green-600 transition" />
               {cartCount > 0 && (
@@ -413,9 +432,10 @@ const Header = () => {
               )}
             </Link>
 
+            {/* Wishlist - Hidden on mobile when search is open */}
             <Link
               to="/wishlist"
-              className="relative p-2 hover:bg-gray-100 rounded-full transition group"
+              className={`relative p-2 hover:bg-gray-100 rounded-full transition group ${isMobileSearchOpen ? 'hidden sm:flex' : 'flex'}`}
             >
               <Heart className="w-5 h-5 text-gray-600 group-hover:text-green-600 transition" />
               {wishlistCount > 0 && (
@@ -425,117 +445,111 @@ const Header = () => {
               )}
             </Link>
 
-            {/* User Profile */}
-            {user ? (
-              <div className="relative">
-                <button
-                  onClick={() => setIsProfileOpen(!isProfileOpen)}
-                  className="flex items-center gap-2 bg-gradient-to-r from-green-50 to-emerald-50 hover:from-green-100 hover:to-emerald-100 text-gray-700 text-sm font-medium px-3 py-1.5 rounded-full transition border border-green-200"
-                >
-                  <div className="w-6 h-6 bg-gradient-to-br from-green-600 to-green-500 rounded-full flex items-center justify-center">
-                    <User className="w-3.5 h-3.5 text-white" />
-                  </div>
-                  <span className="hidden sm:inline max-w-[100px] truncate">
-                    {user.name?.split(" ")[0] || "User"}
-                  </span>
-                  <ChevronDown className="w-3.5 h-3.5 hidden sm:block" />
-                </button>
+            {/* User Profile - Hidden on mobile when search is open */}
+            <div className={`${isMobileSearchOpen ? 'hidden sm:block' : 'block'}`}>
+              {user ? (
+                <div className="relative">
+                  <button
+                    onClick={() => setIsProfileOpen(!isProfileOpen)}
+                    className="flex items-center gap-2 bg-gradient-to-r from-green-50 to-emerald-50 hover:from-green-100 hover:to-emerald-100 text-gray-700 text-sm font-medium px-3 py-1.5 rounded-full transition border border-green-200"
+                  >
+                    <div className="w-6 h-6 bg-gradient-to-br from-green-600 to-green-500 rounded-full flex items-center justify-center">
+                      <User className="w-3.5 h-3.5 text-white" />
+                    </div>
+                    <span className="hidden sm:inline max-w-[100px] truncate">
+                      {user.name?.split(" ")[0] || "User"}
+                    </span>
+                    <ChevronDown className="w-3.5 h-3.5 hidden sm:block" />
+                  </button>
 
-                {isProfileOpen && (
-                  <>
-                    <div
-                      className="fixed inset-0 z-40"
-                      onClick={() => setIsProfileOpen(false)}
-                    />
-                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-100 z-50 overflow-hidden">
-                      <div className="px-4 py-3 border-b border-gray-100 bg-gradient-to-r from-green-50 to-emerald-50">
-                        <p className="text-sm font-semibold text-gray-800">{user.name}</p>
-                        <p className="text-xs text-gray-500">{user.email}</p>
-                      </div>
-                      <div className="py-2">
-                        <Link
-                          to="/profile"
-                          className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition"
-                          onClick={() => setIsProfileOpen(false)}
-                        >
-                          <UserCircle className="w-4 h-4" />
-                          My Profile
-                        </Link>
-                        <Link
-                          to="/orders"
-                          className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition"
-                          onClick={() => setIsProfileOpen(false)}
-                        >
-                          <Package className="w-4 h-4" />
-                          My Orders
-                        </Link>
-                        <Link
-                          to="/wishlist"
-                          className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition"
-                          onClick={() => setIsProfileOpen(false)}
-                        >
-                          <Heart className="w-4 h-4" />
-                          Wishlist
-                        </Link>
-                        {
-                          user.role === "user" &&
+                  {isProfileOpen && (
+                    <>
+                      <div
+                        className="fixed inset-0 z-40"
+                        onClick={() => setIsProfileOpen(false)}
+                      />
+                      <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-100 z-50 overflow-hidden">
+                        <div className="px-4 py-3 border-b border-gray-100 bg-gradient-to-r from-green-50 to-emerald-50">
+                          <p className="text-sm font-semibold text-gray-800">{user.name}</p>
+                          <p className="text-xs text-gray-500">{user.email}</p>
+                        </div>
+                        <div className="py-2">
                           <Link
-                            to="/register-seller"
+                            to="/profile"
                             className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition"
                             onClick={() => setIsProfileOpen(false)}
                           >
-                            <Store className="w-4 h-4" />
-                            Become a Seller
+                            <UserCircle className="w-4 h-4" />
+                            My Profile
                           </Link>
-                        }
-                        {/* <Link
-                          to="/settings"
-                          className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition"
-                          onClick={() => setIsProfileOpen(false)}
-                        >
-                          <Settings className="w-4 h-4" />
-                          Settings
-                        </Link> */}
-                        <div className="border-t border-gray-100 my-1"></div>
-                        <button
-                          className="flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition w-full"
-                          onClick={handleLogout}
-                        >
-                          <LogOut className="w-4 h-4" />
-                          Logout
-                        </button>
+                          <Link
+                            to="/orders"
+                            className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition"
+                            onClick={() => setIsProfileOpen(false)}
+                          >
+                            <Package className="w-4 h-4" />
+                            My Orders
+                          </Link>
+                          <Link
+                            to="/wishlist"
+                            className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition"
+                            onClick={() => setIsProfileOpen(false)}
+                          >
+                            <Heart className="w-4 h-4" />
+                            Wishlist
+                          </Link>
+                          {
+                            user.role === "user" &&
+                            <Link
+                              to="/register-seller"
+                              className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition"
+                              onClick={() => setIsProfileOpen(false)}
+                            >
+                              <Store className="w-4 h-4" />
+                              Become a Seller
+                            </Link>
+                          }
+                          <div className="border-t border-gray-100 my-1"></div>
+                          <button
+                            className="flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition w-full"
+                            onClick={handleLogout}
+                          >
+                            <LogOut className="w-4 h-4" />
+                            Logout
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  </>
-                )}
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <Link
-                  to="/login"
-                  className="hidden sm:flex items-center gap-2 text-green-600 hover:bg-green-50 px-4 py-1.5 rounded-lg transition text-sm font-medium"
-                >
-                  Login
-                </Link>
-                <Link
-                  to="/register"
-                  className="hidden sm:flex items-center gap-2 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white px-4 py-1.5 rounded-lg transition text-sm font-medium shadow-sm"
-                >
-                  Sign Up
-                </Link>
-                <Link
-                  to="/login"
-                  className="sm:hidden p-2 hover:bg-gray-100 rounded-full transition"
-                >
-                  <User className="w-5 h-5 text-gray-600" />
-                </Link>
-              </div>
-            )}
+                    </>
+                  )}
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Link
+                    to="/login"
+                    className="hidden sm:flex items-center gap-2 text-green-600 hover:bg-green-50 px-4 py-1.5 rounded-lg transition text-sm font-medium"
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    to="/register"
+                    className="hidden sm:flex items-center gap-2 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white px-4 py-1.5 rounded-lg transition text-sm font-medium shadow-sm"
+                  >
+                    Sign Up
+                  </Link>
+                  <Link
+                    to="/login"
+                    className="sm:hidden p-2 hover:bg-gray-100 rounded-full transition"
+                  >
+                    <User className="w-5 h-5 text-gray-600" />
+                  </Link>
+                </div>
+              )}
+            </div>
 
-            {/* Mobile Menu Button */}
+            {/* Mobile Menu Button - Hidden when search is open */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden p-2 hover:bg-gray-100 rounded-full transition"
+              className={`md:hidden p-2 hover:bg-gray-100 rounded-full transition ${isMobileSearchOpen ? 'hidden' : 'flex'}`}
             >
               {isMenuOpen ? (
                 <X className="w-5 h-5 text-gray-600" />
@@ -546,27 +560,121 @@ const Header = () => {
           </div>
         </div>
 
-        {/* Mobile Menu */}
-        {isMenuOpen && (
-          <div className="md:hidden mt-4 pt-4 border-t border-gray-100 animate-slide-down">
-            {/* Mobile Search */}
-            <div className="relative mb-4">
-              <form onSubmit={handleSearchSubmit}>
-                <div className="flex items-center bg-gray-50 rounded-full px-4 py-2 border border-gray-200 focus-within:border-green-500 transition-all duration-300">
-                  <Search className="w-4 h-4 text-gray-400" />
+        {/* Mobile Search Bar - Shows when search is opened */}
+        {isMobileSearchOpen && (
+          <div className="md:hidden mt-3 pt-3 border-t border-gray-100 animate-slide-down">
+            <div className="relative" ref={mobileSearchRef}>
+              <form onSubmit={handleSearchSubmit} className="w-full">
+                <div className={`bg-gray-50 rounded-full px-4 py-3 border border-gray-200 focus-within:border-green-500 focus-within:shadow-md transition-all duration-300 flex items-center`}>
+                  <Search className="w-5 h-5 text-gray-400 flex-shrink-0" />
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={handleSearchInput}
-                    placeholder="Search products..."
-                    className="bg-transparent outline-none text-sm ml-2 w-full"
+                    placeholder="Search fresh products..."
+                    className="bg-transparent outline-none text-sm ml-3 w-full"
                     autoComplete="off"
+                    autoFocus
                   />
+                  {isSearching && (
+                    <div className="w-4 h-4 border-2 border-green-500 border-t-transparent rounded-full animate-spin ml-2 flex-shrink-0"></div>
+                  )}
+                  {searchQuery && !isSearching && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSearchQuery('');
+                        setSearchSuggestions([]);
+                        setDidYouMean([]);
+                        setIsSearchOpen(false);
+                      }}
+                      className="p-1 hover:bg-gray-200 rounded-full transition flex-shrink-0"
+                    >
+                      <X className="w-4 h-4 text-gray-400" />
+                    </button>
+                  )}
                 </div>
               </form>
-            </div>
 
-            {/* Mobile Navigation */}
+              {/* Mobile Search Suggestions */}
+              {searchQuery.trim() && (
+                <>
+                  {searchSuggestions.length > 0 || didYouMean.length > 0 ? (
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-100 z-50 overflow-hidden max-h-60 overflow-y-auto">
+                      <div className="py-2">
+                        {searchSuggestions.length > 0 && (
+                          <>
+                            <div className="px-4 py-2 bg-gray-50">
+                              <p className="text-xs font-semibold text-gray-500 uppercase">Suggestions</p>
+                            </div>
+                            {searchSuggestions.map((product, index) => (
+                              <button
+                                key={product.id || index}
+                                onClick={() => handleSuggestionClick(product)}
+                                className="w-full text-left px-4 py-2 hover:bg-green-50 transition flex items-center gap-3"
+                              >
+                                <div className="flex-1">
+                                  <p className="text-sm text-gray-700 font-medium">{product.name}</p>
+                                </div>
+                              </button>
+                            ))}
+                          </>
+                        )}
+
+                        {didYouMean.length > 0 && (
+                          <>
+                            {searchSuggestions.length > 0 && <div className="border-t border-gray-100 mt-2"></div>}
+                            <div className="px-4 py-2 bg-gray-50">
+                              <p className="text-xs font-semibold text-gray-500 uppercase">Did you mean?</p>
+                            </div>
+                            {didYouMean.map((suggestion, index) => (
+                              <button
+                                key={index}
+                                onClick={() => handleSuggestionClick(suggestion)}
+                                className="w-full text-left px-4 py-2 hover:bg-green-50 transition flex items-center gap-3"
+                              >
+                                <Search className="w-4 h-4 text-green-600" />
+                                <span className="text-sm text-green-700 font-medium">{suggestion}</span>
+                              </button>
+                            ))}
+                          </>
+                        )}
+
+                        <div className="border-t border-gray-100 mt-2">
+                          <button
+                            onClick={() => {
+                              navigate(`/products?search=${encodeURIComponent(searchQuery)}`);
+                              setIsMobileSearchOpen(false);
+                              setIsSearchOpen(false);
+                              setSearchSuggestions([]);
+                              setDidYouMean([]);
+                            }}
+                            className="w-full text-center px-4 py-2 text-sm text-green-600 hover:bg-green-50 transition font-medium"
+                          >
+                            View all results
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    !isSearching && (
+                      <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-100 z-50 overflow-hidden">
+                        <div className="text-center py-6">
+                          <Search className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+                          <p className="text-gray-500 text-sm">No products found</p>
+                        </div>
+                      </div>
+                    )
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Mobile Menu */}
+        {isMenuOpen && (
+          <div className="md:hidden mt-4 pt-4 border-t border-gray-100 animate-slide-down">
             <nav className="flex flex-col gap-2">
               <Link
                 to="/"
