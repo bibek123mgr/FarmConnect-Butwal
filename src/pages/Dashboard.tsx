@@ -99,7 +99,7 @@ const Dashboard = () => {
     {
       id: 4,
       title: "Total Payment",
-      value: formatCurrency(dashboardStatic?.totalPayment || 0),
+      value: formatCurrency(0),
       trend: "up",
       color: "bg-orange-500",
       bgLight: "bg-orange-50",
@@ -266,7 +266,7 @@ const Dashboard = () => {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 mb-8">
           {stats.map((stat, idx) => (
             <div
               key={stat.id}

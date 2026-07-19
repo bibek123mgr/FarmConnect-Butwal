@@ -52,8 +52,8 @@ const BecomeSeller = () => {
   const [formData, setFormData] = useState<SellerFormData>({
     farmName: "",
     description: "",
-    province: "",
-    district: "",
+    province: "Lumbini",
+    district: "Rupandehi",
     address: "",
     image: null,
     panNo: "",

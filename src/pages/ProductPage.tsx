@@ -15,8 +15,6 @@ import {
   Truck,
   Leaf,
   Clock,
-  ChevronLeft,
-  ChevronRight,
 } from "lucide-react";
 import { fetchProducts } from "../features/product/productApi";
 import { fetchCategories } from "../features/category/CategoryApi";
@@ -24,9 +22,21 @@ import { fetchCategories } from "../features/category/CategoryApi";
 const ProductsPage = () => {
   const dispatch = useAppDispatch();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { products: ProductList, loading: productLoading, pagination } = useAppSelector((state) => state.product);
+  
+  // Get data directly from store - NO UNWRAPPING
+  const { products, loading: productLoading, pagination } = useAppSelector((state) => state.product);
   const { categories } = useAppSelector((state) => state.category);
   const { loading, success, error, message } = useAppSelector((state) => state.cart);
+
+  // State for infinite scroll - using products from store
+  const [allProducts, setAllProducts] = useState<any[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const isFetchingRef = useRef(false);
+  const prevProductsLengthRef = useRef(0);
 
   const [searchTerm, setSearchTerm] = useState(() => {
     const productname = searchParams.get("productname");
@@ -45,12 +55,18 @@ const ProductsPage = () => {
   const [sortBy, setSortBy] = useState("default");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [showSortDropdown, setShowSortDropdown] = useState(false);
-  const [currentPage, setCurrentPage] = useState(() => {
-    const page = searchParams.get("page");
-    return page ? parseInt(page) : 1;
-  });
 
   const searchDebounceRef = useRef<number | null>(null);
+
+  // Reset all products when filters change
+  const resetProducts = useCallback(() => {
+    setAllProducts([]);
+    setCurrentPage(1);
+    setHasMore(true);
+    setIsLoadingMore(false);
+    isFetchingRef.current = false;
+    prevProductsLengthRef.current = 0;
+  }, []);
 
   const updateURL = useCallback((updates: Record<string, any>) => {
     const newParams = new URLSearchParams(searchParams);
@@ -72,7 +88,6 @@ const ProductsPage = () => {
     if (!newParams.has("page")) {
       newParams.set("page", "1");
     }
-    // Always set store to "all" if not present
     if (!newParams.has("store")) {
       newParams.set("store", "all");
     }
@@ -83,13 +98,12 @@ const ProductsPage = () => {
     setSearchParams(newParams);
   }, [searchParams, setSearchParams]);
 
-  // Add this useEffect to sync store from URL to state
+  // Sync store from URL to state
   useEffect(() => {
     const store = searchParams.get("store");
     if (store) {
       setSelectedStore(store);
     } else if (!store && selectedStore !== "all") {
-      // If no store in URL but state isn't "all", sync state
       setSelectedStore("all");
     }
   }, [searchParams]);
@@ -108,7 +122,7 @@ const ProductsPage = () => {
         page: 1,
       };
       updateURL(updates);
-      setCurrentPage(1);
+      resetProducts();
     }, 500);
   };
 
@@ -122,11 +136,17 @@ const ProductsPage = () => {
       page: 1,
     };
     updateURL(updates);
-    setCurrentPage(1);
+    resetProducts();
   };
 
-  useEffect(() => {
-    const page = searchParams.get("page") || "1";
+  // Fetch products - dispatches action to update store
+  const fetchProductsData = useCallback(async (page: number) => {
+    // Prevent multiple simultaneous requests
+    if (isFetchingRef.current) return;
+    
+    isFetchingRef.current = true;
+    setIsLoadingMore(true);
+    
     const productname = searchParams.get("productname") || "all";
     const category = searchParams.get("category") || "all";
     const pricerangeFrom = searchParams.get("pricerangeFrom") || "0";
@@ -134,7 +154,7 @@ const ProductsPage = () => {
     const store = searchParams.get("store") || "all";
 
     const filters = {
-      page: parseInt(page),
+      page: page,
       limit: 20,
       productname: productname,
       category: category,
@@ -143,13 +163,65 @@ const ProductsPage = () => {
       store: store
     };
 
-    dispatch(fetchProducts({ ...filters }));
+    try {
+      // Just dispatch - data will be in store
+      await dispatch(fetchProducts({ ...filters })).unwrap();
+      setCurrentPage(page);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      toast.error("Failed to load products");
+    } finally {
+      setIsLoadingMore(false);
+      isFetchingRef.current = false;
+    }
   }, [dispatch, searchParams]);
-  
+
+  // Update allProducts when products from store changes (CONCATENATE)
+  useEffect(() => {
+    if (products && products.length > 0) {
+      // Check if this is a new page or append
+      const currentPageFromStore = pagination?.currentPage || 1;
+      
+      if (currentPageFromStore === 1) {
+        // First page - replace
+        setAllProducts(products);
+        prevProductsLengthRef.current = products.length;
+      } else if (currentPageFromStore > 1) {
+        // Subsequent pages - concatenate (avoid duplicates)
+        setAllProducts(prev => {
+          const existingIds = new Set(prev.map(p => p.id));
+          const newProducts = products.filter(p => !existingIds.has(p.id));
+          const concatenated = [...prev, ...newProducts];
+          prevProductsLengthRef.current = concatenated.length;
+          return concatenated;
+        });
+      }
+    }
+  }, [products, pagination]);
+
+  // Update hasMore when pagination changes
+  useEffect(() => {
+    if (pagination) {
+      const totalProducts = pagination.totalProducts || 0;
+      const currentPageData = pagination.currentPage || 1;
+      const limit = pagination.limit || 20;
+      const totalPages = Math.ceil(totalProducts / limit);
+      setHasMore(currentPageData < totalPages);
+    }
+  }, [pagination]);
+
+  // Initial load - when searchParams change (filters change)
+  useEffect(() => {
+    resetProducts();
+    fetchProductsData(1);
+  }, [searchParams]);
+
+  // Load categories - only once
   useEffect(() => {
     dispatch(fetchCategories());
   }, [dispatch]);
 
+  // Cart messages
   useEffect(() => {
     if (loading) return;
     if (success) {
@@ -161,6 +233,33 @@ const ProductsPage = () => {
       dispatch(clearMessage());
     }
   }, [success, error, loading, dispatch, message]);
+
+  // Intersection Observer for infinite scroll
+  useEffect(() => {
+    if (observerRef.current) {
+      observerRef.current.disconnect();
+    }
+
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !isLoadingMore && !productLoading && !isFetchingRef.current) {
+          const nextPage = currentPage + 1;
+          fetchProductsData(nextPage);
+        }
+      },
+      { threshold: 0.1, rootMargin: "100px" }
+    );
+
+    if (loadMoreRef.current) {
+      observerRef.current.observe(loadMoreRef.current);
+    }
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, [hasMore, isLoadingMore, productLoading, currentPage]);
 
   const sortOptions = [
     { value: "default", label: "Default" },
@@ -178,7 +277,7 @@ const ProductsPage = () => {
     setPriceRange([0, 10000]);
     setSelectedRating(0);
     setSortBy("default");
-    setCurrentPage(1);
+    resetProducts();
     setSearchParams({
       page: "1",
       limit: "20",
@@ -207,7 +306,7 @@ const ProductsPage = () => {
     }
 
     updateURL(updates);
-    setCurrentPage(1);
+    resetProducts();
   };
 
   const hasActiveFilters = () => {
@@ -222,36 +321,14 @@ const ProductsPage = () => {
       (pricerangeTo && pricerangeTo !== "max");
   };
 
-  const totalPages = pagination?.total || 1;
-
-  const goToPage = (page: number) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
-      updateURL({ page });
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-  };
-
-  const getPageNumbers = () => {
-    const pages = [];
-    const maxVisible = 5;
-    let start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
-    let end = Math.min(totalPages, start + maxVisible - 1);
-
-    if (end - start + 1 < maxVisible) {
-      start = Math.max(1, end - maxVisible + 1);
-    }
-
-    for (let i = start; i <= end; i++) {
-      pages.push(i);
-    }
-    return pages;
-  };
-
   const currentProductName = searchParams.get("productname") || "all";
   const currentCategory = searchParams.get("category") || "all";
   const currentPriceFrom = parseInt(searchParams.get("pricerangeFrom") || "0");
   const currentPriceTo = searchParams.get("pricerangeTo") || "max";
+
+  // Get values from store
+  const totalProducts = pagination?.totalProducts || 0;
+  const allProductsLength = allProducts?.length || 0;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -294,7 +371,7 @@ const ProductsPage = () => {
                         onClick={() => {
                           setSortBy(option.value);
                           setShowSortDropdown(false);
-                          setCurrentPage(1);
+                          resetProducts();
                         }}
                         className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition ${sortBy === option.value ? "text-green-600 bg-green-50" : "text-gray-700"
                           }`}
@@ -365,6 +442,7 @@ const ProductsPage = () => {
         )}
 
         <div className="flex flex-col md:flex-row gap-6">
+          {/* Sidebar Filters - Desktop */}
           <div className="hidden md:block w-72 flex-shrink-0">
             <div className="bg-white rounded-lg shadow-sm p-5 sticky top-24">
               <div className="flex items-center justify-between mb-4 pb-2 border-b">
@@ -462,6 +540,7 @@ const ProductsPage = () => {
             </div>
           </div>
 
+          {/* Mobile Filter */}
           {isFilterOpen && (
             <>
               <div className="fixed inset-0 bg-black/50 z-50" onClick={() => setIsFilterOpen(false)} />
@@ -545,35 +624,6 @@ const ProductsPage = () => {
                   </div>
                 </div>
 
-                <div className="mb-5">
-                  <h4 className="font-medium text-gray-700 mb-2">Customer Rating</h4>
-                  <div className="space-y-2">
-                    {[4, 3, 2, 1].map((rating) => (
-                      <label key={rating} className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="radio"
-                          name="rating-mobile"
-                          checked={selectedRating === rating}
-                          onChange={() => {
-                            setSelectedRating(rating);
-                            setCurrentPage(1);
-                          }}
-                          className="w-4 h-4 text-green-600 focus:ring-green-500"
-                        />
-                        <div className="flex items-center gap-1">
-                          {[...Array(5)].map((_, i) => (
-                            <Star
-                              key={i}
-                              className={`w-3.5 h-3.5 ${i < rating ? "text-yellow-400 fill-yellow-400" : "text-gray-300"}`}
-                            />
-                          ))}
-                          <span className="text-sm text-gray-600">& Up</span>
-                        </div>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-
                 <button
                   onClick={() => setIsFilterOpen(false)}
                   className="w-full bg-green-600 text-white py-2 rounded-lg mt-4"
@@ -584,17 +634,18 @@ const ProductsPage = () => {
             </>
           )}
 
+          {/* Product Grid */}
           <div className="flex-1">
             <div className="mb-4 text-sm text-gray-500">
-              Showing {ProductList?.length || 0} of {pagination?.total || 0} products
+              Showing {allProductsLength} of {totalProducts} products
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
-              {productLoading ? (
+              {productLoading && allProductsLength === 0 ? (
                 [...Array(8)].map((_, index) => (
                   <ProductCardSkeleton key={index} />
                 ))
-              ) : ProductList?.length === 0 ? (
+              ) : allProductsLength === 0 ? (
                 <div className="col-span-full text-center py-12">
                   <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Search className="w-10 h-10 text-gray-400" />
@@ -609,48 +660,35 @@ const ProductsPage = () => {
                   </button>
                 </div>
               ) : (
-                ProductList?.map((product) => (
+                allProducts.map((product) => (
                   <ProductCard key={product.id} product={product} />
+                ))
+              )}
+
+              {/* Loading more skeletons */}
+              {isLoadingMore && (
+                [...Array(4)].map((_, index) => (
+                  <ProductCardSkeleton key={`loading-${index}`} />
                 ))
               )}
             </div>
 
-            {totalPages > 1 && !productLoading && ProductList?.length > 0 && (
-              <div className="flex justify-center items-center gap-2 mt-8 py-4">
-                <button
-                  onClick={() => goToPage(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className={`p-2 rounded-lg border transition ${currentPage === 1
-                    ? "border-gray-200 text-gray-400 cursor-not-allowed"
-                    : "border-gray-300 text-gray-600 hover:bg-green-50 hover:border-green-500"
-                    }`}
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
+            {/* Intersection Observer target */}
+            {hasMore && allProductsLength > 0 && (
+              <div ref={loadMoreRef} className="h-10 flex items-center justify-center">
+                {!isLoadingMore && (
+                  <span className="text-sm text-gray-400">Scroll for more</span>
+                )}
+                {isLoadingMore && (
+                  <span className="text-sm text-gray-400">Loading more...</span>
+                )}
+              </div>
+            )}
 
-                {getPageNumbers().map((page) => (
-                  <button
-                    key={page}
-                    onClick={() => goToPage(page)}
-                    className={`px-3 py-1 rounded-lg transition ${currentPage === page
-                      ? "bg-green-600 text-white"
-                      : "text-gray-600 hover:bg-green-50"
-                      }`}
-                  >
-                    {page}
-                  </button>
-                ))}
-
-                <button
-                  onClick={() => goToPage(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                  className={`p-2 rounded-lg border transition ${currentPage === totalPages
-                    ? "border-gray-200 text-gray-400 cursor-not-allowed"
-                    : "border-gray-300 text-gray-600 hover:bg-green-50 hover:border-green-500"
-                    }`}
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </button>
+            {/* No more products message */}
+            {!hasMore && allProductsLength > 0 && (
+              <div className="text-center py-8">
+                <p className="text-gray-400 text-sm">You've reached the end of the list</p>
               </div>
             )}
           </div>

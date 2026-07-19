@@ -62,9 +62,10 @@ const initialValues = {
     totalProducts: 0,
     totalPages: 0,
     pagination: {
-        page: 1,
+        currentPage: 1,
         limit: 20,
-        total: 0
+        totalPages: 0,
+        totalProducts: 0
     },
     searchFilters: {
         title: "",

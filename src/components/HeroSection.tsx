@@ -81,9 +81,9 @@ const HeroSection = () => {
   const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
 
   const features = [
-    { icon: Truck, label: "Free Delivery", desc: "On orders above ₹1000", bgColor: "bg-green-50", textColor: "text-green-600" },
+    { icon: Truck, label: "Free Delivery", desc: "On orders above Rs. 100", bgColor: "bg-green-50", textColor: "text-green-600" },
     { icon: Shield, label: "Fresh Guarantee", desc: "100% quality assured", bgColor: "bg-blue-50", textColor: "text-blue-600" },
-    { icon: Clock, label: "Same Day Delivery", desc: "Order before 2 PM", bgColor: "bg-orange-50", textColor: "text-orange-600" },
+    { icon: Clock, label: "Same Day Delivery", desc: "Order before 11 PM", bgColor: "bg-orange-50", textColor: "text-orange-600" },
     { icon: Leaf, label: "100% Organic", desc: "No chemicals used", bgColor: "bg-emerald-50", textColor: "text-emerald-600" },
   ];
 

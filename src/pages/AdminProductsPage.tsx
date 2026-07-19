@@ -323,11 +323,11 @@ const AdminProductsPage = () => {
 
   const getStockBadge = (quantity: number) => {
     if (quantity === 0) {
-      return { text: "Out of Stock", color: "bg-red-100 text-red-800", icon: AlertTriangle };
+      return { text: "", color: "bg-red-100 text-red-800", icon: AlertTriangle };
     } else if (quantity < 10) {
-      return { text: `Low Stock (${quantity})`, color: "bg-orange-100 text-orange-800", icon: AlertTriangle };
+      return { text: `${quantity}`, color: "bg-orange-100 text-orange-800", icon: AlertTriangle };
     } else {
-      return { text: `${quantity} in stock`, color: "bg-green-100 text-green-800", icon: CheckCircle };
+      return { text: `${quantity}`, color: "bg-green-100 text-green-800", icon: CheckCircle };
     }
   };
 
@@ -572,7 +572,7 @@ const AdminProductsPage = () => {
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 rounded-lg text-xs">
+                          <span className="inline-flex items-center gap-1 px-2 py-1 text-gray-700 rounded-lg text-xs">
                             <Tag className="w-3 h-3" />
                             {product.categoryName || "Uncategorized"}
                           </span>

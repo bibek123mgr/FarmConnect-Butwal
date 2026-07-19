@@ -196,7 +196,7 @@ const Footer = () => {
             <Truck className="w-5 h-5 text-green-500" />
             <div>
               <p className="text-white text-sm font-medium">Free Delivery</p>
-              <p className="text-xs text-gray-500">On orders over Rs. 5000</p>
+              <p className="text-xs text-gray-500">On orders over Rs. 100</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -209,8 +209,8 @@ const Footer = () => {
           <div className="flex items-center gap-3">
             <RefreshCw className="w-5 h-5 text-green-500" />
             <div>
-              <p className="text-white text-sm font-medium">Easy Returns</p>
-              <p className="text-xs text-gray-500">7 days return policy</p>
+              <p className="text-white text-sm font-medium">Same Day Delivery</p>
+              <p className="text-xs text-gray-500">Order before 11 PM</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
