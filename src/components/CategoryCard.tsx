@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import type { ICategory } from "../features/category/CategorySlice";
 
 interface ICategoryProps {
@@ -6,7 +7,7 @@ interface ICategoryProps {
 
 const colors = [
   "bg-orange-50",
-  "bg-green-50", 
+  "bg-green-50",
   "bg-orange-100",
   "bg-pink-50",
   "bg-yellow-50",
@@ -17,11 +18,21 @@ const colors = [
   "bg-amber-50",
 ];
 
+
 const CategoryCard = ({ category }: ICategoryProps) => {
   const randomColor = colors[category.id % colors.length];
 
+  const navigate = useNavigate();
+
+const handleNavigate = () => {
+  navigate(`/products?page=1&limit=20&productname=all&category=${category.id}&pricerangeFrom=0&pricerangeTo=max&store=all`);
+};
+
   return (
-    <div className="flex flex-col items-center gap-2 cursor-pointer group">
+    <div 
+    className="flex flex-col items-center gap-2 cursor-pointer group"
+    onClick={handleNavigate}
+    >
       <div
         className={`${randomColor} rounded-2xl px-4 py-5 md:px-6 md:py-6 
         flex flex-col items-center justify-center min-w-[120px] md:min-w-[140px]
@@ -32,7 +43,7 @@ const CategoryCard = ({ category }: ICategoryProps) => {
           alt={category.name}
           className="w-14 h-14 md:w-18 md:h-18 object-contain"
         />
-        
+
         <p className="mt-2 text-xs md:text-sm font-medium text-gray-700 text-center">
           {category.name}
         </p>

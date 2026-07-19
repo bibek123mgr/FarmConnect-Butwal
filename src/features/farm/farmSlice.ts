@@ -1,8 +1,9 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { fetchFarms } from "./farmApi";
 
-interface ITopSellingFarm {
+export interface ITopSellingFarm {
     id: number;
+    image: string;
     farmName: string;
     description: string;
     address: string;

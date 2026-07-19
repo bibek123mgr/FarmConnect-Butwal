@@ -156,16 +156,17 @@ const OrdersPage = () => {
     };
   };
 
+  // Replace the mapOrderStatus function with this:
   const mapOrderStatus = (status: string): string => {
     const statusMap: { [key: string]: string } = {
-      'pending': 'processing',
-      'confirmed': 'processing',
+      'pending': 'pending',        // Changed from 'processing'
+      'confirmed': 'confirmed',    // Changed from 'processing'
       'processing': 'processing',
       'out_for_delivery': 'shipped',
       'delivered': 'delivered',
       'cancelled': 'cancelled'
     };
-    return statusMap[status] || 'processing';
+    return statusMap[status] || 'pending';
   };
 
   const orders = transformOrders(allOrders);
@@ -178,9 +179,12 @@ const OrdersPage = () => {
     : null;
 
   const getStatusBadge = (status: string) => {
+    console.log(status);
     switch (status) {
       case "delivered":
         return { icon: CheckCircle, text: "Delivered", color: "text-green-600", bg: "bg-green-50" };
+      case "confirmed":
+        return { icon: CheckCircle, text: "Confirmed", color: "text-green-600", bg: "bg-green-50" };
       case "shipped":
         return { icon: Truck, text: "Shipped", color: "text-blue-600", bg: "bg-blue-50" };
       case "processing":
@@ -291,8 +295,8 @@ const OrdersPage = () => {
               <div className="flex gap-1 mb-4 border-b border-gray-200 overflow-x-auto">
                 {[
                   { id: "all", label: "All", count: orders.length },
-                  { id: "processing", label: "Processing", count: orders.filter((o) => o.status === "processing").length },
-                  { id: "shipped", label: "Shipped", count: orders.filter((o) => o.status === "shipped").length },
+                  { id: "pending", label: "pending", count: orders.filter((o) => o.status === "pending").length },
+                  { id: "confirmed", label: "confirmed", count: orders.filter((o) => o.status === "confirmed").length },
                   { id: "delivered", label: "Delivered", count: orders.filter((o) => o.status === "delivered").length },
                   { id: "cancelled", label: "Cancelled", count: orders.filter((o) => o.status === "cancelled").length },
                 ].map((tab) => (
@@ -337,7 +341,7 @@ const OrdersPage = () => {
                           </span>
                           <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full ${badge.bg}`}>
                             <BadgeIcon className={`w-3 h-3 ${badge.color}`} />
-                            <span className={`text-xs ${badge.color}`}>{badge.text}</span>
+                            <span className={`text-xs ${badge.color}`}>{order.status}</span>
                           </div>
                         </div>
                         <div className="flex items-center justify-between text-xs text-gray-500">
@@ -513,6 +517,8 @@ const OrderDetails = ({
     switch (order.status) {
       case "delivered":
         return { icon: CheckCircle, text: "Delivered", color: "text-green-600", bg: "bg-green-50" };
+      case "confirmed":
+        return { icon: CheckCircle, text: "Confirmed", color: "text-green-600", bg: "bg-green-50" };
       case "shipped":
         return { icon: Truck, text: "Shipped", color: "text-blue-600", bg: "bg-blue-50" };
       case "processing":

@@ -1,15 +1,10 @@
 import { MapPin, Eye, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import type { ITopSellingFarm } from "../features/farm/farmSlice";
 
-interface IStore {
-  id: number;
-  farmName: string;
-  description: string;
-  address: string;
-}
 
 interface IStoreCardProps {
-  store: IStore;
+  store: ITopSellingFarm;
 }
 
 const StoreCard = ({ store }: IStoreCardProps) => {
@@ -27,7 +22,7 @@ const StoreCard = ({ store }: IStoreCardProps) => {
       {/* Image */}
       <div className="relative h-40 w-full overflow-hidden bg-gray-100">
         <img
-          src="https://as1.ftcdn.net/v2/jpg/13/74/60/08/1000_F_1374600863_2ed7RnXS7sUGgv85i0fp9xVqjVhgXS9u.jpg"
+          src={store.image ||"https://as1.ftcdn.net/v2/jpg/13/74/60/08/1000_F_1374600863_2ed7RnXS7sUGgv85i0fp9xVqjVhgXS9u.jpg"}
           alt="Store"
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
         />
@@ -36,10 +31,10 @@ const StoreCard = ({ store }: IStoreCardProps) => {
           Popular Store
         </div>
 
-        <div className="absolute top-3 right-3 flex items-center gap-1 bg-white/80 px-2 py-1 rounded text-xs">
+        {/* <div className="absolute top-3 right-3 flex items-center gap-1 bg-white/80 px-2 py-1 rounded text-xs">
           <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" />
           <span>4.8</span>
-        </div>
+        </div> */}
       </div>
 
       {/* Body */}

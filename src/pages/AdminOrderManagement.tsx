@@ -468,7 +468,6 @@ const AdminOrderManagement = () => {
                               </option>
                             ))}
                           </select>
-                          <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-3 h-3 pointer-events-none" />
                         </div>
                       </td>
                       <td className="px-6 py-4">
