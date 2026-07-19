@@ -22,7 +22,7 @@ import { fetchCategories } from "../features/category/CategoryApi";
 const ProductsPage = () => {
   const dispatch = useAppDispatch();
   const [searchParams, setSearchParams] = useSearchParams();
-  
+
   // Get data directly from store - NO UNWRAPPING
   const { products, loading: productLoading, pagination } = useAppSelector((state) => state.product);
   const { categories } = useAppSelector((state) => state.category);
@@ -143,10 +143,10 @@ const ProductsPage = () => {
   const fetchProductsData = useCallback(async (page: number) => {
     // Prevent multiple simultaneous requests
     if (isFetchingRef.current) return;
-    
+
     isFetchingRef.current = true;
     setIsLoadingMore(true);
-    
+
     const productname = searchParams.get("productname") || "all";
     const category = searchParams.get("category") || "all";
     const pricerangeFrom = searchParams.get("pricerangeFrom") || "0";
@@ -181,7 +181,7 @@ const ProductsPage = () => {
     if (products && products.length > 0) {
       // Check if this is a new page or append
       const currentPageFromStore = pagination?.currentPage || 1;
-      
+
       if (currentPageFromStore === 1) {
         // First page - replace
         setAllProducts(products);
@@ -199,7 +199,7 @@ const ProductsPage = () => {
     }
   }, [products, pagination]);
 
-  
+
   // Update hasMore when pagination changes
   useEffect(() => {
     if (pagination) {
@@ -279,6 +279,7 @@ const ProductsPage = () => {
     setSelectedRating(0);
     setSortBy("default");
     resetProducts();
+
     setSearchParams({
       page: "1",
       limit: "20",
@@ -286,8 +287,27 @@ const ProductsPage = () => {
       category: "all",
       pricerangeFrom: "0",
       pricerangeTo: "max",
-      store: "all"
+      store: "all",
     });
+
+    setCurrentPage(1);
+
+    dispatch(
+      fetchProducts({
+        page: 1,
+        limit: 20,
+        productname: "all",
+        category: "all",
+        pricerangeFrom: 0, // number, not "0" — matches fetchProductsData's parseInt(...) usage
+        pricerangeTo: "max", // stays a string per your filters shape
+        store: "all",
+      })
+    )
+      .unwrap()
+      .catch((error) => {
+        console.error("Error fetching products:", error);
+        toast.error("Failed to load products");
+      });
   };
 
   const handleFilterChange = (key: string, value: any) => {

@@ -8,6 +8,7 @@ interface IProductFilter extends IProductFilterAdmin {
 
 interface IProductFilterAdmin {
     productname: string;
+    store?: string | number;
     category: string | number;
     page: number;
     limit: number;
