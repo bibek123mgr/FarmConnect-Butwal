@@ -153,7 +153,7 @@ const AdminUsersPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="mx-auto px-2 py-8">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
@@ -373,8 +373,8 @@ const AdminUsersPage = () => {
                               <button
                                 onClick={() => handleSelectUser(user.id)}
                                 className={`p-2 rounded-lg transition ${selectedUserId === user.id
-                                    ? "text-green-600 bg-green-100"
-                                    : "text-gray-400 hover:text-blue-600 hover:bg-blue-50"
+                                  ? "text-green-600 bg-green-100"
+                                  : "text-gray-400 hover:text-blue-600 hover:bg-blue-50"
                                   }`}
                                 title="View Details"
                               >
@@ -415,8 +415,8 @@ const AdminUsersPage = () => {
                       onClick={() => goToPage(1)}
                       disabled={currentPage === 1}
                       className={`px-3 py-1 rounded-lg border transition text-sm ${currentPage === 1
-                          ? "border-gray-200 text-gray-400 cursor-not-allowed"
-                          : "border-gray-300 text-gray-600 hover:bg-green-50 hover:border-green-500"
+                        ? "border-gray-200 text-gray-400 cursor-not-allowed"
+                        : "border-gray-300 text-gray-600 hover:bg-green-50 hover:border-green-500"
                         }`}
                     >
                       First
@@ -425,8 +425,8 @@ const AdminUsersPage = () => {
                       onClick={() => goToPage(currentPage - 1)}
                       disabled={currentPage === 1}
                       className={`p-2 rounded-lg border transition ${currentPage === 1
-                          ? "border-gray-200 text-gray-400 cursor-not-allowed"
-                          : "border-gray-300 text-gray-600 hover:bg-green-50 hover:border-green-500"
+                        ? "border-gray-200 text-gray-400 cursor-not-allowed"
+                        : "border-gray-300 text-gray-600 hover:bg-green-50 hover:border-green-500"
                         }`}
                     >
                       <ChevronLeft className="w-4 h-4" />
@@ -437,8 +437,8 @@ const AdminUsersPage = () => {
                         key={page}
                         onClick={() => goToPage(page)}
                         className={`px-3 py-1 rounded-lg transition text-sm ${currentPage === page
-                            ? "bg-green-600 text-white"
-                            : "text-gray-600 hover:bg-green-50"
+                          ? "bg-green-600 text-white"
+                          : "text-gray-600 hover:bg-green-50"
                           }`}
                       >
                         {page}
@@ -449,8 +449,8 @@ const AdminUsersPage = () => {
                       onClick={() => goToPage(currentPage + 1)}
                       disabled={currentPage === totalPages}
                       className={`p-2 rounded-lg border transition ${currentPage === totalPages
-                          ? "border-gray-200 text-gray-400 cursor-not-allowed"
-                          : "border-gray-300 text-gray-600 hover:bg-green-50 hover:border-green-500"
+                        ? "border-gray-200 text-gray-400 cursor-not-allowed"
+                        : "border-gray-300 text-gray-600 hover:bg-green-50 hover:border-green-500"
                         }`}
                     >
                       <ChevronRight className="w-4 h-4" />
@@ -459,8 +459,8 @@ const AdminUsersPage = () => {
                       onClick={() => goToPage(totalPages)}
                       disabled={currentPage === totalPages}
                       className={`px-3 py-1 rounded-lg border transition text-sm ${currentPage === totalPages
-                          ? "border-gray-200 text-gray-400 cursor-not-allowed"
-                          : "border-gray-300 text-gray-600 hover:bg-green-50 hover:border-green-500"
+                        ? "border-gray-200 text-gray-400 cursor-not-allowed"
+                        : "border-gray-300 text-gray-600 hover:bg-green-50 hover:border-green-500"
                         }`}
                     >
                       Last

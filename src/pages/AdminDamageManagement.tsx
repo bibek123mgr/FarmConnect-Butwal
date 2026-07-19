@@ -234,7 +234,7 @@ const AdminDamageManagement = () => {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="mx-auto px-2 py-8">
                 {/* Header */}
                 <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
@@ -391,7 +391,7 @@ const AdminDamageManagement = () => {
                                             <td className="px-6 py-4 text-right">
                                                 <span className="text-gray-900">Rs. {record.lossAmount}</span>
                                             </td>
-                                           
+
                                             <td className="px-6 py-4">
                                                 <p className="text-sm text-gray-600 max-w-xs truncate">
                                                     {record.remarks || "-"}
@@ -413,7 +413,7 @@ const AdminDamageManagement = () => {
                                                         >
                                                             <Eye className="w-4 h-4" />
                                                         </button>
-                            
+
                                                         <button
                                                             onClick={() => handleDeleteClick(record)}
                                                             className="p-2 rounded-lg text-gray-400 hover:text-green-600 hover:bg-green-50 transition"
@@ -758,7 +758,7 @@ const AdminDamageManagement = () => {
                                 >
                                     Close
                                 </button>
-                                
+
                             </div>
                         </div>
                     </div>

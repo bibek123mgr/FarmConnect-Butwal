@@ -82,7 +82,7 @@ const AdminPurchaseManagement = () => {
     const [showReceiveModal, setShowReceiveModal] = useState(false);
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [receiveQuantities, setReceiveQuantities] = useState<{ [key: number]: number }>({});
-    
+
     // Filter states
     const [filters, setFilters] = useState({
         page: 1,
@@ -93,14 +93,14 @@ const AdminPurchaseManagement = () => {
     const [localSearch, setLocalSearch] = useState("");
     const [localStatus, setLocalStatus] = useState("all");
     const [showFilters, setShowFilters] = useState(false);
-    
+
     const [pagination, setPagination] = useState({
         currentPage: 1,
         totalPages: 1,
         totalItems: 0,
         itemsPerPage: 10,
     });
-    
+
     const [stats, setStats] = useState<PurchaseStats>({
         totalOrders: 0,
         totalAmount: 0,
@@ -214,23 +214,23 @@ const AdminPurchaseManagement = () => {
         setLoading(true);
         setTimeout(() => {
             let filtered = [...mockPurchaseOrders];
-            
+
             if (filters.search) {
                 const searchLower = filters.search.toLowerCase();
-                filtered = filtered.filter(po => 
+                filtered = filtered.filter(po =>
                     po.poNumber.toLowerCase().includes(searchLower) ||
                     po.vendorName.toLowerCase().includes(searchLower)
                 );
             }
-            
+
             if (filters.status && filters.status !== 'all') {
                 filtered = filtered.filter(po => po.status === filters.status);
             }
-            
+
             const startIndex = (filters.page - 1) * filters.limit;
             const endIndex = startIndex + filters.limit;
             const paginatedData = filtered.slice(startIndex, endIndex);
-            
+
             setPurchaseOrders(paginatedData);
             setPagination({
                 currentPage: filters.page,
@@ -238,17 +238,17 @@ const AdminPurchaseManagement = () => {
                 totalItems: filtered.length,
                 itemsPerPage: filters.limit,
             });
-            
+
             // Calculate stats
             const totalAmount = filtered.reduce((sum, po) => sum + po.total, 0);
             const receivedThisMonth = filtered.filter(po => {
                 if (!po.actualDeliveryDate) return false;
                 const receivedDate = new Date(po.actualDeliveryDate);
                 const now = new Date();
-                return receivedDate.getMonth() === now.getMonth() && 
-                       receivedDate.getFullYear() === now.getFullYear();
+                return receivedDate.getMonth() === now.getMonth() &&
+                    receivedDate.getFullYear() === now.getFullYear();
             }).reduce((sum, po) => sum + po.total, 0);
-            
+
             setStats({
                 totalOrders: filtered.length,
                 totalAmount: totalAmount,
@@ -288,7 +288,7 @@ const AdminPurchaseManagement = () => {
 
     const confirmReceiveOrder = async () => {
         if (!selectedOrder) return;
-        
+
         // Here you would call API to update received quantities
         toast.success(`Order ${selectedOrder.poNumber} has been received`);
         setShowReceiveModal(false);
@@ -371,7 +371,7 @@ const AdminPurchaseManagement = () => {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="mx-auto px-2 py-8">
                 {/* Header */}
                 <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
@@ -660,7 +660,7 @@ const AdminPurchaseManagement = () => {
                                     className={`px-3 py-1 rounded-lg border transition text-sm ${pagination.currentPage === 1
                                         ? "border-gray-200 text-gray-400 cursor-not-allowed"
                                         : "border-gray-300 text-gray-600 hover:bg-green-50 hover:border-green-500"
-                                    }`}
+                                        }`}
                                 >
                                     First
                                 </button>
@@ -670,7 +670,7 @@ const AdminPurchaseManagement = () => {
                                     className={`p-2 rounded-lg border transition ${pagination.currentPage === 1
                                         ? "border-gray-200 text-gray-400 cursor-not-allowed"
                                         : "border-gray-300 text-gray-600 hover:bg-green-50 hover:border-green-500"
-                                    }`}
+                                        }`}
                                 >
                                     <ChevronLeft className="w-4 h-4" />
                                 </button>
@@ -682,7 +682,7 @@ const AdminPurchaseManagement = () => {
                                         className={`px-3 py-1 rounded-lg transition text-sm ${pagination.currentPage === page
                                             ? "bg-green-600 text-white"
                                             : "text-gray-600 hover:bg-green-50"
-                                        }`}
+                                            }`}
                                     >
                                         {page}
                                     </button>
@@ -694,7 +694,7 @@ const AdminPurchaseManagement = () => {
                                     className={`p-2 rounded-lg border transition ${pagination.currentPage === pagination.totalPages
                                         ? "border-gray-200 text-gray-400 cursor-not-allowed"
                                         : "border-gray-300 text-gray-600 hover:bg-green-50 hover:border-green-500"
-                                    }`}
+                                        }`}
                                 >
                                     <ChevronRight className="w-4 h-4" />
                                 </button>
@@ -704,7 +704,7 @@ const AdminPurchaseManagement = () => {
                                     className={`px-3 py-1 rounded-lg border transition text-sm ${pagination.currentPage === pagination.totalPages
                                         ? "border-gray-200 text-gray-400 cursor-not-allowed"
                                         : "border-gray-300 text-gray-600 hover:bg-green-50 hover:border-green-500"
-                                    }`}
+                                        }`}
                                 >
                                     Last
                                 </button>

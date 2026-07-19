@@ -38,16 +38,16 @@ const AdminOrderManagement = () => {
   const { user } = useAppSelector(state => state.auth);
 
   const dispatch = useAppDispatch();
-  const { 
-    storeOrders, 
-    loading, 
-    success, 
-    error, 
-    message, 
-    storeOrderDetails, 
-    totalOrders, 
-    orderPagination, 
-    orderStats 
+  const {
+    storeOrders,
+    loading,
+    success,
+    error,
+    message,
+    storeOrderDetails,
+    totalOrders,
+    orderPagination,
+    orderStats
   } = useAppSelector(state => state.order);
 
   // Static delivery persons for now
@@ -253,7 +253,7 @@ const AdminOrderManagement = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="mx-auto px-2 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Order Management</h1>
           <p className="text-gray-600 mt-2">Manage and track all customer orders</p>

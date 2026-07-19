@@ -85,7 +85,7 @@ const AdminSalesManagement = () => {
     const [showUpdateStatusModal, setShowUpdateStatusModal] = useState(false);
     const [updateStatus, setUpdateStatus] = useState('');
     const [trackingNumber, setTrackingNumber] = useState('');
-    
+
     // Filter states
     const [filters, setFilters] = useState({
         page: 1,
@@ -98,14 +98,14 @@ const AdminSalesManagement = () => {
     const [localStatus, setLocalStatus] = useState("all");
     const [localPaymentStatus, setLocalPaymentStatus] = useState("all");
     const [showFilters, setShowFilters] = useState(false);
-    
+
     const [pagination, setPagination] = useState({
         currentPage: 1,
         totalPages: 1,
         totalItems: 0,
         itemsPerPage: 10,
     });
-    
+
     const [stats, setStats] = useState<SalesStats>({
         totalOrders: 0,
         totalRevenue: 0,
@@ -226,28 +226,28 @@ const AdminSalesManagement = () => {
         setLoading(true);
         setTimeout(() => {
             let filtered = [...mockSalesOrders];
-            
+
             if (filters.search) {
                 const searchLower = filters.search.toLowerCase();
-                filtered = filtered.filter(order => 
+                filtered = filtered.filter(order =>
                     order.orderNumber.toLowerCase().includes(searchLower) ||
                     order.customerName.toLowerCase().includes(searchLower) ||
                     order.customerEmail.toLowerCase().includes(searchLower)
                 );
             }
-            
+
             if (filters.status && filters.status !== 'all') {
                 filtered = filtered.filter(order => order.status === filters.status);
             }
-            
+
             if (filters.paymentStatus && filters.paymentStatus !== 'all') {
                 filtered = filtered.filter(order => order.paymentStatus === filters.paymentStatus);
             }
-            
+
             const startIndex = (filters.page - 1) * filters.limit;
             const endIndex = startIndex + filters.limit;
             const paginatedData = filtered.slice(startIndex, endIndex);
-            
+
             setSalesOrders(paginatedData);
             setPagination({
                 currentPage: filters.page,
@@ -255,26 +255,26 @@ const AdminSalesManagement = () => {
                 totalItems: filtered.length,
                 itemsPerPage: filters.limit,
             });
-            
+
             // Calculate stats
             const totalRevenue = filtered.reduce((sum, order) => sum + order.total, 0);
-            const totalItems = filtered.reduce((sum, order) => 
+            const totalItems = filtered.reduce((sum, order) =>
                 sum + order.items.reduce((itemSum, item) => itemSum + item.quantity, 0), 0);
             const deliveredThisMonth = filtered.filter(order => {
                 if (!order.deliveryDate) return false;
                 const deliveryDate = new Date(order.deliveryDate);
                 const now = new Date();
-                return deliveryDate.getMonth() === now.getMonth() && 
-                       deliveryDate.getFullYear() === now.getFullYear();
+                return deliveryDate.getMonth() === now.getMonth() &&
+                    deliveryDate.getFullYear() === now.getFullYear();
             }).reduce((sum, order) => sum + order.total, 0);
-            
+
             const revenueThisMonth = filtered.filter(order => {
                 const orderDate = new Date(order.orderDate);
                 const now = new Date();
-                return orderDate.getMonth() === now.getMonth() && 
-                       orderDate.getFullYear() === now.getFullYear();
+                return orderDate.getMonth() === now.getMonth() &&
+                    orderDate.getFullYear() === now.getFullYear();
             }).reduce((sum, order) => sum + order.total, 0);
-            
+
             setStats({
                 totalOrders: filtered.length,
                 totalRevenue: totalRevenue,
@@ -314,7 +314,7 @@ const AdminSalesManagement = () => {
 
     const confirmUpdateStatus = async () => {
         if (!selectedOrder) return;
-        
+
         // Here you would call API to update order status
         toast.success(`Order ${selectedOrder.orderNumber} status updated to ${updateStatus}`);
         setShowUpdateStatusModal(false);
@@ -417,7 +417,7 @@ const AdminSalesManagement = () => {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="mx-auto px-2 py-8">
                 {/* Header */}
                 <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
@@ -729,7 +729,7 @@ const AdminSalesManagement = () => {
                                     className={`px-3 py-1 rounded-lg border transition text-sm ${pagination.currentPage === 1
                                         ? "border-gray-200 text-gray-400 cursor-not-allowed"
                                         : "border-gray-300 text-gray-600 hover:bg-green-50 hover:border-green-500"
-                                    }`}
+                                        }`}
                                 >
                                     First
                                 </button>
@@ -739,7 +739,7 @@ const AdminSalesManagement = () => {
                                     className={`p-2 rounded-lg border transition ${pagination.currentPage === 1
                                         ? "border-gray-200 text-gray-400 cursor-not-allowed"
                                         : "border-gray-300 text-gray-600 hover:bg-green-50 hover:border-green-500"
-                                    }`}
+                                        }`}
                                 >
                                     <ChevronLeft className="w-4 h-4" />
                                 </button>
@@ -751,7 +751,7 @@ const AdminSalesManagement = () => {
                                         className={`px-3 py-1 rounded-lg transition text-sm ${pagination.currentPage === page
                                             ? "bg-green-600 text-white"
                                             : "text-gray-600 hover:bg-green-50"
-                                        }`}
+                                            }`}
                                     >
                                         {page}
                                     </button>
@@ -763,7 +763,7 @@ const AdminSalesManagement = () => {
                                     className={`p-2 rounded-lg border transition ${pagination.currentPage === pagination.totalPages
                                         ? "border-gray-200 text-gray-400 cursor-not-allowed"
                                         : "border-gray-300 text-gray-600 hover:bg-green-50 hover:border-green-500"
-                                    }`}
+                                        }`}
                                 >
                                     <ChevronRight className="w-4 h-4" />
                                 </button>
@@ -773,7 +773,7 @@ const AdminSalesManagement = () => {
                                     className={`px-3 py-1 rounded-lg border transition text-sm ${pagination.currentPage === pagination.totalPages
                                         ? "border-gray-200 text-gray-400 cursor-not-allowed"
                                         : "border-gray-300 text-gray-600 hover:bg-green-50 hover:border-green-500"
-                                    }`}
+                                        }`}
                                 >
                                     Last
                                 </button>
@@ -879,7 +879,7 @@ const AdminSalesManagement = () => {
                                                 <div className="flex items-center gap-1.5 text-sm text-gray-800">
                                                     {getPaymentMethodIcon(selectedOrder.paymentMethod)}
                                                     {selectedOrder.paymentMethod === 'mobile_payment' ? 'Mobile Payment' :
-                                                     selectedOrder.paymentMethod.charAt(0).toUpperCase() + selectedOrder.paymentMethod.slice(1)}
+                                                        selectedOrder.paymentMethod.charAt(0).toUpperCase() + selectedOrder.paymentMethod.slice(1)}
                                                 </div>
                                             </div>
                                             <div>
@@ -1101,7 +1101,7 @@ const AdminSalesManagement = () => {
                     </div>
                 </div>
             )}
-            
+
         </div>
     );
 };

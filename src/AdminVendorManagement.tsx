@@ -31,7 +31,7 @@ interface StatusUpdateData {
 
 const AdminVendorManagement = () => {
     const dispatch = useAppDispatch();
-    const { vendors, pagination, loading,stats } = useAppSelector((state) => state.vendor);
+    const { vendors, pagination, loading, stats } = useAppSelector((state) => state.vendor);
 
     const [selectedVendor, setSelectedVendor] = useState<IVendor | null>(null);
     const [showStatusModal, setShowStatusModal] = useState(false);
@@ -167,7 +167,7 @@ const AdminVendorManagement = () => {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="mx-auto px-2 py-8">
                 {/* Header */}
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold text-gray-900">Vendor Management</h1>

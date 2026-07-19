@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { fetchFarms } from "./farmApi";
+import { fetchFarms, getMyFarmDetails } from "./farmApi";
 
 export interface ITopSellingFarm {
     id: number;
@@ -11,6 +11,7 @@ export interface ITopSellingFarm {
 
 const initialState = {
     topSellingFarms: [] as ITopSellingFarm[],
+    myFarmDetail:{} as any,
     loading: false,
     success: false,
     error: false,
@@ -41,6 +42,22 @@ const FarmSlice = createSlice({
                 state.topSellingFarms = action.payload.data;
             })
             .addCase(fetchFarms.rejected, (state, action) => {
+                state.loading = false;
+                state.error = true;
+                state.message = action.payload as string;
+            })
+            .addCase(getMyFarmDetails.pending, (state) => {
+                state.loading = true;
+                state.error = false;
+                state.success = false;
+                state.message = "";
+            })
+            .addCase(getMyFarmDetails.fulfilled, (state, action) => {
+                state.loading = false;
+                state.success = true;
+                state.myFarmDetail = action.payload.data;
+            })
+            .addCase(getMyFarmDetails.rejected, (state, action) => {
                 state.loading = false;
                 state.error = true;
                 state.message = action.payload as string;

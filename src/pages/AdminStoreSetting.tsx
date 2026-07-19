@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Store,
   Upload,
@@ -6,20 +6,52 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { districtsByProvince, provinces } from './BecomeSeller';
+import { useAppDispatch, useAppSelector } from '../hooks/hooks';
+import { getMyFarmDetails } from '../features/farm/farmApi';
 
 const AdminStoreSettings = () => {
   const [storeLogo, setStoreLogo] = useState<string | null>(null);
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    dispatch(getMyFarmDetails());
+  }, [dispatch]);
+
+  const { myFarmDetail } = useAppSelector((state) => state.store);
+
   const [formData, setFormData] = useState({
-    storeName: 'Boxera Electronics',
+    storeName: '',
     storeDescription: '',
     registrationNumber: '',
     taxNumber: '',
-    storeEmail: 'support@boxera.com',
-    storePhone: '+1 202 555 0173',
+    storeEmail: '',
+    storePhone: '',
     district: '',
     address: '',
     province: '',
   });
+
+  // Update form data when myFarmDetail changes
+  useEffect(() => {
+    if (myFarmDetail) {
+      setFormData({
+        storeName: myFarmDetail.farmName || '',
+        storeDescription: myFarmDetail.description || '',
+        registrationNumber: myFarmDetail.panNo || '',
+        taxNumber: myFarmDetail.vatNo || '',
+        storeEmail: myFarmDetail.email || '',
+        storePhone: myFarmDetail.phone || '',
+        district: myFarmDetail.district || '',
+        address: myFarmDetail.address || '',
+        province: myFarmDetail.province || '',
+      });
+
+      // Set logo if available
+      if (myFarmDetail.logo) {
+        setStoreLogo(myFarmDetail.logo);
+      }
+    }
+  }, [myFarmDetail]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -56,7 +88,7 @@ const AdminStoreSettings = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="mx-auto px-2 py-8">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
@@ -74,7 +106,7 @@ const AdminStoreSettings = () => {
               {/* Store Logo */}
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Store Logo <span className="text-red-500">*</span>
+                  Store Image <span className="text-red-500">*</span>
                 </label>
                 <p className="text-xs text-gray-500 mb-3">Upload your brand logo (PNG, JPG, max 5MB).</p>
 
@@ -122,7 +154,7 @@ const AdminStoreSettings = () => {
                   value={formData.storeName}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                  placeholder="Boxera Electronics"
+                  placeholder="Enter store name"
                 />
                 <p className="text-xs text-gray-500 mt-1">This is the public name displayed to your customers.</p>
               </div>
@@ -161,7 +193,7 @@ const AdminStoreSettings = () => {
                   value={formData.registrationNumber}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                  placeholder="Enter registration number"
+                  placeholder="Enter PAN number"
                 />
                 <p className="text-xs text-gray-500 mt-1">Your business registration or company number.</p>
               </div>
@@ -177,7 +209,7 @@ const AdminStoreSettings = () => {
                   value={formData.taxNumber}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                  placeholder="Enter tax number"
+                  placeholder="Enter VAT number"
                 />
                 <p className="text-xs text-gray-500 mt-1">Your tax identification number (optional).</p>
               </div>
@@ -196,16 +228,16 @@ const AdminStoreSettings = () => {
                   Store Email <span className="text-red-500">*</span>
                 </label>
                 <input
+                  disabled={true}
                   type="email"
                   name="storeEmail"
                   value={formData.storeEmail}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                  placeholder="support@boxera.com"
+                  placeholder="Enter store email"
                 />
-                <p className="text-xs text-gray-500 mt-1">Label</p>
+                <p className="text-xs text-gray-500 mt-1">Main contact email for your store.</p>
               </div>
-
 
               {/* Store Phone */}
               <div className="mb-6">
@@ -218,22 +250,23 @@ const AdminStoreSettings = () => {
                   value={formData.storePhone}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                  placeholder="+1 202 555 0173"
+                  placeholder="Enter store phone"
                 />
                 <p className="text-xs text-gray-500 mt-1">Shown on invoices and customer communications.</p>
               </div>
-
             </div>
 
             {/* Address Card */}
             <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
               <h2 className="text-lg font-semibold text-gray-900 mb-6">Address</h2>
-              {/* Country */}
+
+              {/* Province */}
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Province
                 </label>
                 <select
+                  disabled={true}
                   name="province"
                   value={formData.province}
                   onChange={handleInputChange}
@@ -244,15 +277,18 @@ const AdminStoreSettings = () => {
                     <option key={province} value={province}>{province}</option>
                   ))}
                 </select>
-                <p className="text-xs text-gray-500 mt-1">Select your business country.</p>
+                <p className="text-xs text-gray-500 mt-1">Select your business province.</p>
               </div>
-              {/* State & Zip Code */}
+
+              {/* District & Address */}
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     District
                   </label>
                   <select
+                    disabled={true}
+
                     name="district"
                     value={formData.district}
                     onChange={handleInputChange}
